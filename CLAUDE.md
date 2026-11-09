@@ -15,4 +15,4 @@ Decidido por el grupo (el enunciado lo promueve): **ninguna función de un reque
 ## Reglas del proyecto
 - Lenguaje: **Python** (todos los algoritmos, la descarga con OSMnx y la aplicación). Fijar versiones en `requirements.txt` (NetworkX, OSMnx, SciPy). Todos los algoritmos en un solo lenguaje; implementación propia donde el enunciado lo exige (NetworkX/SciPy/Shapely solo para verificar).
 - Todo uso de IA se anota en `docs/anexo-ia.md` para el anexo de IA (herramienta, para qué, cómo se verificó). Cada integrante debe poder explicar y modificar cualquier parte del código.
-- Commits pequeños y frecuentes de cada integrante (el historial es evidencia de trabajo).
+- Commits pequeños y frecuentes de cada integrante.
