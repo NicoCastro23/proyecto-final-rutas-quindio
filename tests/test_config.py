@@ -29,3 +29,9 @@ def test_gitignore_excluye_data_raw():
     assert "data/raw/" in lineas
     assert not any(l.rstrip("/") in ("data/processed", "data") for l in lineas)
     assert not any("data/processed" in l for l in lineas)
+
+
+def test_rutas_r2():
+    assert config.RESULTS_R2 == config.RAIZ / "results" / "r2"
+    assert config.MATRIZ_TIEMPOS.name == "matriz_tiempos.csv"
+    assert config.MATRIZ_TIEMPOS.parent == config.DATA_PROCESSED
