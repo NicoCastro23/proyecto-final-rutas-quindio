@@ -129,7 +129,7 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
   - Verificar: `grep -n "R1" docs/anexo-ia.md && grep -n "rutas.r1.construir_red" README.md`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T20 · Suite completa y regeneración de todos los resultados de R1
+- [x] T20 · Suite completa y regeneración de todos los resultados de R1 (ejecutada por el usuario con el portátil enchufado, commit afbd260; 112 passed)
   - Archivos: ninguno nuevo (regenera `data/processed/*` y `results/r1/*` desde `data/raw/`)
   - Test primero: no aplica
   - Verificar: `.venv/bin/python -m rutas.r1.construir_red && .venv/bin/python -m rutas.r1.medir_componente && .venv/bin/python -m rutas.r1.tablas && .venv/bin/python -m pytest` (todas pasan, ninguna `red` saltada); comprobar que `results/r1/` tiene `r1_tamanos.csv`, `r1_tiempos_componente.csv`, `r1_memoria.csv` (4 filas), `r1_velocidades.csv`, `maquina.json`, `tablas_r1.md`, y que `data/processed/` tiene una sola forma del grafo

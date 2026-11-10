@@ -1,6 +1,6 @@
 # Modelo de la red vial — Requerimiento 1
 Enunciado: sección 4 (Datos) y sección 5, Requerimiento 1 (puntos 1 a 5); formato en Anexo, Requerimiento 1; protocolo de la sección 6. Peso: 15 % (40 % implementación verificada, 30 % teoría, 30 % experimental).
-Estado: ☑ spec (aprobada en Puerta 1, 2026-11-10, con precisiones de aristas paralelas y pesos sin redondear) · ☐ pruebas · ☐ código · ☐ verificado
+Estado: ☑ spec (aprobada en Puerta 1, 2026-11-10, con precisiones de aristas paralelas y pesos sin redondear) · ☑ pruebas (112, incluidas 8 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO)
 
 ## Propósito
 Descargar la red vial del Quindío, modelarla como grafo ponderado (distancia y tiempo), quedarse con la componente fuertemente conexa más grande, ubicar el catálogo de lugares sobre ella y guardar todo para que R2 a R5 no vuelvan a descargar nada.
