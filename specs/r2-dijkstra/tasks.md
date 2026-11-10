@@ -50,20 +50,20 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B2 · Verificación contra NetworkX y detalle de la ruta
 
-- [ ] T6 · `detalle_ruta(G, ruta)` con `mejor_arista` (caso 12 y bordes de ruta)
+- [x] T6 · `detalle_ruta(G, ruta)` con `mejor_arista` (caso 12 y bordes de ruta)
   - Archivos: `rutas/r2/ruta.py` (stub primero; luego suma tramo a tramo de `mejor_arista(G, u, v).travel_time` y `.length`)
   - Test primero: `tests/test_ruta.py::test_caso_12_detalle_usa_mejor_arista` (multigrafo del caso 12 con `grafo_sintetico` y su red con `construir_adyacencia`: la ruta en ids de `consultar(red, 1, 2, "cola_prioridad")` es [1, 2] y `detalle_ruta(G, ruta)` = (40.0, 900.0)), `::test_ruta_g1` (ruta del caso 3 en G1 con `length` conocidos → suma exacta de tiempos = 7 y suma de longitudes a mano), `::test_ruta_de_un_nodo` ((0.0, 0.0)), `::test_ruta_vacia_error` (`ValueError`)
   - Verificar: `.venv/bin/python -m pytest tests/test_ruta.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T7 · Propiedad: 200 grafos aleatorios contra NetworkX (caso 13)
+- [x] T7 · Propiedad: 200 grafos aleatorios contra NetworkX (caso 13)
   - Archivos: `tests/test_dijkstra_propiedad.py` (solo prueba; el generador usa `random.Random(2026)`: 5 a 30 nodos con ids enteros **no consecutivos y en orden aleatorio** (para ejercitar la traducción), pesos enteros 0–20, algunas paralelas y autolazos; se construye un `nx.MultiDiGraph` y su `Red` con `construir_adyacencia`)
   - Test primero: `::test_caso_13_sin_destino` (para cada grafo y cada origen: `dist` de ambas versiones, traducida a ids con `red.ids`, en los alcanzados = `nx.single_source_dijkstra_path_length(G, o, weight="travel_time")` exacto, `inf` exactamente en los no alcanzados, mismos explorados entre versiones), `::test_caso_13_con_destino` (pares con destino vía `consultar`: mismo tiempo, misma ruta y mismos explorados entre versiones; tiempo = NetworkX o `inf` si no hay camino; la ruta suma el tiempo con la arista mínima de cada tramo)
   - Ver fallar: el código ya existe; se valida con una **mutación temporal** en `dijkstra.py` (p. ej. `<=` en la búsqueda del mínimo de la lineal, que rompe el desempate, o `<=` en la relajación) que la hace fallar, y se restaura
   - Verificar: `.venv/bin/python -m pytest tests/test_dijkstra_propiedad.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T8 · Adyacencia de la red real (caso 15, marcador `red`)
+- [x] T8 · Adyacencia de la red real (caso 15, marcador `red`)
   - Archivos: `tests/test_red_real_r2.py` (crear con `pytestmark = pytest.mark.red`; usa la fixture `grafo_procesado_real`)
   - Test primero: `::test_caso_15_adyacencia_real` (`len(ids) == len(adyacencia) == 8 791`, `ids == sorted(G.nodes)`, `indice[ids[i]] == i`, 20 132 entradas en total, todos los índices de vecino en 0..V−1, todos los pesos finitos y ≥ 0)
   - Ver fallar: mutación temporal (p. ej. saltarse los autolazos en `construir_adyacencia` → 20 108 entradas) y restaurar

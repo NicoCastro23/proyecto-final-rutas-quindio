@@ -8,7 +8,7 @@ Implementar dos versiones propias de Dijkstra (mínimo por recorrido lineal y co
 
 ## Entradas y salidas
 **Entradas**
-- Grafo de la componente cargado con `cargar_grafo_procesado()` (R1). R2 construye **su propia representación indexada** (decisión de la Puerta 2): `ids` = lista de los ids de nodo **ordenados de menor a mayor** (el índice i ∈ 0..V−1 representa al nodo `ids[i]`), `indice` = `dict` id → i, y `adyacencia` = lista de V listas, `adyacencia[i]` = lista de `(j, travel_time)`, con **todas** las aristas del MultiDiGraph (paralelas y autolazos incluidos; coherente con R1). Como los índices siguen el orden de los ids, desempatar por menor índice equivale a desempatar por menor id. Construirla es preparación de datos y queda fuera de la medición. Hoy: V = 8 791, E = 20 132; 133 pares (u, v) con aristas paralelas (máx. 3) y 24 autolazos.
+- Grafo de la componente cargado con `cargar_grafo_procesado()` (R1). R2 construye **su propia representación indexada** (decisión de la Puerta 2): `ids` = lista de los ids de nodo **ordenados de menor a mayor** (el índice i ∈ 0..V−1 representa al nodo `ids[i]`), `indice` = `dict` id → i, y `adyacencia` = lista de V listas, `adyacencia[i]` = lista de `(j, travel_time)`, con **todas** las aristas del MultiDiGraph (paralelas y autolazos incluidos; coherente con R1). Como los índices siguen el orden de los ids, desempatar por menor índice equivale a desempatar por menor id. Construirla es preparación de datos y queda fuera de la medición. Hoy: V = 8 791, E = 20 132; 133 pares (u, v) con aristas paralelas (máx. 3) y 37 autolazos en 24 nodos distintos.
 - `lugares_nodos.csv` (R1): lugar → nodo. T03 y T05 comparten el nodo 2978288220.
 
 **Funciones** (implementación propia; NetworkX solo en pruebas)

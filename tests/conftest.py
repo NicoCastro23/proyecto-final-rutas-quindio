@@ -1,4 +1,4 @@
-"""Fixtures compartidas por las pruebas de R1."""
+"""Fixtures y helpers compartidos por las pruebas (R1 y R2)."""
 import json
 
 import networkx as nx
