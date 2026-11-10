@@ -35,3 +35,11 @@ def test_rutas_r2():
     assert config.RESULTS_R2 == config.RAIZ / "results" / "r2"
     assert config.MATRIZ_TIEMPOS.name == "matriz_tiempos.csv"
     assert config.MATRIZ_TIEMPOS.parent == config.DATA_PROCESSED
+
+
+def test_rutas_r3():
+    assert config.RESULTS_R3 == config.RAIZ / "results" / "r3"
+    assert config.ENVOLVENTE_CSV.name == "envolvente.csv"
+    assert config.ENVOLVENTE_GEOJSON.name == "envolvente.geojson"
+    assert config.ENVOLVENTE_CSV.parent == config.DATA_PROCESSED
+    assert config.ENVOLVENTE_GEOJSON.parent == config.DATA_PROCESSED

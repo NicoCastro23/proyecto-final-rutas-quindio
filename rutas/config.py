@@ -7,7 +7,10 @@ DATA_RAW = RAIZ / "data" / "raw"
 DATA_PROCESSED = RAIZ / "data" / "processed"
 RESULTS_R1 = RAIZ / "results" / "r1"
 RESULTS_R2 = RAIZ / "results" / "r2"
+RESULTS_R3 = RAIZ / "results" / "r3"
 MATRIZ_TIEMPOS = DATA_PROCESSED / "matriz_tiempos.csv"
+ENVOLVENTE_CSV = DATA_PROCESSED / "envolvente.csv"
+ENVOLVENTE_GEOJSON = DATA_PROCESSED / "envolvente.geojson"
 CATALOGO = RAIZ / "data" / "catalogo.csv"
 
 EPSG_UTM = 32618                    # UTM zona 18N (el Quindío está en la zona 18)

@@ -14,7 +14,7 @@ ORIGINAL = RAIZ / "estudio" / "casos_prueba.json"
 def test_red_clase_versionada():
     assert ARCHIVO.exists()
     datos = json.loads(ARCHIVO.read_text(encoding="utf-8"))
-    assert set(datos) == {"_origen", "red", "R2"}
+    assert set(datos) == {"_origen", "red", "R2", "R3"}
     aristas = datos["red"]["aristas"]
     assert len(aristas) == 24
     assert sorted(a["min"] for a in aristas if (a["u"], a["v"]) == (2, 3)) == [2, 5]
@@ -29,6 +29,7 @@ def test_red_clase_versionada():
         original = json.loads(ORIGINAL.read_text(encoding="utf-8"))
         assert datos["red"] == original["red"]
         assert datos["R2"] == original["R2"]
+        assert datos["R3"] == original["R3"]
 
 
 VERSION = pytest.mark.parametrize("version", ["lineal", "cola_prioridad"])

@@ -15,31 +15,32 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B1 · Copia de R3, unidades de la tabla de R2 y piezas básicas (cruz, redondeo, área)
 
-- [ ] T1 · Paquete `rutas/r3` y rutas de R3 en la configuración
+- [x] T1 · Paquete `rutas/r3` y rutas de R3 en la configuración
   - Archivos: `rutas/r3/__init__.py` (vacío), `rutas/config.py` (agregar `RESULTS_R3 = RAIZ / "results" / "r3"`, `ENVOLVENTE_CSV = DATA_PROCESSED / "envolvente.csv"`, `ENVOLVENTE_GEOJSON = DATA_PROCESSED / "envolvente.geojson"`; no tocar lo demás)
   - Test primero: `tests/test_config.py::test_rutas_r3` (`RESULTS_R3 == RAIZ / "results" / "r3"`; `ENVOLVENTE_CSV.name == "envolvente.csv"` y `ENVOLVENTE_GEOJSON.name == "envolvente.geojson"`, ambos en `DATA_PROCESSED`)
   - Verificar: `.venv/bin/python -m pytest tests/test_config.py`
 
-- [ ] T2 · Sección `R3` en la copia versionada de la red de la clase (casos 2, 3, 6, 7, 10)
+- [x] T2 · Sección `R3` en la copia versionada de la red de la clase (casos 2, 3, 6, 7, 10)
   - Archivos: `tests/datos/red_clase.json` (agregar **solo** la sección `R3` de `estudio/casos_prueba.json`, sin cambiar valores; `red` y `R2` intactas; `_origen` pasa a decir: `"Copia de las secciones red, R2 y R3 de estudio/casos_prueba.json (grafo de la clase de Dijkstra y casos de la envolvente, resueltos a mano y verificados con NetworkX 3.7 y SciPy 1.18.1), 2026-11-10. estudio/ no se versiona."`); `tests/conftest.py` (agregar `cargar_casos_r3()` → `(nodos, seccion_R3)` con `nodos = {id: (x, y)}` en `int` desde `red.nodos`); `tests/test_dijkstra_clase.py::test_red_clase_versionada` (cambiar la aserción de claves a `{"_origen", "red", "R2", "R3"}`; lo demás igual)
   - Test primero: `tests/test_envolvente_clase.py::test_r3_versionada` (claves de `R3` exactamente `nodos_red`, `empate`, `rectangulo`, `scipy_falla`; `R3.nodos_red.vertices == [9, 7, 8, 3, 2]`, `area_m2 == 585000`; `cargar_casos_r3()` da 9 nodos con `nodos[9] == (0, 0)`; si existe `estudio/casos_prueba.json`, `red`, `R2` **y** `R3` son iguales a las de allí, si no se omite esa comparación). Se ve fallar con `KeyError: 'R3'` (el JSON aún no tiene la sección) antes de editarlo
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente_clase.py tests/test_dijkstra_clase.py -k versionada`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T3 · Tarea pequeña de R2: unidad de la pendiente por versión en `tablas_r2.md` (aprobada en Puerta 1)
+- [x] T3 · Tarea pequeña de R2: unidad de la pendiente por versión en `tablas_r2.md` (aprobada en Puerta 1)
   - Archivos: `rutas/r2/tablas.py` (agregar `UNIDAD_PENDIENTE = {"lineal": ("ms/nodo", 1), "cola_prioridad": ("µs/nodo", 1000)}` y cambiar **solo** `_tabla_ajuste`: columnas `Versión | Pendiente | Unidad de la pendiente | Ordenada (ms)`, la pendiente de cada versión multiplicada por su factor; `ajuste_tiempo_explorados` no cambia); `tests/test_tablas_r2.py`
   - Test primero: `tests/test_tablas_r2.py::test_tabla_ajuste_unidad_por_version` (`_tabla_ajuste({"lineal": {"pendiente": 0.5, "ordenada": 1.0}, "cola_prioridad": {"pendiente": 0.0003, "ordenada": 0.5}})`: la fila `lineal` contiene `0.5000` y `ms/nodo`; la fila `cola_prioridad` contiene `0.3000` y `µs/nodo`; el encabezado tiene `Unidad de la pendiente` y ya no `Pendiente (ms/nodo)`); actualizar `::test_tablas_md_incluye_cociente_por_par_y_ajuste` (con `FILAS_AJUSTE` la cola da 0,1 ms/nodo = `100.0000` µs/nodo: cambiar `"0.1000"` por `"100.0000"` y comprobar `"µs/nodo"`). Ver fallar las dos antes de cambiar `_tabla_ajuste`
   - Regenerar (no es medición: lee los CSV ya medidos): `.venv/bin/python -m rutas.r2.tablas`, y luego `git status --porcelain results/r2` debe mostrar **solo** ` M results/r2/tablas_r2.md`. Se espera así porque `r2_cociente.csv` y la PNG salen de los mismos CSV de forma determinista; si alguno de los dos cambia, **reportarlo** al usuario (no restaurarlo ni tocar git) para que decida
   - Verificar: `.venv/bin/python -m pytest tests/test_tablas_r2.py && git status --porcelain results/r2 && git diff --stat results/r2`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T4 · Algoritmo (stubs), predicado de giro, área y normalización (Comportamiento 1; caso 8; utilidades)
+- [x] T4 · Algoritmo (stubs), predicado de giro, área y normalización (Comportamiento 1; caso 8; utilidades)
   - Archivos: `rutas/r3/envolvente.py` (crear con `cruz`, `envolvente`, `_lado`, `area`, `normalizar` como stubs `raise NotImplementedError`, y el `sys.setrecursionlimit(max(sys.getrecursionlimit(), 20_000))` con su comentario (ver plan); implementar aquí `cruz`, `area` (doble del área con enteros, `abs(...) / 2`; 0 con < 3 vértices) y `normalizar` (si el área con signo es negativa se invierte la lista; luego se rota al vértice de menor `(y, x)`))
   - Test primero: `tests/test_envolvente.py::test_cruz_signos` (`cruz((0,0), (1,0), (0,1)) == 1` izquierda, `cruz((0,0), (1,0), (0,-1)) == -1` derecha, `cruz((0,0), (1,1), (2,2)) == 0` alineados; resultado `int`), `::test_cruz_grande` (caso 8: `cruz((0,0), (3*10**9, 0), (0, 3*10**9)) == 9 * 10**18`, exacto e `int`), `::test_area` (cuadrado 4 × 4 → 16.0; triángulo (0,0), (4,0), (0,3) → 6.0; mismo valor en sentido horario; 2 vértices → 0), `::test_normalizar` (el cuadrado en horario y empezando en (4,4) → `[(0,0), (4,0), (4,4), (0,4)]`; ya normalizado → igual; empate de `y` mínima: empieza por el de menor `x`)
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente.py -k "cruz or area or normalizar"`
+  - Nota: `puntos_de_grafo` y `envolvente`/`_lado` siguen como stubs (T11 y T6). `normalizar` usa `min(..., default=0)` para tolerar la lista vacía.
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T5 · Preparación de puntos: redondeo, repetidos y cuadrado aleatorio (casos 5, 9; preparación del 12)
+- [x] T5 · Preparación de puntos: redondeo, repetidos y cuadrado aleatorio (casos 5, 9; preparación del 12)
   - Archivos: `rutas/r3/puntos.py` (crear con stubs; luego `SEMILLA = 2026`, `LADO = 10**6`, `redondear(x)` = `math.floor(x + 0.5)`, `preparar_puntos(xs, ys)` (redondea, `set`, `sorted`; `zip(..., strict=True)`), `puntos_cuadrado(n, semilla=SEMILLA, lado=LADO)` (un `random.Random(semilla)` nuevo por llamada; `n` veces `(rng.randrange(lado), rng.randrange(lado))`; `set`, `sorted`); `puntos_de_grafo` queda como stub hasta T11)
   - Test primero: `tests/test_puntos_r3.py::test_caso_9_redondeo` (`redondear(2.5) == 3`, `redondear(-0.5) == 0`, `redondear(2.4999) == 2`, `redondear(-2.5) == -2`; tipo `int`, también con `numpy.float64`), `::test_preparar_quita_repetidos` (caso 5 y fusión tras redondear: `preparar_puntos([0, 0, 1, 0, 0.4], [0, 0, 0, 1, 0.4]) == [(0, 0), (0, 1), (1, 0)]`; todos `int` de Python), `::test_preparar_ordena` (salida = `sorted` y sin repetidos), `::test_preparar_largos_distintos` (`ValueError`), `::test_puntos_cuadrado_semilla` (misma semilla → misma lista; otra semilla → otra; `n = 1000` → `len ≤ 1000` y `> 990`; todas las coordenadas en `[0, 10**6)`; ordenada y sin repetidos)
   - Verificar: `.venv/bin/python -m pytest tests/test_puntos_r3.py`

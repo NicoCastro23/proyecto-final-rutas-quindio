@@ -1,5 +1,5 @@
 {
- "_origen": "Copia de las secciones red y R2 de estudio/casos_prueba.json (grafo de la clase de Dijkstra, resuelto a mano y verificado con NetworkX 3.7 y SciPy 1.18.1), 2026-11-10. estudio/ no se versiona.",
+ "_origen": "Copia de las secciones red, R2 y R3 de estudio/casos_prueba.json (grafo de la clase de Dijkstra y casos de la envolvente, resueltos a mano y verificados con NetworkX 3.7 y SciPy 1.18.1), 2026-11-10. estudio/ no se versiona.",
  "red": {
   "nodos": {
    "1": {
@@ -282,6 +282,148 @@
    "destino": 3,
    "esperado": 3,
    "si_usa_la_de_5": 6
+  }
+ },
+ "R3": {
+  "nodos_red": {
+   "vertices": [
+    9,
+    7,
+    8,
+    3,
+    2
+   ],
+   "no_vertices_sobre_lado": [
+    4,
+    6
+   ],
+   "area_m2": 585000
+  },
+  "empate": {
+   "puntos": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     2,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     8,
+     5
+    ]
+   ],
+   "vertices": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     8,
+     5
+    ],
+    [
+     2,
+     5
+    ]
+   ]
+  },
+  "rectangulo": {
+   "puntos": [
+    [
+     0,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     5,
+     10
+    ],
+    [
+     0,
+     10
+    ],
+    [
+     0,
+     5
+    ],
+    [
+     10,
+     5
+    ],
+    [
+     3,
+     4
+    ]
+   ],
+   "vertices": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     0,
+     10
+    ]
+   ]
+  },
+  "scipy_falla": {
+   "colineales": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     2,
+     2
+    ]
+   ],
+   "dos_puntos": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     0
+    ]
+   ]
   }
  }
 }

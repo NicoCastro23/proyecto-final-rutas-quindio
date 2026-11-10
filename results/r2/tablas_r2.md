@@ -60,10 +60,10 @@ Generadas por `rutas/r2/tablas.py` desde los CSV/JSON de `results/r2/`.
 
 ## Ajuste tiempo_ms ≈ a + b · nodos_explorados (mínimos cuadrados, por versión)
 
-| Versión | Pendiente (ms/nodo) | Ordenada (ms) |
-|---|---|---|
-| lineal | 0.1548 | -0.3946 |
-| cola_prioridad | 0.0003 | 0.0013 |
+| Versión | Pendiente | Unidad de la pendiente | Ordenada (ms) |
+|---|---|---|---|
+| lineal | 0.1548 | ms/nodo | -0.3946 |
+| cola_prioridad | 0.3355 | µs/nodo | 0.0013 |
 
 ## Pares y semilla
 

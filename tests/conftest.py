@@ -1,4 +1,4 @@
-"""Fixtures y helpers compartidos por las pruebas (R1 y R2)."""
+"""Fixtures y helpers compartidos por las pruebas (R1, R2 y R3)."""
 import json
 
 import networkx as nx
@@ -51,6 +51,13 @@ def cargar_red_clase():
     aristas = [(a["u"], a["v"], float(a["min"])) for a in datos["red"]["aristas"]
                if a["u"] <= 7 and a["v"] <= 7]
     return red_desde_aristas(aristas), datos["R2"]
+
+
+def cargar_casos_r3():
+    """Casos de la envolvente (tests/datos/red_clase.json): (nodos {id: (x, y)} como int, sección R3)."""
+    datos = json.loads((RAIZ / "tests" / "datos" / "red_clase.json").read_text(encoding="utf-8"))
+    nodos = {int(i): (int(n["x"]), int(n["y"])) for i, n in datos["red"]["nodos"].items()}
+    return nodos, datos["R3"]
 
 
 def _ruta_grafo_procesado():

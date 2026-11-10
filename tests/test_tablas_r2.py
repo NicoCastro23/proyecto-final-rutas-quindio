@@ -134,7 +134,8 @@ def test_tablas_md_incluye_cociente_por_par_y_ajuste(tmp_path, results):
     texto = (results / "tablas_r2.md").read_text(encoding="utf-8")
     assert "Cociente por par" in texto and "Ajuste" in texto
     assert "P3" in texto and "3.33" in texto          # 3.0 / 0.9 = 3.33
-    assert "0.5000" in texto and "0.1000" in texto    # pendientes (ms/nodo)
+    assert "0.5000" in texto and "100.0000" in texto  # pendientes: lineal 0.5 ms/nodo, cola 100 µs/nodo
+    assert "ms/nodo" in texto and "µs/nodo" in texto
     assert "1.0000" in texto                          # ordenada de la lineal (ms)
 
 
@@ -157,3 +158,14 @@ def test_grafica_usa_el_titulo_del_csv(results, monkeypatch):
     monkeypatch.setattr(Axes, "set_title", lambda self, t, *a, **k: (titulos.append(t), original(self, t, *a, **k))[1])
     tablas.grafica_tiempo_vs_explorados(results)
     assert "3 repeticiones" in titulos[0] and "5" not in titulos[0]
+
+
+def test_tabla_ajuste_unidad_por_version():
+    ajuste = {"lineal": {"pendiente": 0.5, "ordenada": 1.0},
+              "cola_prioridad": {"pendiente": 0.0003, "ordenada": 0.5}}
+    filas = tablas._tabla_ajuste(ajuste).splitlines()
+    assert "Unidad de la pendiente" in filas[0] and "Pendiente (ms/nodo)" not in filas[0]
+    lineal = next(f for f in filas if "lineal" in f)
+    cola = next(f for f in filas if "cola_prioridad" in f)
+    assert "0.5000" in lineal and "ms/nodo" in lineal and "µs/nodo" not in lineal
+    assert "0.3000" in cola and "µs/nodo" in cola    # 0.0003 ms/nodo = 0.3 µs/nodo

@@ -16,6 +16,10 @@ import pandas as pd
 from rutas.config import RESULTS_R2
 from rutas.r1.tablas import a_markdown
 
+# Unidad y factor con que se muestra la pendiente del ajuste (la cola es tan pequeña que en ms/nodo
+# se leería 0.0003; en µs/nodo se lee). ajuste_tiempo_explorados sigue devolviendo ms/nodo.
+UNIDAD_PENDIENTE = {"lineal": ("ms/nodo", 1), "cola_prioridad": ("µs/nodo", 1000)}
+
 UMBRAL_LOG = 100                # eje y logarítmico si el mayor tiempo es >= 100 veces el menor
 
 
@@ -141,8 +145,11 @@ def _tabla_cociente_por_par(df):
 
 
 def _tabla_ajuste(ajuste):
+    unidades = [UNIDAD_PENDIENTE[version] for version in ajuste]
     df = pd.DataFrame({"Versión": list(ajuste),
-                       "Pendiente (ms/nodo)": [a["pendiente"] for a in ajuste.values()],
+                       "Pendiente": [a["pendiente"] * factor
+                                     for a, (_, factor) in zip(ajuste.values(), unidades)],
+                       "Unidad de la pendiente": [unidad for unidad, _ in unidades],
                        "Ordenada (ms)": [a["ordenada"] for a in ajuste.values()]})
     return a_markdown(df, 4)
 
