@@ -50,17 +50,17 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B3 · UTM, ubicación de lugares y persistencia (sin internet)
 
-- [ ] T8 · Conversión a UTM 18N (punto 4; caso 10)
+- [x] T8 · Conversión a UTM 18N (punto 4; caso 10)
   - Archivos: `rutas/r1/utm.py` (`transformador`, `a_utm`, `a_latlon`, `agregar_utm_a_nodos`)
   - Test primero: `tests/test_utm.py::test_caso_10_catalogo_contra_pyproj` (C01, A03, A10 < 1 mm frente a `pyproj.Transformer` EPSG:4326 → EPSG:32618 creado en la prueba), `::test_caso_10_ida_y_vuelta` (< 1 m), `::test_caso_10_rango_recuadro` (esquinas del recuadro → x ∈ [389 000, 456 000], y ∈ [442 000, 542 000] aprox.; lon −75,6716, lat 4,5339 → (425 498, 501 177) ± 1 m), `::test_agregar_utm_a_nodos` (atributos `x_utm`, `y_utm` float)
   - Verificar: `.venv/bin/python -m pytest tests/test_utm.py`
 
-- [ ] T9 · Nodo más cercano por búsqueda lineal propia y asociación de lugares (punto 4; casos 7, 8, 9)
+- [x] T9 · Nodo más cercano por búsqueda lineal propia y asociación de lugares (punto 4; casos 7, 8, 9)
   - Archivos: `rutas/r1/ubicacion.py` (`nodo_mas_cercano`, `ubicar_lugares`)
   - Test primero: `tests/test_ubicacion.py::test_caso_7_vecino_mas_cercano` ((100,100); nodos 1 (103,104), 2 (200,100) → 1, 5,0 m, sin alerta), `::test_caso_8_alerta_y_frontera_500` (600 m → alerta; 500 m exactos → sin alerta), `::test_caso_9_empate_menor_id` (nodos 7 y 3 equidistantes → 3, probando ambos órdenes de la lista), `::test_lugar_sobre_nodo_distancia_cero`, `::test_ubicar_lugares_columnas_y_orden` (DataFrame `id_lugar, id_nodo, distancia_al_nodo_m, alerta_500m`, alertados conservados)
   - Verificar: `.venv/bin/python -m pytest tests/test_ubicacion.py`
 
-- [ ] T10 · Guardar y cargar el grafo procesado (`.graphml` o `.graphml.gz`) y las asociaciones sin redondear (punto 5; casos 4c, 11 sintético, 11b tras guardar/cargar; Puerta 2)
+- [x] T10 · Guardar y cargar el grafo procesado (`.graphml` o `.graphml.gz`) y las asociaciones sin redondear (punto 5; casos 4c, 11 sintético, 11b tras guardar/cargar; Puerta 2)
   - Archivos: `rutas/r1/persistencia.py` (`NOMBRE_GRAFO`, `guardar_grafo(G, carpeta, umbral_bytes=UMBRAL_GZ_BYTES)`, `cargar_grafo_procesado(carpeta)`, `guardar_procesado(..., umbral_bytes=...)`, `cargar_lugares_nodos`, `cargar_metadatos`)
   - Test primero: `tests/test_persistencia.py::test_caso_4c_paralelas_sobreviven` (A→B claves 0 y 1 con 50 s y 40 s, más B→A para que A y B formen la componente; tras `agregar_pesos` → `obtener_componente` → guardar/cargar siguen las 2 aristas A→B con sus tiempos; los tiempos de 4c se fijan con `length` y `maxspeed` que los producen), `::test_caso_11_guardar_cargar_sintetico` (mismos V, E; suma de `travel_time` ± 1e-6; `travel_time` y `length` arista por arista ± 1e-9; además igualdad exacta de `float`; `lugares_nodos.csv` idéntico tras cargar y volver a guardar), `::test_caso_11b_tras_guardar_cargar` (`mejor_arista` da lo mismo antes y después), `::test_tipos_al_cargar` (`x_utm`, `y_utm`, `length`, `speed_kph`, `travel_time` son `float`; `maxspeed_original` es `bool`; `id_nodo` es `int`), `::test_metadatos_ida_y_vuelta` (incluye `archivo_grafo` y `comprimido`), `::test_gz_y_sin_comprimir_dan_el_mismo_grafo` (el mismo grafo sintético con pesos se guarda en `tmp_path/a` con umbral por defecto → solo `.graphml`, y en `tmp_path/b` con `umbral_bytes=0` → solo `.graphml.gz`; cargar ambos con `cargar_grafo_procesado`: mismos nodos, mismas aristas `(u, v, key)`, `length`, `speed_kph`, `travel_time`, `x_utm`, `y_utm` ± 1e-9, mismos tipos), `::test_umbral_no_superado_no_comprime` (umbral mayor que el archivo → `.graphml`, sin `.gz`), `::test_nunca_quedan_las_dos_formas` (guardar comprimido y luego sin comprimir en la misma carpeta, y al revés → solo queda una forma), `::test_cargar_con_ambas_formas_es_error` (copiar a mano ambas formas → `ValueError`; carpeta vacía → `FileNotFoundError`), `::test_gz_reproducible` (guardar dos veces con `umbral_bytes=0` → `.gz` idénticos byte a byte, por `mtime=0`)
   - Verificar: `.venv/bin/python -m pytest tests/test_persistencia.py`
