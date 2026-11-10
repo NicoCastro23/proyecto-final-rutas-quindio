@@ -1,6 +1,6 @@
 # Caminos mínimos (Dijkstra y matriz de tiempos) — Requerimiento 2
 Enunciado: sección 5, Requerimiento 2 (punto 1 con sus viñetas, matriz de tiempos y verificación); protocolo en sección 6; formatos en Anexo, Requerimiento 2. Peso: 20 % (40 % implementación verificada, 30 % teoría, 30 % experimental).
-Estado: ☑ spec (aprobada en Puerta 1, 2026-11-10, con tres ajustes: casos de la clase, frase de la lineal y fuentes) · ☐ pruebas · ☐ código · ☐ verificado
+Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-10) · ☑ pruebas (213 en la suite, 14 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO)
 Depende de: `r1-red-vial` (cerrado): `data/processed/grafo_componente.graphml` (peso `travel_time` en s, aristas paralelas conservadas), `data/processed/lugares_nodos.csv`, `rutas.r1.persistencia`, `rutas.r1.aristas.mejor_arista` y `rutas.medicion` (modos en proceso y en proceso hijo).
 
 ## Propósito
@@ -19,11 +19,11 @@ Implementar dos versiones propias de Dijkstra (mínimo por recorrido lineal y co
 
 **Archivos** (resultados bajo `results/r2/`; la matriz bajo `data/processed/` porque la usa R4)
 - `results/r2/r2_pares.csv`: `origen, destino, tipo (cercano|lejano), municipio_origen, municipio_destino, nodo_origen, nodo_destino` y la semilla en `results/r2/r2_pares.json`.
-- `results/r2/r2_dijkstra.csv`: `origen, destino, version, tiempo_viaje_s, nodos_explorados, tiempo_ms` (columnas del Anexo, una fila por consulta y versión; `version ∈ {lineal, cola_prioridad}`), ampliado con `tipo, distancia_m, repeticiones` (columnas pueden ampliarse, no reducirse). `tiempo_viaje_s` y `distancia_m` sin redondear.
+- `results/r2/r2_dijkstra.csv`: `origen, destino, version, tiempo_viaje_s, nodos_explorados, tiempo_ms` (columnas del Anexo, una fila por consulta y versión; `version ∈ {lineal, cola_prioridad}`), ampliado con `tipo, distancia_m, repeticiones` (columnas pueden ampliarse, no reducirse). `tiempo_viaje_s` y `distancia_m` sin redondear. **Cada fila sale de su propia versión** (revisión 1 de R2): `tiempo_viaje_s` y `nodos_explorados` de la fila `lineal` vienen de una corrida de `dijkstra_lineal` hecha fuera del cronómetro, y los de la fila `cola_prioridad` de una corrida de `dijkstra_cola`; así el CSV es la evidencia de la verificación entre versiones que pide el enunciado. La prueba sobre los resultados reales compara las dos filas de cada par cercano (±1e-6 s y mismos explorados).
 - `results/r2/r2_cociente.csv`: `mediana, minimo, maximo` del cociente `tiempo_ms lineal / tiempo_ms cola` en los 10 pares cercanos.
 - `results/r2/r2_tiempo_vs_explorados.png`: nodos explorados en x, tiempo (ms) en y, un color y marcador distinto por versión, desde `r2_dijkstra.csv`. Si las dos versiones difieren en órdenes de magnitud, eje y logarítmico, indicado en la etiqueta.
 - `results/r2/r2_asimetria.json`: número de pares {i, j} con `|M[i][j] − M[j][i]| > 1e-6`, el par con mayor diferencia y su valor.
-- `results/r2/maquina.json` y `results/r2/tablas_r2.md` (tablas generadas desde los CSV).
+- `results/r2/maquina.json` y `results/r2/tablas_r2.md` (tablas generadas desde los CSV). `tablas_r2.md` incluye además (revisión 1): la tabla del cociente **por par** cercano con sus nodos explorados, y las pendientes y ordenadas del ajuste lineal tiempo_ms ≈ a + b · nodos_explorados de cada versión (mínimos cuadrados, `numpy.polyfit` de grado 1), calculadas desde `r2_dijkstra.csv`. El título de la gráfica dice la mediana y el número de repeticiones leído del CSV, no un 5 fijo.
 - `data/processed/matriz_tiempos.csv`: primera fila y primera columna = ids de los 42 lugares en el orden del catálogo; celda (i, j) = segundos de i a j. **Sin redondear**: cada valor con la representación completa del float (`repr`), leído con `float_precision="round_trip"` (decisión del usuario), de modo que la matriz leída del archivo coincide con Dijkstra con destino dentro de 1e-6 s.
 
 ## Comportamiento
@@ -122,7 +122,7 @@ Origen: `estudio/casos_prueba.json` (grafo de la clase de Dijkstra convertido en
 - Modos de `rutas.medicion` (decididos en R1): `dijkstra_cola` con `medir_en_proceso`; `dijkstra_lineal` con `medir_en_hijo` (cronómetro dentro del hijo, límite de 5 min → "no completada").
 - 5 repeticiones, mediana en **ms**; una sola si pasa de 1 min. `nodos_explorados` y `tiempo_viaje_s` se registran de una corrida (son deterministas).
 - Misma máquina para todo R2, portátil enchufado; `maquina.json`.
-- Predicción a contrastar: tiempo casi lineal en los nodos explorados para ambas; ambas con un piso pequeño y común por la inicialización O(V) (microsegundos); la lineal con pendiente ∝ V (cada extracción recorre los V nodos, que es su costo dominante); la cola con pendiente ∝ grado · log. El cociente lineal/cola debería crecer con los nodos explorados.
+- Predicción a contrastar: tiempo casi lineal en los nodos explorados para ambas; ambas con un piso pequeño y común por la inicialización O(V) (microsegundos); la lineal con pendiente ∝ V (cada extracción recorre los V nodos, que es su costo dominante); la cola con pendiente ∝ grado · log. El cociente lineal/cola debería crecer con los nodos explorados. Más precisamente: con k nodos explorados, lineal ≈ a + c_lin · V · k y cola ≈ a + c_cola · k (a = costo fijo común, sobre todo la inicialización O(V)); el cociente crece con k mientras pesa a y tiende a la constante c_lin · V / c_cola cuando k crece. (Resultado de la medición del 2026-11-10, para la discusión: ≈ 0,186 ms/nodo la lineal ≈ 21 ns × V, ≈ 0,41 µs/nodo la cola; cociente de 44,7 con 8 nodos a 507 con 1 375, cerca del límite ≈ 457.)
 - Reportar mediana, mínimo y máximo del cociente en los 10 pares cercanos y discutir la gráfica.
 - Por qué la lineal solo se mide en 10 pares (ajuste 2 de la Puerta 1): el enunciado pide medirla en 10 pares cercanos. En esta red (V = 8 791) una consulta lineal que explore toda la componente haría del orden de V² ≈ 7,7 · 10⁷ comparaciones y tardaría **unos segundos** en Python, no minutos; el aviso del enunciado de que puede tardar varios minutos aplica a redes más grandes. Medirla en los pares lejanos no es necesario ni se pide.
 

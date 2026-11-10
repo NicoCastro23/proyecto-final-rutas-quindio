@@ -10,6 +10,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")           # sin ventana: la gráfica solo se guarda en un archivo
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from rutas.config import RESULTS_R2
@@ -43,6 +44,46 @@ def cociente(df):
             "maximo": float(razones.max())}
 
 
+def cociente_por_par(df):
+    """Una fila por par cercano: nodos explorados, tiempos lineal y cola (ms) y su cociente.
+
+    Los pares con alguna de las dos versiones "no completada" no aparecen. Orden: por explorados.
+    """
+    df = _con_tiempo_numerico(df).dropna(subset=["tiempo_ms"])
+    clave = ["origen", "destino"]
+    lineal = df[df.version == "lineal"].set_index(clave)
+    cola = df[df.version == "cola_prioridad"].set_index(clave)
+    tabla = pd.DataFrame({"nodos_explorados": cola["nodos_explorados"],
+                          "lineal_ms": lineal["tiempo_ms"], "cola_ms": cola["tiempo_ms"]})
+    tabla = tabla.dropna(subset=["lineal_ms", "cola_ms"]).reset_index()   # solo pares con ambas
+    tabla["cociente"] = tabla["lineal_ms"] / tabla["cola_ms"]
+    return tabla.sort_values("nodos_explorados", kind="stable").reset_index(drop=True)
+
+
+def ajuste_tiempo_explorados(df):
+    """Ajuste por mínimos cuadrados tiempo_ms ~ ordenada + pendiente * nodos_explorados, por versión.
+
+    Pendiente en ms/nodo y ordenada en ms (numpy.polyfit de grado 1, solo mediciones completadas).
+    """
+    df = _con_tiempo_numerico(df).dropna(subset=["tiempo_ms"])
+    ajuste = {}
+    for version in ("lineal", "cola_prioridad"):
+        datos = df[df.version == version]
+        pendiente, ordenada = np.polyfit(datos["nodos_explorados"].astype(float),
+                                         datos["tiempo_ms"], 1)
+        ajuste[version] = {"pendiente": float(pendiente), "ordenada": float(ordenada)}
+    return ajuste
+
+
+def titulo_grafica(df):
+    """Título con el número de repeticiones leído del CSV (si varía: "1 a 5"). Ignora las 0."""
+    reps = pd.to_numeric(df["repeticiones"], errors="coerce")
+    reps = reps[reps > 0]                       # las "no completada" guardan 0 repeticiones
+    minimo, maximo = int(reps.min()), int(reps.max())
+    cuantas = str(minimo) if minimo == maximo else f"{minimo} a {maximo}"
+    return f"R2: tiempo de Dijkstra vs nodos explorados (mediana de {cuantas} repeticiones)"
+
+
 def usar_escala_log(df):
     """True si max(tiempo_ms) / min(tiempo_ms) >= 100 entre las filas completadas."""
     tiempos = _con_tiempo_numerico(df)["tiempo_ms"].dropna()
@@ -52,7 +93,8 @@ def usar_escala_log(df):
 def grafica_tiempo_vs_explorados(results=RESULTS_R2):
     """Nodos explorados (x) contra tiempo en ms (y), un color y marcador por versión."""
     results = Path(results)
-    df = _con_tiempo_numerico(_leer_mediciones(results)).dropna(subset=["tiempo_ms"])
+    crudo = _leer_mediciones(results)
+    df = _con_tiempo_numerico(crudo).dropna(subset=["tiempo_ms"])
     figura, ejes = plt.subplots(figsize=(7, 4.5))
     estilos = {"lineal": ("tab:blue", "o"), "cola_prioridad": ("tab:orange", "^")}
     for version, (color, marcador) in estilos.items():
@@ -65,7 +107,7 @@ def grafica_tiempo_vs_explorados(results=RESULTS_R2):
         etiqueta_y = "Tiempo (ms, escala logarítmica)"
     ejes.set_xlabel("Nodos explorados")
     ejes.set_ylabel(etiqueta_y)
-    ejes.set_title("R2: tiempo de Dijkstra vs nodos explorados (mediana de 5 repeticiones)")
+    ejes.set_title(titulo_grafica(crudo))
     ejes.legend()
     ejes.grid(alpha=0.3)
     figura.tight_layout()
@@ -89,6 +131,20 @@ def _tabla_mediciones(df):
 def _tabla_cociente(c):
     df = pd.DataFrame({"Mediana": [c["mediana"]], "Mínimo": [c["minimo"]], "Máximo": [c["maximo"]]})
     return a_markdown(df, 2)
+
+
+def _tabla_cociente_por_par(df):
+    tabla = cociente_por_par(df).rename(columns={
+        "origen": "Origen", "destino": "Destino", "nodos_explorados": "Nodos explorados",
+        "lineal_ms": "Lineal (ms)", "cola_ms": "Cola (ms)", "cociente": "Cociente"})
+    return a_markdown(tabla, {"Lineal (ms)": 3, "Cola (ms)": 3, "Cociente": 2})
+
+
+def _tabla_ajuste(ajuste):
+    df = pd.DataFrame({"Versión": list(ajuste),
+                       "Pendiente (ms/nodo)": [a["pendiente"] for a in ajuste.values()],
+                       "Ordenada (ms)": [a["ordenada"] for a in ajuste.values()]})
+    return a_markdown(df, 4)
 
 
 def _tabla_asimetria(a):
@@ -123,6 +179,9 @@ def main(results=RESULTS_R2):
         "## Mediciones (mediana de las repeticiones)\n\n" + _tabla_mediciones(df),
         "## Cociente de tiempos lineal / cola de prioridad (10 pares cercanos)\n\n"
         + _tabla_cociente(c) + aviso,
+        "## Cociente por par cercano, con nodos explorados\n\n" + _tabla_cociente_por_par(df),
+        "## Ajuste tiempo_ms ≈ a + b · nodos_explorados (mínimos cuadrados, por versión)\n\n"
+        + _tabla_ajuste(ajuste_tiempo_explorados(df)),
         f"## Pares y semilla\n\nSemilla: {pares['semilla']} (`{pares['generador']}`). "
         f"{pares['regla']}.",
         "## Asimetría de la matriz de tiempos\n\n" + _tabla_asimetria(_leer_json(results / "r2_asimetria.json")),

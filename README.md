@@ -112,3 +112,28 @@ Pruebas:
 - **Forma del grafo procesado.** Puede estar como `data/processed/grafo_componente.graphml` o `grafo_componente.graphml.gz` (este último si pasa de 100 MB). Hoy es `.graphml` de unos 15 MB.
 - **Medición.** Medir con el portátil enchufado y sin otros procesos pesados. Son 5 repeticiones y se reporta la mediana en ms; los resultados quedan en `results/r1/` y las tablas en `results/r1/tablas_r1.md`, generadas desde los CSV.
 - **Datos actuales.** Se descargaron el 2026-11-10 (ver `fecha_descarga` en `data/processed/metadatos.json`).
+
+## Reproducir R2
+
+Todas las órdenes se corren desde la raíz del repositorio, con el mismo entorno de R1. **Requisito:** haber hecho R1 (debe existir `data/processed/` con el grafo y `lugares_nodos.csv`).
+
+### Comandos, en orden
+
+| Orden | Qué hace | Deja |
+|---|---|---|
+| `.venv/bin/python -m rutas.r2.matriz` | Calcula la matriz de tiempos 42×42 (Dijkstra con cola, sin destino, un origen por fila) y su asimetría. No mide tiempos. | `data/processed/matriz_tiempos.csv` y `results/r2/r2_asimetria.json` |
+| `.venv/bin/python -m rutas.r2.medir_dijkstra` | Selecciona los pares con semilla 2026 y mide: la versión con cola en el mismo proceso, la lineal en un proceso hijo; 5 repeticiones, mediana en ms. Antes comprueba que las dos versiones coinciden; si no coinciden, no escribe nada. Tarda de 1 a 5 min por el arranque de los procesos hijo. Medir con el portátil enchufado y sin otros procesos pesados. | `results/r2/r2_pares.csv`, `r2_pares.json`, `r2_dijkstra.csv` y `maquina.json` |
+| `.venv/bin/python -m rutas.r2.tablas` | Calcula el cociente lineal/cola, la gráfica y las tablas desde los CSV, no a mano. | `results/r2/r2_cociente.csv`, `r2_tiempo_vs_explorados.png` y `tablas_r2.md` |
+
+Pruebas:
+
+```bash
+.venv/bin/python -m pytest -m "not red"                 # sin datos descargados
+.venv/bin/python -m pytest tests/test_red_real_r2.py    # sobre la red real de R2 (necesita data/processed)
+.venv/bin/python -m pytest                              # todas
+```
+
+### Notas
+
+- Las pruebas de los casos de la clase usan la copia versionada `tests/datos/red_clase.json`, así que no necesitan datos descargados.
+- La semilla de los pares (2026) queda documentada en `results/r2/r2_pares.json`.

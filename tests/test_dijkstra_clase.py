@@ -45,6 +45,30 @@ def test_caso_19_orden_de_extraccion(version):
     assert [dist[red.indice[n]] for n in orden] == [0, 1, 3, 4, 5, 8, 9]
 
 
+def test_caso_19_orden_observado_en_la_cola(monkeypatch):
+    """Observación directa (sin deducir): se espía heappop y la primera salida de cada nodo
+    (las posteriores son entradas obsoletas) da el orden de extracción real, sin destino."""
+    from rutas.r2 import dijkstra
+    red, _ = cargar_red_clase()
+    sacados = []
+    heappop_real = dijkstra.heapq.heappop
+
+    def heappop_espia(cola):
+        entrada = heappop_real(cola)
+        sacados.append(entrada)
+        return entrada
+
+    monkeypatch.setattr(dijkstra.heapq, "heappop", heappop_espia)
+    dijkstra_cola(red.adyacencia, red.indice[1])
+    orden, distancias = [], []
+    for distancia, u in sacados:
+        if red.ids[u] not in orden:
+            orden.append(red.ids[u])
+            distancias.append(distancia)
+    assert orden == [1, 2, 3, 4, 5, 7, 6]
+    assert distancias == [0, 1, 3, 4, 5, 8, 9]
+
+
 @VERSION
 def test_caso_21_explorados_con_parada(version):
     red, r2 = cargar_red_clase()

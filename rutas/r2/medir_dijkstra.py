@@ -46,9 +46,11 @@ def _comprobar_versiones(red, pares):
     for par in pares[pares.tipo == "cercano"].itertuples():
         t_c, _, k_c = consultar(red, par.nodo_origen, par.nodo_destino, "cola_prioridad")
         t_l, _, k_l = consultar(red, par.nodo_origen, par.nodo_destino, "lineal")
-        assert abs(t_l - t_c) <= TOLERANCIA_S and k_l == k_c, (
-            f"las versiones difieren en el par {par.origen}->{par.destino}: "
-            f"lineal ({t_l} s, {k_l} explorados) vs cola ({t_c} s, {k_c} explorados)")
+        if abs(t_l - t_c) > TOLERANCIA_S or k_l != k_c:
+            # Error explícito (no assert): sigue funcionando aunque Python corra con -O
+            raise ValueError(
+                f"las versiones difieren en el par {par.origen}->{par.destino}: "
+                f"lineal ({t_l} s, {k_l} explorados) vs cola ({t_c} s, {k_c} explorados)")
 
 
 def _argumentos(red, i_o, i_d):
@@ -71,9 +73,11 @@ def medir_pares(G, red, pares, repeticiones=5, medir_cola=medir_en_proceso, medi
                                repeticiones=repeticiones)
         filas.append(fila(par, "cola_prioridad", tiempo_s, explorados, resultado, distancia_m))
         if par.tipo == "cercano":
+            # Cada fila sale de su propia versión: la lineal se corre aparte (fuera del cronómetro)
+            tiempo_l, _, explorados_l = consultar(red, par.nodo_origen, par.nodo_destino, "lineal")
             resultado = medir_lineal(dijkstra_lineal, (red.adyacencia, i_o, i_d),
                                      repeticiones=repeticiones)
-            filas.append(fila(par, "lineal", tiempo_s, explorados, resultado, distancia_m))
+            filas.append(fila(par, "lineal", tiempo_l, explorados_l, resultado, distancia_m))
         print(f"[{numero}/{len(pares)}] {par.origen}->{par.destino} ({par.tipo}): "
               f"{explorados} explorados, " + ", ".join(
                   f"{f['version']} {f['tiempo_ms']} ms" for f in filas[-2 if par.tipo == 'cercano' else -1:]),

@@ -118,7 +118,8 @@ def comprobar_resultados(df):
     assert cola.index.is_unique and lineal.index.is_unique
     for valor in df["tiempo_ms"]:               # número positivo o el texto "no completada"
         assert valor == "no completada" or _es_tiempo_positivo(valor), valor
-    # la lineal solo se mide en los cercanos, y en ellos las dos versiones coinciden
+    # la lineal solo se mide en los cercanos; su fila (con SUS valores) debe coincidir con la de cola:
+    # tiempo de viaje a 1e-6 s y mismos explorados
     for par, fila_l in lineal.iterrows():
         assert par in cola.index, f"el par {par} no tiene fila de cola"
         fila_c = cola.loc[par]

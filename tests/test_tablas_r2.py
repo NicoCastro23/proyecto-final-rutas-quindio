@@ -88,3 +88,72 @@ def test_main_avisa_si_hay_lineal_no_completada(results):
     tablas.main(results=results)
     texto = (results / "tablas_r2.md").read_text(encoding="utf-8")
     assert "no completada" in texto and "excluy" in texto
+
+
+# ---- Revisión 1: cociente por par, ajuste tiempo ~ a + b*explorados y título de la gráfica ----
+
+# Valores resueltos a mano: lineal = 1 + 0.5*k y cola = 0.5 + 0.1*k, con k = 2, 4, 6 explorados
+FILAS_AJUSTE = [
+    ("P1", "P2", "cola_prioridad", 10.0, 2, 0.7, "cercano", 100.0, 5),
+    ("P1", "P2", "lineal", 10.0, 2, 2.0, "cercano", 100.0, 5),
+    ("P3", "P4", "cola_prioridad", 20.0, 4, 0.9, "cercano", 200.0, 5),
+    ("P3", "P4", "lineal", 20.0, 4, 3.0, "cercano", 200.0, 5),
+    ("P5", "P6", "cola_prioridad", 30.0, 6, 1.1, "cercano", 300.0, 5),
+    ("P5", "P6", "lineal", 30.0, 6, 4.0, "cercano", 300.0, 5),
+]
+
+
+def test_cociente_por_par():
+    tabla = tablas.cociente_por_par(pd.DataFrame(FILAS_AJUSTE, columns=COLUMNAS))
+    assert list(tabla.columns) == ["origen", "destino", "nodos_explorados", "lineal_ms", "cola_ms",
+                                   "cociente"]
+    assert tabla["nodos_explorados"].tolist() == [2, 4, 6]
+    assert tabla["lineal_ms"].tolist() == [2.0, 3.0, 4.0]
+    assert tabla["cola_ms"].tolist() == [0.7, 0.9, 1.1]
+    assert tabla["cociente"].tolist() == pytest.approx([2.0 / 0.7, 3.0 / 0.9, 4.0 / 1.1])
+
+
+def test_cociente_por_par_omite_no_completada():
+    filas = list(FILAS_AJUSTE)
+    filas[3] = ("P3", "P4", "lineal", 20.0, 4, "no completada", "cercano", 200.0, 0)
+    tabla = tablas.cociente_por_par(pd.DataFrame(filas, columns=COLUMNAS))
+    assert tabla["origen"].tolist() == ["P1", "P5"]
+
+
+def test_ajuste_tiempo_vs_explorados():
+    ajuste = tablas.ajuste_tiempo_explorados(pd.DataFrame(FILAS_AJUSTE, columns=COLUMNAS))
+    assert ajuste["lineal"]["pendiente"] == pytest.approx(0.5)
+    assert ajuste["lineal"]["ordenada"] == pytest.approx(1.0)
+    assert ajuste["cola_prioridad"]["pendiente"] == pytest.approx(0.1)
+    assert ajuste["cola_prioridad"]["ordenada"] == pytest.approx(0.5)
+
+
+def test_tablas_md_incluye_cociente_por_par_y_ajuste(tmp_path, results):
+    pd.DataFrame(FILAS_AJUSTE, columns=COLUMNAS).to_csv(results / "r2_dijkstra.csv", index=False)
+    tablas.main(results=results)
+    texto = (results / "tablas_r2.md").read_text(encoding="utf-8")
+    assert "Cociente por par" in texto and "Ajuste" in texto
+    assert "P3" in texto and "3.33" in texto          # 3.0 / 0.9 = 3.33
+    assert "0.5000" in texto and "0.1000" in texto    # pendientes (ms/nodo)
+    assert "1.0000" in texto                          # ordenada de la lineal (ms)
+
+
+def test_titulo_con_repeticiones_iguales_y_distintas():
+    df = pd.DataFrame(FILAS_AJUSTE, columns=COLUMNAS)
+    assert "mediana de 5 repeticiones" in tablas.titulo_grafica(df)
+    df.loc[0, "repeticiones"] = 1
+    assert "mediana de 1 a 5 repeticiones" in tablas.titulo_grafica(df)
+    df["repeticiones"] = 3
+    assert "mediana de 3 repeticiones" in tablas.titulo_grafica(df)
+
+
+def test_grafica_usa_el_titulo_del_csv(results, monkeypatch):
+    df = df_sintetico()
+    df["repeticiones"] = 3
+    df.to_csv(results / "r2_dijkstra.csv", index=False)
+    titulos = []
+    from matplotlib.axes import Axes
+    original = Axes.set_title
+    monkeypatch.setattr(Axes, "set_title", lambda self, t, *a, **k: (titulos.append(t), original(self, t, *a, **k))[1])
+    tablas.grafica_tiempo_vs_explorados(results)
+    assert "3 repeticiones" in titulos[0] and "5" not in titulos[0]

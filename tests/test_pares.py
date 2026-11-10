@@ -19,6 +19,7 @@ def _pares_ordenados(pares):
     return list(zip(pares["origen"], pares["destino"]))
 
 
+@pytest.mark.red
 def test_caso_17_catalogo_real():
     if not (DATA_PROCESSED / "lugares_nodos.csv").exists():
         pytest.skip("falta data/processed/lugares_nodos.csv")
@@ -50,6 +51,7 @@ def test_caso_17_catalogo_real():
         assert fila.nodo_destino == nodo[fila.destino]
 
 
+@pytest.mark.red
 def test_misma_semilla_mismos_pares():
     if not (DATA_PROCESSED / "lugares_nodos.csv").exists():
         pytest.skip("falta data/processed/lugares_nodos.csv")

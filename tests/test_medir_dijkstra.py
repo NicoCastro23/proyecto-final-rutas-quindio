@@ -95,9 +95,22 @@ def test_versiones_distintas_abortan(mundo, monkeypatch):
     monkeypatch.setitem(dijkstra.VERSIONES, "lineal",
                         lambda *a, **k: (lambda r: (r[0] + 1.0, r[1], r[2]))(original(*a, **k)))
     cola, lineal = Falso("cola", 1.0), Falso("lineal", 1.0)
-    with pytest.raises(AssertionError, match="L1.*L2"):
+    with pytest.raises(ValueError, match="L1.*L2"):
         medir_pares(G, red, pares_a_mano(), medir_cola=cola, medir_lineal=lineal)
     assert cola.llamadas == [] and lineal.llamadas == []      # se comprueba ANTES de medir nada
+
+
+def test_comprobacion_previa_no_depende_de_assert(mundo, monkeypatch):
+    # La comprobación debe ser un error explícito (sobrevive a python -O) y nombrar los valores
+    G, red = mundo
+    from rutas.r2 import dijkstra
+    original = dijkstra.VERSIONES["lineal"]
+    monkeypatch.setitem(dijkstra.VERSIONES, "lineal",
+                        lambda *a, **k: (lambda r: (r[0] + 1.0, r[1], r[2]))(original(*a, **k)))
+    with pytest.raises(ValueError) as error:
+        medir_pares(G, red, pares_a_mano(), medir_cola=Falso("c", 1.0), medir_lineal=Falso("l", 1.0))
+    assert not isinstance(error.value, AssertionError)
+    assert "31.0" in str(error.value) and "30.0" in str(error.value)    # lineal vs cola
 
 
 def test_explorados_distintos_abortan(mundo, monkeypatch):
@@ -106,8 +119,40 @@ def test_explorados_distintos_abortan(mundo, monkeypatch):
     original = dijkstra.VERSIONES["lineal"]
     monkeypatch.setitem(dijkstra.VERSIONES, "lineal",
                         lambda *a, **k: (lambda r: (r[0], r[1], r[2] + 1))(original(*a, **k)))
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         medir_pares(G, red, pares_a_mano(), medir_cola=Falso("cola", 1.0), medir_lineal=Falso("lineal", 1.0))
+
+
+def test_fila_lineal_lleva_sus_propios_valores(mundo, monkeypatch):
+    # Lineal "saboteada" pero dentro de la tolerancia (5e-7 s < 1e-6): pasa la comprobación previa,
+    # y su fila del CSV debe traer SU tiempo de viaje, no el de la cola.
+    G, red = mundo
+    from rutas.r2 import dijkstra
+    original = dijkstra.VERSIONES["lineal"]
+    monkeypatch.setitem(dijkstra.VERSIONES, "lineal",
+                        lambda *a, **k: (lambda r: (r[0] + 5e-7, r[1], r[2]))(original(*a, **k)))
+    filas = medir_pares(G, red, pares_a_mano(), medir_cola=Falso("cola", 2.0),
+                        medir_lineal=Falso("lineal", 8.0))
+    por_version = {f["version"]: f for f in filas if f["origen"] == "L1"}
+    assert por_version["cola_prioridad"]["tiempo_viaje_s"] == 30.0
+    assert por_version["lineal"]["tiempo_viaje_s"] == pytest.approx(30.0 + 5e-7, abs=1e-12)
+    assert por_version["lineal"]["tiempo_viaje_s"] != por_version["cola_prioridad"]["tiempo_viaje_s"]
+
+
+def test_fila_lineal_lleva_sus_propios_explorados(mundo, monkeypatch):
+    # La lineal se consulta con consultar(..., "lineal") y no con el resultado de la cola
+    G, red = mundo
+    from rutas.r2 import medir_dijkstra as modulo
+    llamadas = []
+    real = modulo.consultar
+
+    def espia(red_, origen, destino, version="cola_prioridad"):
+        llamadas.append((origen, destino, version))
+        return real(red_, origen, destino, version)
+
+    monkeypatch.setattr(modulo, "consultar", espia)
+    medir_pares(G, red, pares_a_mano(), medir_cola=Falso("cola", 2.0), medir_lineal=Falso("lineal", 8.0))
+    assert (100, 300, "lineal") in llamadas[2:]       # además de la comprobación previa
 
 
 def test_medir_en_hijo_de_verdad(mundo):
@@ -153,7 +198,7 @@ def test_main_no_escribe_si_las_versiones_difieren(tmp_path, monkeypatch):
     pd.DataFrame({"id": ["L1", "L2"], "municipio": ["M", "M"]}).to_csv(catalogo, index=False)
     monkeypatch.setattr(medir_dijkstra, "seleccionar_pares", lambda cat, lug: pares_a_mano().iloc[:1])
     monkeypatch.setitem(dijkstra.VERSIONES, "lineal", lambda *a, **k: (0.0, [], 0))
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         main(processed=tmp_path / "p", catalogo=catalogo, salida=tmp_path / "s", repeticiones=1)
     assert not (tmp_path / "s").exists() or list((tmp_path / "s").iterdir()) == []
 
@@ -201,5 +246,17 @@ def test_comprobar_resultados_detecta_alteraciones(alteracion):
         df = df[["destino", "origen"] + COLUMNAS[2:]]
     elif alteracion == "lineal_en_lejano":
         df.loc[df.index[-1], "version"] = "lineal"
+    with pytest.raises(AssertionError):
+        comprobar_resultados(df)
+
+
+def test_comprobar_resultados_tolerancia_entre_lineal_y_cola():
+    # La fila lineal se compara con la de cola del mismo par: 5e-7 s pasa, 2e-6 s no
+    from tests.test_red_real_r2 import comprobar_resultados
+    df = csv_medido_sintetico()
+    indice = df[df.version == "lineal"].index[0]
+    df.loc[indice, "tiempo_viaje_s"] += 5e-7
+    comprobar_resultados(df)
+    df.loc[indice, "tiempo_viaje_s"] += 1.5e-6
     with pytest.raises(AssertionError):
         comprobar_resultados(df)

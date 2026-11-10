@@ -129,13 +129,14 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## Cierre
 
-- [ ] T15 · Anexo de IA y "Reproducir R2" en el README
+- [x] T15 · Anexo de IA y "Reproducir R2" en el README
   - Archivos: `docs/anexo-ia.md` (entradas de R2: plan y tareas con el agente planner, incluida la revisión de la Puerta 2 (representación indexada); código y pruebas con el implementer; cómo se verificó: casos a mano 1–12, red de la clase 19–23, propiedad contra NetworkX, red real contra `nx.dijkstra_path_length`, matriz releída del CSV, mutaciones temporales); `README.md` (sección "Reproducir R2" después de "Reproducir R1": requisito de haber corrido R1; los comandos `rutas.r2.matriz`, `rutas.r2.medir_dijkstra`, `rutas.r2.tablas` con lo que deja cada uno; semilla 2026; nota de medir enchufado; `pytest -m "not red"` y `pytest`)
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "R2" docs/anexo-ia.md && grep -n "rutas.r2.medir_dijkstra" README.md`
   - anotar en `docs/anexo-ia.md`
+  - Nota: el anexo trae el "Resumen de R2" consolidando los bloques y el README la sección "Reproducir R2" (con las pruebas sin datos, las de la red real de R2 y la suite completa).
 
-- [ ] T16 · Suite completa y regeneración de todos los resultados de R2 (la ejecuta el usuario con el portátil enchufado)
+- [x] T16 · Suite completa y regeneración de todos los resultados de R2 (la ejecuta el usuario con el portátil enchufado)
   - Archivos: ninguno nuevo (regenera `data/processed/matriz_tiempos.csv` y `results/r2/*`)
   - Test primero: no aplica
   - Comando que se entrega al usuario:
@@ -143,6 +144,7 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
     cd /Users/santiagopolaniapinzon/proyecto-final-rutas-quindio && .venv/bin/python -m rutas.r2.matriz && .venv/bin/python -m rutas.r2.medir_dijkstra && .venv/bin/python -m rutas.r2.tablas && .venv/bin/python -m pytest
     ```
   - Verificar: todas pasan y ninguna `red` saltada; `data/processed/matriz_tiempos.csv` sin cambios respecto a B3 (mismo grafo → mismos bytes); `results/r2/` con los 8 archivos de la spec (`r2_pares.csv`, `r2_pares.json`, `r2_dijkstra.csv`, `r2_cociente.csv`, `r2_tiempo_vs_explorados.png`, `r2_asimetria.json`, `maquina.json`, `tablas_r2.md`)
+  - Nota: la medición real la ejecutó el usuario con el portátil enchufado (commit 1cb9a56; `tests/test_red_real_r2.py`: 5 passed). Aquí solo se corrió `pytest -q` (213 passed) y no se regeneró nada más (ni `data/` ni `results/`).
 
 ## Cobertura
 
@@ -181,3 +183,15 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 | Sección 6.7 límite de 5 min → "no completada" | T12 (`medir_en_hijo`), T13 |
 | Sección 6.8 tablas y gráficas desde CSV/JSON | T13 |
 | Anexo de IA | T15 (y cada tarea con IA) |
+
+## Revisión 1 (sugerencias del reviewer)
+
+- [x] R1-1 · La fila `lineal` del CSV lleva sus propios `tiempo_viaje_s` y `nodos_explorados` (`consultar(..., "lineal")` fuera del cronómetro). Pruebas: `test_fila_lineal_lleva_sus_propios_valores`, `test_fila_lineal_lleva_sus_propios_explorados`, `test_comprobar_resultados_tolerancia_entre_lineal_y_cola` (`tests/test_medir_dijkstra.py`).
+  - Nota: `comprobar_resultados` ya comparaba la fila lineal con la de cola por par (±1e-6 s y mismos explorados) y ya fallaba con un CSV sintético alterado (`test_comprobar_resultados_detecta_alteraciones`); solo se actualizó su comentario y se añadió la prueba de frontera de tolerancia. Era tautológica con el CSV real únicamente porque la medición copiaba los valores.
+- [x] R1-2 · La comprobación previa lanza `ValueError` (par y valores) en vez de `assert`.
+- [x] R1-4 · `rutas/r2/tablas.py`: tabla del cociente por par con nodos explorados y ajuste `tiempo_ms ≈ a + b·nodos_explorados` por versión (`numpy.polyfit`, grado 1) en `tablas_r2.md`.
+- [x] R1-5 · El título de la gráfica lee las repeticiones del CSV ("5" o "1 a 5").
+- [x] R1-8 · Las dos pruebas de `tests/test_pares.py` que leen `data/processed/lugares_nodos.csv` llevan `@pytest.mark.red`.
+- [x] R1-9 · `docs/anexo-ia.md`: referencia corregida a `tests/test_config.py::test_rutas_r2`.
+- [x] R1-7 · Caso 19: nueva prueba que observa el orden de extracción de la cola espiando `heapq.heappop` (sin tocar `dijkstra.py`).
+  - Nota: la versión lineal no expone el orden sin cambiar producción; para ella se conserva la deducción por explorados con parada.
