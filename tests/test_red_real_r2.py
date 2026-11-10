@@ -92,3 +92,60 @@ def test_caso_16_matriz_real(datos_reales, tmp_path):
     copia = tmp_path / "copia.csv"
     guardar_matriz(valores.tolist(), ids, copia)
     assert copia.read_bytes() == MATRIZ_TIEMPOS.read_bytes()
+
+
+# ---- B4: resultados medidos (results/r2/r2_dijkstra.csv, lo deja la corrida del usuario) ----
+
+COLUMNAS_ANEXO = ["origen", "destino", "version", "tiempo_viaje_s", "nodos_explorados", "tiempo_ms"]
+
+
+def _es_tiempo_positivo(valor):
+    """Con una celda de texto, pandas lee toda la columna como texto: '1.5' también vale."""
+    try:
+        return float(valor) > 0
+    except ValueError:
+        return False
+
+
+def comprobar_resultados(df):
+    """Reglas que cumple r2_dijkstra.csv; lanza AssertionError si alguna falla."""
+    assert list(df.columns[:6]) == COLUMNAS_ANEXO
+    assert len(df) == 30, f"se esperaban 30 filas y hay {len(df)}"
+    assert set(df["version"]) <= {"cola_prioridad", "lineal"}
+    cola = df[df.version == "cola_prioridad"].set_index(["origen", "destino"])
+    lineal = df[df.version == "lineal"].set_index(["origen", "destino"])
+    assert len(cola) == 20 and len(lineal) == 10, "deben ser 20 de cola y 10 de lineal"
+    assert cola.index.is_unique and lineal.index.is_unique
+    for valor in df["tiempo_ms"]:               # número positivo o el texto "no completada"
+        assert valor == "no completada" or _es_tiempo_positivo(valor), valor
+    # la lineal solo se mide en los cercanos, y en ellos las dos versiones coinciden
+    for par, fila_l in lineal.iterrows():
+        assert par in cola.index, f"el par {par} no tiene fila de cola"
+        fila_c = cola.loc[par]
+        assert fila_l["tipo"] == "cercano" == fila_c["tipo"], par
+        assert abs(float(fila_l["tiempo_viaje_s"]) - float(fila_c["tiempo_viaje_s"])) <= 1e-6, par
+        assert fila_l["nodos_explorados"] == fila_c["nodos_explorados"], par
+
+
+def test_resultados_medidos_versiones_coinciden():
+    import pandas as pd
+    from rutas.config import RESULTS_R2
+    from rutas.r2.tablas import cociente
+    csv = RESULTS_R2 / "r2_dijkstra.csv"
+    if not csv.exists():
+        pytest.skip("falta results/r2/r2_dijkstra.csv (lo genera rutas.r2.medir_dijkstra)")
+    df = pd.read_csv(csv, keep_default_na=False)
+    comprobar_resultados(df)
+    # el cociente guardado sale de este mismo CSV
+    archivo_cociente = RESULTS_R2 / "r2_cociente.csv"
+    if archivo_cociente.exists():
+        guardado = pd.read_csv(archivo_cociente).iloc[0].to_dict()
+        esperado = cociente(df)
+        assert guardado == pytest.approx(esperado, rel=1e-9)
+    # los pares medidos son los de r2_pares.csv, en el mismo orden
+    archivo_pares = RESULTS_R2 / "r2_pares.csv"
+    if archivo_pares.exists():
+        pares = pd.read_csv(archivo_pares)
+        medidos = df[df.version == "cola_prioridad"]
+        assert list(zip(medidos["origen"], medidos["destino"])) == \
+            list(zip(pares["origen"], pares["destino"]))

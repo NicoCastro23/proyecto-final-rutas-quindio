@@ -100,25 +100,28 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B4 · Medición, cociente, gráfica y tablas
 
-- [ ] T12 · Script de medición con la comprobación entre versiones (sección 6; viñeta 2 y verificación de R2)
+- [x] T12 · Script de medición con la comprobación entre versiones (sección 6; viñeta 2 y verificación de R2)
   - Archivos: `rutas/r2/medir_dijkstra.py` (`COLUMNAS`, `fila`, `medir_pares(G, red, pares, repeticiones=5, medir_cola=medir_en_proceso, medir_lineal=medir_en_hijo)` con la secuencia del plan: traducción a índices y corrida con `consultar` fuera del cronómetro, medición de `dijkstra_*(red.adyacencia, i_o, i_d)`, `main(processed=..., catalogo=..., salida=RESULTS_R2, repeticiones=5)` que escribe `r2_pares.csv`, `r2_pares.json`, `r2_dijkstra.csv` y `maquina.json`; `if __name__ == "__main__":`)
   - Test primero: `tests/test_medir_dijkstra.py::test_fila_columnas_y_no_completada` (`list(fila) == COLUMNAS`; resultado no completado → `tiempo_ms == "no completada"`), `::test_medir_pares_con_medidores_falsos` (grafo sintético de `grafo_sintetico` con ids **no consecutivos** (p. ej. 100, 200, 300, 400) y su `Red`; `pares` a mano, 1 cercano + 1 lejano; medidores falsos que registran sus argumentos y devuelven `ResultadoMedicion` fijo: 3 filas en orden cola, lineal, cola; la cola se mide con `dijkstra_cola` y `preparar()` → `(red.adyacencia, red.indice[o], red.indice[d])` (índices, no ids); la lineal con `dijkstra_lineal` y `args == (red.adyacencia, red.indice[o], red.indice[d])`; las filas llevan los **ids** de lugar; `tiempo_viaje_s`, `nodos_explorados` y `distancia_m` correctos a mano), `::test_versiones_distintas_abortan` (monkeypatch de `VERSIONES["lineal"]` (o de `dijkstra_lineal` en el módulo) que devuelve otro tiempo → `AssertionError` con el par y no se escribe nada), `::test_medir_en_hijo_de_verdad` (red diminuta, `repeticiones=1`, medidores reales: `repeticiones == 1` y `tiempo_ms > 0`; comprueba que la función se puede enviar al hijo), `::test_main_sintetico_escribe_archivos` (carpeta sintética como en T11 con 4 lugares de 2 municipios y `monkeypatch` de `seleccionar_pares` para devolver 2 pares; `repeticiones=1`: existen los 4 archivos, `r2_pares.json` con `"semilla": 2026`)
   - Verificar: `.venv/bin/python -m pytest tests/test_medir_dijkstra.py`
   - anotar en `docs/anexo-ia.md`
+  - Nota: la comprobación entre versiones se hace sobre los 10 cercanos **antes** de medir nada (`_comprobar_versiones`), no par por par, para no perder horas de medición si falla. `main` lee el catálogo con `pandas.read_csv` (como la matriz). Se agregaron `test_explorados_distintos_abortan` y `test_main_no_escribe_si_las_versiones_difieren`. La prueba de los medidores falsos detectó que un `lambda` dentro del ciclo capturaba los índices del último par; se corrigió con la función `_argumentos`.
 
-- [ ] T13 · Cociente, gráfica y tablas desde los CSV (caso 18; viñeta 3)
+- [x] T13 · Cociente, gráfica y tablas desde los CSV (caso 18; viñeta 3)
   - Archivos: `rutas/r2/tablas.py` (`cociente(df)`, `usar_escala_log(df)`, `grafica_tiempo_vs_explorados(results)`, `main(results=RESULTS_R2)`; reutiliza `a_markdown` de `rutas.r1.tablas`; `matplotlib.use("Agg")`)
   - Test primero: `tests/test_tablas_r2.py::test_caso_18_cociente` (CSV sintético con 3 pares cercanos: lineal 10, 30, 8 ms y cola 2, 3, 4 ms → cocientes 5, 10, 2 → mediana 5, mínimo 2, máximo 10; más una fila de un par lejano solo con cola que no cuenta; `r2_cociente.csv` con columnas exactas `mediana, minimo, maximo`), `::test_cociente_excluye_no_completada`, `::test_escala_log` (`usar_escala_log(df)` es `True` si `max(tiempo_ms) / min(tiempo_ms) ≥ 100` entre las filas completadas, `False` si no), `::test_grafica_crea_png` (el PNG existe y no está vacío), `::test_tablas_salen_de_los_csv` (`tablas_r2.md` contiene los valores del CSV sintético, la semilla de `r2_pares.json`, el cociente, la asimetría de `r2_asimetria.json` y la unidad "ms" en los encabezados), `::test_main_genera_todo` (cociente, PNG y Markdown en `tmp_path`)
   - Verificar: `.venv/bin/python -m pytest tests/test_tablas_r2.py`
   - anotar en `docs/anexo-ia.md`
+  - Nota: se agregó `test_main_avisa_si_hay_lineal_no_completada` (el aviso del plan en `tablas_r2.md`).
 
-- [ ] T14 · Prueba de los resultados medidos y entrega del comando de medición real al usuario
+- [x] T14 · Prueba de los resultados medidos y entrega del comando de medición real al usuario
   - Archivos: `tests/test_red_real_r2.py::test_resultados_medidos_versiones_coinciden` (se salta si falta `results/r2/r2_dijkstra.csv`: 30 filas, 20 `cola_prioridad` y 10 `lineal`; en cada par cercano `tiempo_viaje_s` igual ± 1e-6 y `nodos_explorados` igual entre versiones; `tiempo_ms` numérico o `"no completada"`; columnas del Anexo presentes y en ese orden al inicio)
   - Test primero: la prueba se ve fallar con un CSV de prueba alterado en `tmp_path` (o mutación temporal) y se restaura; con el CSV ausente queda saltada
   - **No ejecutar la medición.** Entregar al usuario el comando exacto, para correr con el portátil enchufado y sin otros procesos pesados:
     ```bash
     cd /Users/santiagopolaniapinzon/proyecto-final-rutas-quindio && .venv/bin/python -m rutas.r2.medir_dijkstra && .venv/bin/python -m rutas.r2.tablas && .venv/bin/python -m pytest tests/test_red_real_r2.py
     ```
+  - Nota: la regla vive en `comprobar_resultados(df)` (en `tests/test_red_real_r2.py`) y se prueba con CSV sintéticos alterados en `tests/test_medir_dijkstra.py` (7 pruebas); la prueba `red` también compara `r2_cociente.csv` y `r2_pares.csv` si existen. Estimación (una consulta lineal real por par, 1 repetición): lineal ≈ 0,64 s en los 10 cercanos y cola ≈ 0,02 s en los 20; con 5 repeticiones y un proceso hijo por repetición (importar módulos ≈ 1-5 s cada uno) la corrida completa debería tardar de 1 a 5 minutos.
   - Verificar (lo hace el usuario): `results/r2/` tiene `r2_pares.csv`, `r2_pares.json`, `r2_dijkstra.csv` (30 filas), `maquina.json`, `r2_cociente.csv`, `r2_tiempo_vs_explorados.png`, `tablas_r2.md`; la prueba de resultados medidos pasa
   - anotar en `docs/anexo-ia.md`
 
