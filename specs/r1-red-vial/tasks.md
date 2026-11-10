@@ -123,7 +123,7 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## Cierre
 
-- [ ] T19 · Documentación de uso de IA y reproducción de R1
+- [x] T19 · Documentación de uso de IA y reproducción de R1
   - Archivos: `docs/anexo-ia.md` (entradas de R1: plan y tareas generados con Claude Code —agente planner—, código y pruebas generados con el implementer; cómo se verificó cada parte: casos a mano 1–9, `pyproj`, `cKDTree`, `nx.strongly_connected_components`, ida y vuelta de GraphML y `.gz`, pruebas sintéticas del cronómetro), `README.md` (sección "Reproducir R1": `pip install -r requirements.txt`, los 4 comandos y `pytest`; nota de que `data/raw/` no está en git y se regenera con `rutas.r1.descargar`, y de que el grafo puede estar como `.graphml.gz`)
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "R1" docs/anexo-ia.md && grep -n "rutas.r1.construir_red" README.md`

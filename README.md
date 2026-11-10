@@ -78,3 +78,37 @@ Para un typo o renombrar una variable no hace falta el flujo completo: pídeselo
 - Commits pequeños y frecuentes, de cada integrante, con mensajes claros.
 - Antes de empezar: `git pull`. Al terminar un bloque: `git add`, `git commit` y `git push`.
 - El repositorio debe estar compartido con el docente.
+
+## Reproducir R1
+
+Todas las órdenes se corren desde la raíz del repositorio. Se usó Python 3.13.8.
+
+### 1. Entorno
+
+```bash
+python3.13 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+### 2. Comandos, en orden
+
+| Orden | Qué hace | Deja |
+|---|---|---|
+| `.venv/bin/python -m rutas.r1.descargar` | Descarga con OSMnx las 5 redes crudas (departamento y radios de 2, 5, 10 y 20 km). **Requiere internet** y puede tardar varios minutos. `--help` solo muestra la ayuda. | `data/raw/` (no está en git, se regenera con este comando) y `cache/` |
+| `.venv/bin/python -m rutas.r1.construir_red` | Construye la red: pesos en segundos, componente fuertemente conexa, asociación de los 42 lugares al nodo más cercano. Opción `--graphml RUTA` (Plan B): usa el GraphML entregado por el docente en lugar de `data/raw/`. | `data/processed/` (grafo, `lugares_nodos.csv`, `metadatos.json`) y los CSV de tamaños, memoria y velocidades en `results/r1/` |
+| `.venv/bin/python -m rutas.r1.medir_componente` | Mide el tiempo de extraer la componente en las 5 redes (5 repeticiones, mediana en ms). | `results/r1/r1_tiempos_componente.csv` y `results/r1/maquina.json` |
+| `.venv/bin/python -m rutas.r1.tablas` | Genera las tablas desde los CSV, no a mano. | `results/r1/tablas_r1.md` |
+
+Pruebas:
+
+```bash
+.venv/bin/python -m pytest -m "not red"   # sin datos descargados
+.venv/bin/python -m pytest                # todas; las marcadas `red` necesitan data/processed y data/raw
+```
+
+### 3. Notas
+
+- **Reintentos de la descarga.** Ante errores 502/504 el script espera 30, 60, 120 y 240 s y luego se rinde sugiriendo el Plan B. Si Overpass responde 504/429, OSMnx reintenta por su cuenta cada 55 s sin límite: si queda así, corta con Ctrl+C y vuelve a intentar más tarde (la caché `cache/` evita repetir lo ya descargado) o usa el Plan B (`construir_red --graphml RUTA`).
+- **Forma del grafo procesado.** Puede estar como `data/processed/grafo_componente.graphml` o `grafo_componente.graphml.gz` (este último si pasa de 100 MB). Hoy es `.graphml` de unos 15 MB.
+- **Medición.** Medir con el portátil enchufado y sin otros procesos pesados. Son 5 repeticiones y se reporta la mediana en ms; los resultados quedan en `results/r1/` y las tablas en `results/r1/tablas_r1.md`, generadas desde los CSV.
+- **Datos actuales.** Se descargaron el 2026-11-10 (ver `fecha_descarga` en `data/processed/metadatos.json`).
