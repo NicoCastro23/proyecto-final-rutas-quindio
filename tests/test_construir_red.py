@@ -128,3 +128,12 @@ def test_caso_4e_formato_de_velocidades_csv(carpetas):
     for columna in ("pct_osm", "pct_imputado"):
         assert (v[columna] == v[columna].round(1)).all()
     assert (v["pct_osm"] + v["pct_imputado"] - 100).abs().max() <= 0.1 + 1e-9
+
+
+def test_metadatos_guardan_version_de_python(carpetas):
+    """versiones.python = platform.python_version() (revisión 1), junto a OSMnx y NetworkX."""
+    import platform
+    correr(carpetas)
+    meta = json.loads((carpetas["processed"] / "metadatos.json").read_text(encoding="utf-8"))
+    assert meta["versiones"]["python"] == platform.python_version()
+    assert {"osmnx", "networkx"} <= set(meta["versiones"])

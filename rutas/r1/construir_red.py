@@ -6,6 +6,7 @@ Uso (desde la raíz del repo):
 """
 import argparse
 import json
+import platform
 from pathlib import Path
 
 import networkx as nx
@@ -65,7 +66,8 @@ def main(raw=DATA_RAW, graphml=None, catalogo=CATALOGO, salida_processed=DATA_PR
     metadatos = {
         "fuente": fuente,
         "fecha_descarga": descarga.get("fecha_descarga"),
-        "versiones": {"osmnx": ox.__version__, "networkx": nx.__version__},
+        "versiones": {"osmnx": ox.__version__, "networkx": nx.__version__,
+                      "python": platform.python_version()},
         "parametros_descarga": descarga.get("parametros"),
         "poligono": descarga.get("poligono"),
         "V_antes": V_antes, "E_antes": E_antes,

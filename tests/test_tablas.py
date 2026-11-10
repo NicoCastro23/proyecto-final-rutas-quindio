@@ -17,7 +17,8 @@ def carpetas(tmp_path):
     pd.DataFrame({
         "red": ["Radio de 2 km", "Departamento completo"], "V": [701, 8877], "E": [1502, 20245],
         "V_mas_E": [2203, 29122], "tiempo_ms": [12.5, "no completada"],
-        "tiempo_por_elemento_us": [5.675, ""], "repeticiones": [5, 0]}
+        "tiempo_por_elemento_us": [5.675, ""], "repeticiones": [5, 0],
+        "ya_fuertemente_conexa": [True, False]}
     ).to_csv(results / "r1_tiempos_componente.csv", index=False)
     memoria = []
     for red, V, E in (("Red descargada", 8877, 20245), ("Componente fuertemente conexa", 8791, 20132)):
@@ -96,3 +97,54 @@ def test_tabla_alertas_solo_alertados(carpetas):
 
 def test_no_completada_se_muestra(carpetas):
     assert "no completada" in generar(carpetas)
+
+
+def test_tabla_tiempos_muestra_conexidad(carpetas):
+    md = generar(carpetas)
+    bloque = md.split("## Tiempo de")[1].split("## Memoria")[0]
+    filas = [l for l in bloque.splitlines() if l.startswith("|")]
+    assert filas[0].endswith("| Ya fuertemente conexa |")
+    assert filas[2].endswith("| 5 | sí |")                   # Radio de 2 km
+    assert filas[3].endswith("| 0 | no |")                   # Departamento completo
+
+
+def test_tabla_tiempos_sin_columna_de_conexidad(carpetas):
+    """Un CSV viejo (sin ya_fuertemente_conexa) no rompe las tablas: se muestra '—'."""
+    results, _ = carpetas
+    df = pd.read_csv(results / "r1_tiempos_componente.csv").drop(columns="ya_fuertemente_conexa")
+    df.to_csv(results / "r1_tiempos_componente.csv", index=False)
+    md = generar(carpetas)
+    bloque = md.split("## Tiempo de")[1].split("## Memoria")[0]
+    filas = [l for l in bloque.splitlines() if l.startswith("|")]
+    assert filas[0].endswith("| Ya fuertemente conexa |")
+    assert filas[2].endswith("| 5 | — |") and filas[3].endswith("| 0 | — |")
+
+
+def test_pendiente_es_la_mediana_de_us_por_elemento():
+    """Pendiente de la recta de referencia, en ms por elemento = mediana(µs por elemento) / 1000.
+    Las filas 'no completada' (sin tiempo por elemento) no cuentan."""
+    df = pd.DataFrame({"tiempo_por_elemento_us": [2.0, 4.0, 10.0, ""],
+                       "tiempo_ms": [1.0, 2.0, 3.0, "no completada"]})
+    assert tablas.pendiente_referencia_ms(df) == pytest.approx(4.0 / 1000)
+    df_par = pd.DataFrame({"tiempo_por_elemento_us": [2.0, 4.0, 6.0, 10.0]})
+    assert tablas.pendiente_referencia_ms(df_par) == pytest.approx(5.0 / 1000)
+
+
+def test_grafica_tiempos_crea_png(carpetas):
+    results, _ = carpetas
+    salida = tablas.grafica_tiempos(results)
+    assert salida == results / "r1_tiempos_componente.png"
+    assert salida.exists() and salida.stat().st_size > 0
+    assert salida.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_grafica_funciona_sin_columna_de_conexidad(carpetas):
+    results, _ = carpetas
+    df = pd.read_csv(results / "r1_tiempos_componente.csv").drop(columns="ya_fuertemente_conexa")
+    df.to_csv(results / "r1_tiempos_componente.csv", index=False)
+    assert tablas.grafica_tiempos(results).stat().st_size > 0
+
+
+def test_main_genera_tablas_y_grafica(carpetas):
+    generar(carpetas)
+    assert (carpetas[0] / "r1_tiempos_componente.png").exists()

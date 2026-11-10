@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from rutas.config import CATALOGO
-from rutas.r1.catalogo import CatalogoInvalido, cargar_catalogo
+from rutas.r1.catalogo import RECUADRO, CatalogoInvalido, cargar_catalogo
 
 
 def _con_celda_alterada(tmp_path, fila, columna, valor):
@@ -25,9 +25,18 @@ def test_caso_12_catalogo_real():
     assert (atractivos["duracion_visita_min"] > 0).all()
     assert atractivos["fuente_duracion"].str.match(r"Criterio [1-4]").all()
     assert df["verificado"].all()
-    # Cocora (lon -75,489) y PANACA (lon -75,819) deben quedar dentro del recuadro
-    assert df["longitud"].between(-76.0, -75.4).all()
-    assert df["longitud"].min() < -75.81 and df["longitud"].max() < -75.48
+    # Recuadro de la spec: lat 4,0 a 4,9 y lon -76,0 a -75,4. Cocora (lon -75,489) y PANACA
+    # (lon -75,819) deben quedar dentro; un recuadro que termine en -75,5 dejaría fuera a Cocora.
+    for nombre in ("Valle de Cocora", "PANACA"):
+        lugar = df[df["nombre"] == nombre]
+        assert len(lugar) == 1, nombre
+        fila = lugar.iloc[0]
+        assert 4.0 <= fila["latitud"] <= 4.9, nombre
+        assert -76.0 <= fila["longitud"] <= -75.4, nombre
+    assert RECUADRO == {"lat": (4.0, 4.9), "lon": (-76.0, -75.4)}
+    cocora = df[df["nombre"] == "Valle de Cocora"].iloc[0]
+    assert df[df["id"] == "A03"].iloc[0]["nombre"] == "Valle de Cocora"
+    assert not (-76.0 <= cocora["longitud"] <= -75.5)    # un recuadro hasta -75,5 la excluiría
 
 
 def test_caso_12_id_repetido(tmp_path):

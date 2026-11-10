@@ -129,3 +129,22 @@ def test_memoria_real_coincide_con_tamanos(grafo_procesado_real):
     meta = cargar_metadatos(DATA_PROCESSED)
     assert tamanos.loc["Red descargada", "nodos"] == meta["V_antes"]
     assert tamanos.loc["Componente fuertemente conexa", "aristas"] == meta["E_despues"]
+
+
+def test_velocidades_csv_real(grafo_procesado_real):
+    """results/r1/r1_velocidades.csv real: columnas, Total = E de la componente, tabla y porcentajes."""
+    ruta = RESULTS_R1 / "r1_velocidades.csv"
+    if not ruta.exists():
+        pytest.skip("falta results/r1/r1_velocidades.csv")
+    texto = pd.read_csv(ruta, dtype=str, keep_default_na=False)
+    v = pd.read_csv(ruta)
+    assert list(v.columns) == ["highway", "velocidad_tabla_kmh", "aristas", "con_maxspeed_osm",
+                               "pct_osm", "pct_imputado"]
+    total = v[v["highway"] == "Total"].iloc[0]
+    assert total["aristas"] == grafo_procesado_real.number_of_edges()
+    tabla = v.set_index("highway")["velocidad_tabla_kmh"]
+    assert tabla["ladder"] == 20 and tabla["residential"] == 30
+    assert ((v["pct_osm"] + v["pct_imputado"]) - 100).abs().le(0.1 + 1e-9).all()
+    for columna in ("pct_osm", "pct_imputado"):         # a lo más 1 decimal en el texto del CSV
+        decimales = texto[columna].str.split(".").str[1].fillna("").str.len()
+        assert (decimales <= 1).all(), columna

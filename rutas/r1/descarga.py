@@ -54,6 +54,9 @@ def con_reintentos(funcion, esperas=(30, 60, 120, 240), dormir=time.sleep):
                 mensaje = (f"La descarga falló tras {numero_intento} intentos "
                            f"(último error: {error}). Use el Plan B: el GraphML del docente "
                            f"(--graphml ruta).")
+                # Se relanza el mismo tipo de error con un mensaje más útil. Supone que el
+                # constructor acepta un solo argumento de texto; las excepciones que se
+                # reintentan aquí (ResponseStatusCodeError, HTTPError) lo cumplen.
                 raise type(error)(mensaje) from error
             espera = esperas[numero_intento - 1]
             LOG.warning("Error %s del servidor; espera %s s y reintenta (intento %s de %s)",

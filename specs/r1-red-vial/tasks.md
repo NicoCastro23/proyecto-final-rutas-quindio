@@ -161,3 +161,15 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 | Sección 4 (catálogo, fecha de descarga) | T3, T11, T13 |
 | Sección 6 (protocolo; cronómetro en dos modos) | T15, T15b, T16, T17, T18 |
 | Anexo de IA | T19 (y cada tarea con IA) |
+
+## Revisión 1 (sugerencias del reviewer)
+
+- [x] R1.1 · `docs/anexo-ia.md`: aristas paralelas "se conservan todas; `mejor_arista` elige la de menor tiempo" (sin prueba; el resto del anexo no contradice la spec)
+- [x] R1.2 · Columna `ya_fuertemente_conexa` en `r1_tiempos_componente.csv` (`medir_componente.py`, calculada fuera del cronómetro) y en la tabla de tiempos de `tablas_r1.md` ("—" si el CSV no la trae); `plan.md` ya no la promete en `metadatos.json`
+  - Test primero: `tests/test_medir_componente.py` (fila, `main`, red ciclo → True), `tests/test_tablas.py::test_tabla_tiempos_muestra_conexidad`, `::test_tabla_tiempos_sin_columna_de_conexidad`
+- [x] R1.3 · `tests/test_red_real.py::test_velocidades_csv_real` (columnas, Total = E de la componente, ladder 20, residential 30, pct_osm + pct_imputado = 100 ± 0,1, ≤ 1 decimal)
+- [x] R1.4 · `tests/test_catalogo.py::test_caso_12_catalogo_real`: aserciones explícitas de Cocora y PANACA dentro del recuadro y de que un recuadro hasta −75,5 excluiría a Cocora
+- [x] R1.5 · a) `versiones.python` en `metadatos.json` (`tests/test_construir_red.py::test_metadatos_guardan_version_de_python`); b) `plan.md` al día (columnas de velocidades, `PARAMETROS`, firmas de `centro_plaza_bolivar` y `descargar_radio`, `.gitignore`); c) comentario sobre `raise type(error)(mensaje)` en `descarga.py`
+- [x] R1.6 · Gráfica `results/r1/r1_tiempos_componente.png` desde el CSV (`tablas.grafica_tiempos`, `pendiente_referencia_ms`; la genera `python -m rutas.r1.tablas`)
+  - Test primero: `tests/test_tablas.py::test_pendiente_es_la_mediana_de_us_por_elemento`, `::test_grafica_tiempos_crea_png`, `::test_grafica_funciona_sin_columna_de_conexidad`, `::test_main_genera_tablas_y_grafica`
+  - Nota: la medición con la columna nueva y la gráfica real las genera el usuario (portátil enchufado); `results/r1/` actual aún no los trae.

@@ -17,7 +17,7 @@ En R1 el enunciado **no** pide implementación propia del algoritmo de component
 
 - `data/catalogo.csv` (42 filas). Textos reales de `categoria`: `"Cabecera municipal"` (12), `"Atractivo turístico"` (15), `"Finca u hotel rural"` (9), `"Centro de acopio o trilladora"` (6). `pandas.read_csv` lee `verificado` como `bool` y `fuente_duracion` empieza siempre por `"Criterio 1:"` … `"Criterio 4:"`. Lat ∈ [4,2065; 4,6771], lon ∈ [−75,8188; −75,4890].
 - `.venv` ya tiene todo lo necesario (verificado con `pip freeze`): osmnx 2.1.1, networkx 3.7, numpy 2.5.3, pandas 3.0.5, geopandas 1.2.0, pyproj 3.8.0, scipy 1.18.1, shapely 2.2.0, matplotlib 3.11.2, pytest 9.2.0, psutil 7.2.2, Flask 3.1.3, folium 0.20.0, requests 2.34.2. **No hace falta instalar nada**; solo fijarlas en `requirements.txt`.
-- `.gitignore` existe (solo ignora `estudio/`); se le agregan líneas. No hay código, `requirements.txt` ni `docs/anexo-ia.md`.
+- `.gitignore` hoy: ignora `estudio/`, `docs/` y `.DS_Store` (conservados por decisión del grupo), `data/raw/`, `cache/`, `__pycache__/` y `.pytest_cache/`; `data/processed/` **no** se ignora.
 - `ox.load_graphml` de OSMnx 2.1.1 acepta `graphml_str=` además de `filepath` (verificado en `osmnx/io.py`): así el `.graphml.gz` se lee descomprimiendo en memoria y pasando el texto, con los mismos `node_dtypes`/`edge_dtypes`, sin archivos temporales.
 - Lo que consumen los siguientes requerimientos: R2 lee el grafo procesado, `lugares_nodos.csv` y usa `mejor_arista`; R3 lee `x_utm`, `y_utm` de los nodos; R5 usa el grafo, `mejor_arista` (geometría) y las tablas; R2 y R4 usan `rutas/medicion.py`. Por eso `cargar_grafo_procesado`, `cargar_lugares_nodos`, `mejor_arista`, `medir_en_proceso` y `medir_en_hijo` son API pública estable.
 
@@ -95,7 +95,8 @@ def agregar_pesos(G) -> MultiDiGraph
     # 4) verificar_velocidades(G). Devuelve el mismo G.
 def verificar_velocidades(G) -> None      # ValueError si algún speed_kph no es finito > 0 o travel_time NaN
 def resumen_velocidades(G) -> pd.DataFrame
-    # columnas: highway, aristas, con_maxspeed_osm, pct_osm, pct_imputado; fila final "Total".
+    # columnas: highway, velocidad_tabla_kmh, aristas, con_maxspeed_osm, pct_osm, pct_imputado; fila final "Total"
+    # (velocidad_tabla_kmh vacía en el Total; en el CSV los porcentajes van a 1 decimal).
     # highway lista -> primer elemento (igual que OSMnx).
 ```
 
@@ -165,14 +166,14 @@ Sin `round` ni `float_format`: `save_graphml` escribe `str(float)` (representaci
 # codigo_http(error) -> int | None   (e.response.status_code o el número en el mensaje de ResponseStatusCodeError)
 # Nota: OSMnx 2.1.1 ya reintenta 429/504 de Overpass cada 55 s sin límite; ver spec, casos borde.
 LUGAR = "Quindío, Colombia"
-PARAMETROS = {"network_type": "drive", "retain_all": True, "simplify": True}
-def centro_plaza_bolivar(catalogo) -> tuple[float, float]       # (lat, lon) de C01
+PARAMETROS = {"network_type": "drive", "retain_all": True}   # simplify no se pasa: es el defecto de OSMnx (True)
+def centro_plaza_bolivar() -> tuple[float, float]       # (lat, lon) de C01, leído con cargar_catalogo()
 def comprobar_poligono_departamento(gdf) -> dict
     # exige addresstype == "state" y área en UTM entre 1 500 y 2 200 km² (Quindío ≈ 1 845 km²);
     # devuelve {display_name, addresstype, area_km2} para metadatos; si no, ValueError.
 def descargar_departamento() -> MultiDiGraph     # ox.graph_from_place(LUGAR, **PARAMETROS)
-def descargar_radio(centro, dist_m) -> MultiDiGraph
-    # ox.graph_from_point(centro, dist=dist_m, dist_type="bbox", **PARAMETROS)
+def descargar_radio(radio_m, dormir=time.sleep) -> MultiDiGraph      # el centro es centro_plaza_bolivar()
+    # ox.graph_from_point(centro, dist=radio_m, dist_type="bbox", **PARAMETROS)
 def cargar_red_cruda(ruta) -> MultiDiGraph        # ox.load_graphml; sirve también para el GraphML del docente
 ```
 
@@ -238,11 +239,11 @@ No hay algoritmo recursivo ni de programación dinámica en R1, así que no apli
 | `data/raw/descarga.json` | `descargar.py` | no | `fecha_descarga` (ISO 8601), `osmnx`, `networkx`, `lugar`, `centro` (lat, lon de C01), `radios_m`, `parametros`, `poligono` (display_name, addresstype, area_km2) |
 | `data/processed/grafo_componente.graphml` **o** `grafo_componente.graphml.gz` (nunca ambos) | `construir_red.py` | sí | Spec: nodos `y, x, x_utm, y_utm`; aristas `length, speed_kph, travel_time, highway, maxspeed_original` + lo que trae OSMnx (`geometry`, `osmid`, `oneway`, `key`…). `.gz` si el `.graphml` pasa de 100 000 000 B |
 | `data/processed/lugares_nodos.csv` | `construir_red.py` | sí | `id_lugar,id_nodo,distancia_al_nodo_m,alerta_500m`, orden del catálogo |
-| `data/processed/metadatos.json` | `construir_red.py` | sí | contenido de `descarga.json` (o `"fuente": "GraphML del docente"` + ruta si se usó `--graphml`) + `V_antes, E_antes, V_despues, E_despues`, `ya_fuertemente_conexa`, `archivo_grafo`, `comprimido` |
+| `data/processed/metadatos.json` | `construir_red.py` | sí | contenido de `descarga.json` (o `"fuente": "GraphML del docente"` + ruta si se usó `--graphml`) + `versiones` (`osmnx`, `networkx`, `python`) + `V_antes, E_antes, V_despues, E_despues`, `archivo_grafo`, `comprimido`. La conexidad previa de cada red no va aquí: está en la columna `ya_fuertemente_conexa` de `r1_tiempos_componente.csv` |
 | `results/r1/r1_tamanos.csv` | `construir_red.py` | sí | `red,nodos,aristas`; filas `Red descargada`, `Componente fuertemente conexa` |
 | `results/r1/r1_memoria.csv` | `construir_red.py` | sí | `red,V,E,representacion,supuesto,bytes,MB`; 4 filas en este orden: (Red descargada, Matriz de adyacencia), (Red descargada, Listas de adyacencia), (Componente fuertemente conexa, Matriz…), (Componente fuertemente conexa, Listas…). `bytes` entero, `MB = bytes / 1e6` |
 | `results/r1/r1_velocidades.csv` | `construir_red.py` | sí | `highway,velocidad_tabla_kmh,aristas,con_maxspeed_osm,pct_osm,pct_imputado` + fila `Total` (sobre la componente; porcentajes a 1 decimal) |
-| `results/r1/r1_tiempos_componente.csv` | `medir_componente.py` | sí | `red,V,E,V_mas_E,tiempo_ms,tiempo_por_elemento_us,repeticiones`; filas `Radio de 2 km`, `Radio de 5 km`, `Radio de 10 km`, `Radio de 20 km`, `Departamento completo`; V y E de la **red cruda** medida; si no completada: `tiempo_ms = "no completada"`, `tiempo_por_elemento_us` vacío, `repeticiones = 0` |
+| `results/r1/r1_tiempos_componente.csv` | `medir_componente.py` | sí | `red,V,E,V_mas_E,tiempo_ms,tiempo_por_elemento_us,repeticiones,ya_fuertemente_conexa` (esta última, revisión 1: `nx.is_strongly_connected` de la red cruda, calculado fuera del cronómetro); filas `Radio de 2 km`, `Radio de 5 km`, `Radio de 10 km`, `Radio de 20 km`, `Departamento completo`; V y E de la **red cruda** medida; si no completada: `tiempo_ms = "no completada"`, `tiempo_por_elemento_us` vacío, `repeticiones = 0` |
 | `results/r1/maquina.json` | `medir_componente.py` | sí | `procesador, ram_gb, so, python` |
 | `results/r1/tablas_r1.md` | `tablas.py` | sí | Tablas Markdown: tamaños, tiempos (ms y µs/elemento), memoria (red, V, E, representación, B y MB), velocidades (%), lugares con `alerta_500m` (desde `lugares_nodos.csv` + nombre del catálogo) |
 
@@ -275,7 +276,7 @@ Las pruebas sin internet usan grafos sintéticos construidos en `tests/conftest.
 - **Repeticiones**: 5, mediana; si la primera pasa de 60 s, una sola; si pasa de 300 s → `"no completada"` (en el modo (a) se reporta después de terminar; no se espera que ocurra).
 - **Unidad**: ms (`perf_counter_ns / 1e6`); `tiempo_por_elemento_us = tiempo_ms · 1000 / (V + E)`.
 - **Máquina**: `maquina.json` con `platform`, `psutil.virtual_memory().total` y, en macOS, `sysctl -n machdep.cpu.brand_string` para el procesador.
-- **Análisis** (en el informe, no en código): comparar `tiempo_por_elemento_us` entre filas; `metadatos`/la propia prueba indican si alguna red ya era fuertemente conexa.
+- **Análisis** (en el informe, no en código): comparar `tiempo_por_elemento_us` entre filas; la columna `ya_fuertemente_conexa` de `r1_tiempos_componente.csv` indica si alguna red ya era fuertemente conexa. La gráfica `r1_tiempos_componente.png` (revisión 1) la genera `tablas.py` desde ese CSV.
 - **Modo (b)** se implementa y prueba en R1 (T15b) porque `rutas/medicion.py` es compartido, pero R1 no lo usa; lo usarán R2 (Dijkstra lineal) y R4 (fuerza bruta, Held-Karp).
 
 ## Trazabilidad

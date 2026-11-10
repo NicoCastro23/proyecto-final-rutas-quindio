@@ -97,7 +97,7 @@ python3.13 -m venv .venv
 | `.venv/bin/python -m rutas.r1.descargar` | Descarga con OSMnx las 5 redes crudas (departamento y radios de 2, 5, 10 y 20 km). **Requiere internet** y puede tardar varios minutos. `--help` solo muestra la ayuda. | `data/raw/` (no está en git, se regenera con este comando) y `cache/` |
 | `.venv/bin/python -m rutas.r1.construir_red` | Construye la red: pesos en segundos, componente fuertemente conexa, asociación de los 42 lugares al nodo más cercano. Opción `--graphml RUTA` (Plan B): usa el GraphML entregado por el docente en lugar de `data/raw/`. | `data/processed/` (grafo, `lugares_nodos.csv`, `metadatos.json`) y los CSV de tamaños, memoria y velocidades en `results/r1/` |
 | `.venv/bin/python -m rutas.r1.medir_componente` | Mide el tiempo de extraer la componente en las 5 redes (5 repeticiones, mediana en ms). | `results/r1/r1_tiempos_componente.csv` y `results/r1/maquina.json` |
-| `.venv/bin/python -m rutas.r1.tablas` | Genera las tablas desde los CSV, no a mano. | `results/r1/tablas_r1.md` |
+| `.venv/bin/python -m rutas.r1.tablas` | Genera las tablas y la gráfica desde los CSV, no a mano. | `results/r1/tablas_r1.md` y `results/r1/r1_tiempos_componente.png` (gráfica) |
 
 Pruebas:
 

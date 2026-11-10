@@ -16,13 +16,16 @@ from rutas.medicion import info_maquina, medir_en_proceso
 from rutas.r1.componente import contar, obtener_componente
 from rutas.r1.descarga import cargar_red_cruda
 
-COLUMNAS = ["red", "V", "E", "V_mas_E", "tiempo_ms", "tiempo_por_elemento_us", "repeticiones"]
+COLUMNAS = ["red", "V", "E", "V_mas_E", "tiempo_ms", "tiempo_por_elemento_us", "repeticiones",
+            "ya_fuertemente_conexa"]
 
 
-def fila_tiempos(nombre, V, E, resultado):
+def fila_tiempos(nombre, V, E, resultado, ya_fuertemente_conexa):
     """Una fila del CSV. tiempo_por_elemento_us = tiempo_ms * 1000 / (V + E).
 
     Si la medición no se completó: tiempo "no completada", sin tiempo por elemento.
+    ya_fuertemente_conexa dice si la red cruda ya lo era (entonces largest_component no
+    tuvo nada que quitar); se calcula fuera del cronómetro.
     """
     if not resultado.completada:
         tiempo, por_elemento = "no completada", ""
@@ -30,7 +33,8 @@ def fila_tiempos(nombre, V, E, resultado):
         tiempo = resultado.tiempo_ms
         por_elemento = tiempo * 1000 / (V + E)
     return {"red": nombre, "V": V, "E": E, "V_mas_E": V + E, "tiempo_ms": tiempo,
-            "tiempo_por_elemento_us": por_elemento, "repeticiones": resultado.repeticiones}
+            "tiempo_por_elemento_us": por_elemento, "repeticiones": resultado.repeticiones,
+            "ya_fuertemente_conexa": ya_fuertemente_conexa}
 
 
 def preparar_copia(G):
@@ -50,9 +54,9 @@ def main(raw=DATA_RAW, salida=RESULTS_R1):
     for nombre, archivo in ARCHIVOS_CRUDOS.items():
         G = cargar_red_cruda(raw / archivo)             # fuera del cronómetro
         V, E = contar(G)                                # fuera del cronómetro
-        ya_conexa = nx.is_strongly_connected(G)         # solo informativo, fuera del cronómetro
+        ya_conexa = nx.is_strongly_connected(G)         # fuera del cronómetro; va al CSV
         resultado = medir_en_proceso(obtener_componente, preparar_copia(G))
-        filas.append(fila_tiempos(nombre, V, E, resultado))
+        filas.append(fila_tiempos(nombre, V, E, resultado, ya_conexa))
         print(f"{nombre}: V={V} E={E} mediana={resultado.tiempo_ms} ms "
               f"({resultado.repeticiones} rep.) ya fuertemente conexa: {ya_conexa}")
 

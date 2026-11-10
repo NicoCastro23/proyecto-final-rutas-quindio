@@ -3,7 +3,8 @@
   "fecha_descarga": "2026-11-10T13:38:59-05:00",
   "versiones": {
     "osmnx": "2.1.1",
-    "networkx": "3.7"
+    "networkx": "3.7",
+    "python": "3.13.8"
   },
   "parametros_descarga": {
     "network_type": "drive",
