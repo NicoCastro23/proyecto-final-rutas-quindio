@@ -1,0 +1,13 @@
+highway,velocidad_tabla_kmh,aristas,con_maxspeed_osm,pct_osm,pct_imputado
+ladder,20,4,0,0.0,100.0
+primary,60,563,166,29.5,70.5
+primary_link,60,36,0,0.0,100.0
+residential,30,13488,304,2.3,97.7
+secondary,50,1282,157,12.2,87.8
+secondary_link,50,48,4,8.3,91.7
+tertiary,40,1843,318,17.3,82.7
+tertiary_link,40,5,0,0.0,100.0
+trunk,80,414,116,28.0,72.0
+trunk_link,80,37,1,2.7,97.3
+unclassified,30,2412,237,9.8,90.2
+Total,,20132,1303,6.5,93.5

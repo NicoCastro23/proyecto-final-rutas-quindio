@@ -19,6 +19,8 @@ VELOCIDADES = {
     "tertiary": 40, "tertiary_link": 40,
     "unclassified": 30, "residential": 30, "road": 30,
     "living_street": 20, "service": 20, "track": 20,
+    # Etiqueta rara en una red "drive" (en OSM es una escalera): la más lenta de la tabla.
+    "ladder": 20,
 }
 
 
@@ -64,7 +66,8 @@ def _primer_tipo(highway):
 def resumen_velocidades(G):
     """Tabla por tipo de vía: cuántas aristas traen maxspeed de OSM y cuántas se imputaron.
 
-    Columnas: highway, aristas, con_maxspeed_osm, pct_osm, pct_imputado. Última fila: Total.
+    Columnas: highway, velocidad_tabla_kmh, aristas, con_maxspeed_osm, pct_osm,
+    pct_imputado. Última fila: Total.
     Requiere haber corrido agregar_pesos (usa la marca maxspeed_original).
     """
     conteos = {}  # tipo -> [aristas, con_maxspeed_osm]
@@ -76,14 +79,15 @@ def resumen_velocidades(G):
 
     filas = []
     for tipo in sorted(conteos, key=str):
-        filas.append(_fila_resumen(tipo, *conteos[tipo]))
+        filas.append(_fila_resumen(tipo, *conteos[tipo], VELOCIDADES.get(tipo)))
     total = sum(c[0] for c in conteos.values())
     con_osm = sum(c[1] for c in conteos.values())
-    filas.append(_fila_resumen("Total", total, con_osm))
+    filas.append(_fila_resumen("Total", total, con_osm, None))
     return pd.DataFrame(filas)
 
 
-def _fila_resumen(tipo, aristas, con_osm):
+def _fila_resumen(tipo, aristas, con_osm, velocidad_tabla):
+    # velocidad_tabla es None en la fila Total (y en un tipo fuera de la tabla): queda vacía.
     pct_osm = 100.0 * con_osm / aristas if aristas else 0.0
-    return {"highway": tipo, "aristas": aristas, "con_maxspeed_osm": con_osm,
+    return {"highway": tipo, "velocidad_tabla_kmh": velocidad_tabla, "aristas": aristas, "con_maxspeed_osm": con_osm,
             "pct_osm": pct_osm, "pct_imputado": 100.0 - pct_osm if aristas else 0.0}

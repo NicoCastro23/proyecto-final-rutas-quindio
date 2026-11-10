@@ -1,0 +1,6 @@
+{
+  "procesador": "Apple M5",
+  "ram_gb": 16.0,
+  "so": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.8"
+}

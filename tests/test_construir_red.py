@@ -104,3 +104,27 @@ def test_pipeline_comprime_si_supera_umbral(carpetas):
     meta = json.loads((processed / "metadatos.json").read_text(encoding="utf-8"))
     assert meta["comprimido"] is True
     assert cargar_grafo_procesado(processed).number_of_nodes() == 3
+
+
+def test_velocidades_se_calculan_sobre_la_componente(carpetas):
+    """El Total de r1_velocidades.csv es E de la componente (4), no E de la red cruda (5):
+    la arista 'track' 3 -> 4 queda fuera de la componente y no debe aparecer."""
+    correr(carpetas)
+    velocidades = pd.read_csv(carpetas["results"] / "r1_velocidades.csv")
+    meta = json.loads((carpetas["processed"] / "metadatos.json").read_text(encoding="utf-8"))
+    total = velocidades[velocidades["highway"] == "Total"].iloc[0]
+    assert meta["E_antes"] == 5 and meta["E_despues"] == 4
+    assert total["aristas"] == meta["E_despues"]
+    assert "track" not in set(velocidades["highway"])
+
+
+def test_caso_4e_formato_de_velocidades_csv(carpetas):
+    correr(carpetas)
+    v = pd.read_csv(carpetas["results"] / "r1_velocidades.csv")
+    assert list(v.columns) == ["highway", "velocidad_tabla_kmh", "aristas", "con_maxspeed_osm",
+                               "pct_osm", "pct_imputado"]
+    assert v.loc[v["highway"] == "residential", "velocidad_tabla_kmh"].iloc[0] == 30
+    assert v["velocidad_tabla_kmh"].iloc[-1] != v["velocidad_tabla_kmh"].iloc[-1]  # vacía (NaN)
+    for columna in ("pct_osm", "pct_imputado"):
+        assert (v[columna] == v[columna].round(1)).all()
+    assert (v["pct_osm"] + v["pct_imputado"] - 100).abs().max() <= 0.1 + 1e-9

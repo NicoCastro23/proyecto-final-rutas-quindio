@@ -81,7 +81,10 @@ def main(raw=DATA_RAW, graphml=None, catalogo=CATALOGO, salida_processed=DATA_PR
     pd.DataFrame(filas_memoria(RED_ANTES, V_antes, E_antes)
                  + filas_memoria(RED_DESPUES, V_despues, E_despues)
                  ).to_csv(salida_results / "r1_memoria.csv", index=False)
-    resumen_velocidades(G).to_csv(salida_results / "r1_velocidades.csv", index=False)
+    # Solo el CSV (tabla de resumen) se redondea a 1 decimal; los pesos del grafo no.
+    resumen = resumen_velocidades(componente).round({"pct_osm": 1, "pct_imputado": 1})
+    resumen["velocidad_tabla_kmh"] = resumen["velocidad_tabla_kmh"].astype("Int64")  # 20, no 20.0
+    resumen.to_csv(salida_results / "r1_velocidades.csv", index=False)
 
     # 6. Resumen en pantalla.
     print(f"Red descargada: {V_antes} nodos, {E_antes} aristas")

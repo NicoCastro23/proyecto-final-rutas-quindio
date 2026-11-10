@@ -1,0 +1,31 @@
+{
+  "fuente": "OSMnx (Overpass)",
+  "fecha_descarga": "2026-11-10T13:38:59-05:00",
+  "versiones": {
+    "osmnx": "2.1.1",
+    "networkx": "3.7"
+  },
+  "parametros_descarga": {
+    "network_type": "drive",
+    "retain_all": true,
+    "dist_type": "bbox",
+    "lugar": "Quindío, Colombia",
+    "radios_m": [
+      2000,
+      5000,
+      10000,
+      20000
+    ]
+  },
+  "poligono": {
+    "addresstype": "state",
+    "area_km2": 1934.6455019526668,
+    "nombre": "Quindío, RAP Eje Cafetero, Colombia"
+  },
+  "V_antes": 8877,
+  "E_antes": 20245,
+  "V_despues": 8791,
+  "E_despues": 20132,
+  "archivo_grafo": "grafo_componente.graphml",
+  "comprimido": false
+}

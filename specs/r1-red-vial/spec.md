@@ -30,7 +30,7 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 - `results/r1/r1_tamanos.csv`: columnas `red, nodos, aristas` (filas "Red descargada", "Componente fuertemente conexa"), formato del Anexo.
 - `results/r1/r1_tiempos_componente.csv`: `red, V, E, V_mas_E, tiempo_ms, tiempo_por_elemento_us, repeticiones`, filas Radio de 2/5/10/20 km y Departamento completo (columnas del Anexo ampliadas, no reducidas).
 - `results/r1/r1_memoria.csv`: `red, V, E, representacion, supuesto, bytes, MB`, con **dos redes** (decisión de la Puerta 2): la red descargada del departamento y la componente fuertemente conexa, cada una con su fila de matriz y su fila de listas (4 filas).
-- `results/r1/r1_velocidades.csv`: porcentaje de aristas con `maxspeed` de OSM y porcentaje imputado, por tipo de vía.
+- `results/r1/r1_velocidades.csv` (sobre la **componente**; va al documento técnico): `highway, velocidad_tabla_kmh, aristas, con_maxspeed_osm, pct_osm, pct_imputado`. `velocidad_tabla_kmh` = velocidad de la tabla del grupo que reciben los tramos de ese tipo sin `maxspeed` (los que sí traen `maxspeed` usan el suyo); vacío en la fila `Total` y en un tipo que no esté en la tabla (que no debería haber). `pct_osm` y `pct_imputado` redondeados a **1 decimal** (es una tabla de resumen; los pesos del grafo siguen sin redondear). Una fila por tipo (primer elemento si `highway` es lista) y una fila `Total` con aristas = E de la componente.
 - `results/r1/maquina.json`: procesador, RAM, SO, versión de Python.
 - Tablas (Markdown) generadas **desde** esos CSV por un script, nunca a mano.
 
@@ -48,7 +48,9 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
    | secondary, secondary_link | 50 |
    | tertiary, tertiary_link | 40 |
    | unclassified, residential, road | 30 |
-   | living_street, service, track | 20 |
+   | living_street, service, track, ladder | 20 |
+
+   **`ladder` (decisión del usuario tras la corrida real del 2026-11-10):** en la red real aparecieron aristas con `highway = ladder` (14 en la red descargada, 4 en la componente; en OSM es una escalera vertical, una etiqueta rara o errónea en una red `drive`). Sin valor en la tabla OSMnx les ponía el promedio general (48,125 km/h), más rápido que `residential`, y las rutas las habrían preferido. Se les asignan 20 km/h, la velocidad más baja de la tabla, y el informe las menciona como etiquetas raras de OSM. Las aristas `['residential', 'ladder']` siguen tomando el primer elemento (`residential`, 30 km/h). Si en otra descarga aparece otro tipo fuera de la tabla, se reporta y se decide igual.
 
    Todo tramo termina con velocidad finita > 0 (se comprueba; si no, error). Se reportan porcentajes con `maxspeed` de OSM e imputados. El tiempo es una estimación del modelo (sin tráfico, pendientes ni estado de la vía).
    - **Aristas paralelas: se conservan todas** (decisión del grupo). Dijkstra (R2) las relaja todas y queda la de menor tiempo de forma natural.
@@ -60,7 +62,7 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 6. **Catálogo (sección 4).** Validación al cargar: 42 filas; conteos por categoría exactamente (12, 15, 9, 6), que cumplen los mínimos (12, 15, 8, 5); `id` únicos; categoría dentro de las 4; todo atractivo con `duracion_visita_min > 0` y `fuente_duracion` con criterio 1 a 4; `verificado = TRUE` en todas; coordenadas dentro del recuadro lat 4,0 a 4,9 y lon −76,0 a −75,4. Cualquier violación → error con mensaje que diga la fila y la regla.
 
 ## Casos borde
-- Arista sin `maxspeed` ni `highway` de la tabla → la imputa OSMnx (promedio), nunca 0 ni `NaN`; se comprueba velocidad finita > 0 en todas.
+- Arista sin `maxspeed` ni `highway` de la tabla → la imputa OSMnx (promedio), nunca 0 ni `NaN`; se comprueba velocidad finita > 0 en todas. En la red real del 2026-11-10 todos los tipos presentes están en la tabla (`ladder` se agregó con 20 km/h).
 - `maxspeed = ["30", "50"]` → 40 km/h. `maxspeed = "none"` o `"signals"` → faltante, usa la tabla.
 - `highway = ["residential", "tertiary"]` → usa `residential` (primer elemento).
 - Aristas paralelas → se conservan; el GraphML las guarda con su `key`.
@@ -79,6 +81,8 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 2. Tiempo: 1 000 m a 36 km/h → 100 s.
 3. Tiempo: 500 m con `maxspeed = "30 mph"` → 48,2802 km/h → ≈ 37,28 s (tolerancia 0,1 s).
 4. Tiempo, grafo sintético sin `maxspeed`, 1 000 m: `residential` → 120 s; `primary` → 60 s; `primary_link` → 60 s; `track` → 180 s.
+4d. `ladder`: 1 000 m sin `maxspeed`, `highway = ladder` → 20 km/h → 180 s; `highway = ["residential", "ladder"]` → 30 km/h → 120 s. En la red real, toda arista cuyo primer `highway` sea `ladder` tiene `speed_kph = 20`.
+4e. `r1_velocidades.csv`: columnas exactas de arriba; `velocidad_tabla_kmh` de `residential` = 30 y de `ladder` = 20; porcentajes con a lo sumo 1 decimal; `pct_osm + pct_imputado` = 100 ± 0,1; fila `Total` con aristas = E de la componente.
 4b. `maxspeed = ["30", "50"]`, 1 000 m → 40 km/h → 90 s. `maxspeed = "none"`, `highway = tertiary`, 1 000 m → 40 km/h → 90 s.
 4c. Aristas paralelas: grafo con dos aristas A→B (claves 0 y 1, tiempos 50 s y 40 s) → tras pesos, componente y guardar/cargar, siguen existiendo las 2 aristas con sus tiempos.
 5. Componente: aristas A→B, B→C, C→A, C→D, D→E → componente {A, B, C}: 3 nodos, 3 aristas. Igual a `max(nx.strongly_connected_components)`.

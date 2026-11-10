@@ -84,7 +84,7 @@ def validar_catalogo(df: pd.DataFrame) -> None            # lanza CatalogoInvali
 
 ```python
 # rutas/r1/pesos.py
-VELOCIDADES: dict[str, float]   # tabla de la spec, 16 claves (incluye *_link y road)
+VELOCIDADES: dict[str, float]   # tabla de la spec, 17 claves (incluye *_link, road y ladder)
 def maxspeed_original(valor) -> bool
     # True si OSMnx 2.1.1 obtendría una velocidad numérica de ese maxspeed.
     # Reutiliza ox.routing._collapse_multiple_maxspeed_values y _clean_maxspeed
@@ -241,7 +241,7 @@ No hay algoritmo recursivo ni de programación dinámica en R1, así que no apli
 | `data/processed/metadatos.json` | `construir_red.py` | sí | contenido de `descarga.json` (o `"fuente": "GraphML del docente"` + ruta si se usó `--graphml`) + `V_antes, E_antes, V_despues, E_despues`, `ya_fuertemente_conexa`, `archivo_grafo`, `comprimido` |
 | `results/r1/r1_tamanos.csv` | `construir_red.py` | sí | `red,nodos,aristas`; filas `Red descargada`, `Componente fuertemente conexa` |
 | `results/r1/r1_memoria.csv` | `construir_red.py` | sí | `red,V,E,representacion,supuesto,bytes,MB`; 4 filas en este orden: (Red descargada, Matriz de adyacencia), (Red descargada, Listas de adyacencia), (Componente fuertemente conexa, Matriz…), (Componente fuertemente conexa, Listas…). `bytes` entero, `MB = bytes / 1e6` |
-| `results/r1/r1_velocidades.csv` | `construir_red.py` | sí | `highway,aristas,con_maxspeed_osm,pct_osm,pct_imputado` + fila `Total` (sobre la componente) |
+| `results/r1/r1_velocidades.csv` | `construir_red.py` | sí | `highway,velocidad_tabla_kmh,aristas,con_maxspeed_osm,pct_osm,pct_imputado` + fila `Total` (sobre la componente; porcentajes a 1 decimal) |
 | `results/r1/r1_tiempos_componente.csv` | `medir_componente.py` | sí | `red,V,E,V_mas_E,tiempo_ms,tiempo_por_elemento_us,repeticiones`; filas `Radio de 2 km`, `Radio de 5 km`, `Radio de 10 km`, `Radio de 20 km`, `Departamento completo`; V y E de la **red cruda** medida; si no completada: `tiempo_ms = "no completada"`, `tiempo_por_elemento_us` vacío, `repeticiones = 0` |
 | `results/r1/maquina.json` | `medir_componente.py` | sí | `procesador, ram_gb, so, python` |
 | `results/r1/tablas_r1.md` | `tablas.py` | sí | Tablas Markdown: tamaños, tiempos (ms y µs/elemento), memoria (red, V, E, representación, B y MB), velocidades (%), lugares con `alerta_500m` (desde `lugares_nodos.csv` + nombre del catálogo) |
@@ -289,6 +289,8 @@ Las pruebas sin internet usan grafos sintéticos construidos en `tests/conftest.
 | 3 | T4 | `tests/test_pesos.py::test_caso_3_maxspeed_30mph` |
 | 4 | T4 | `tests/test_pesos.py::test_caso_4_tabla_por_tipo` (parametrizada: residential, primary, primary_link, track) |
 | 4b | T4 | `tests/test_pesos.py::test_caso_4b_maxspeed_lista_y_none` |
+| 4d | T4 | `tests/test_pesos.py::test_caso_4d_ladder_20_kmh`, `tests/test_red_real.py::test_caso_4d_ladder_real_20_kmh` |
+| 4e | T5, T12 | `tests/test_construir_red.py::test_caso_4e_formato_de_velocidades_csv` |
 | 4c | T10 | `tests/test_persistencia.py::test_caso_4c_paralelas_sobreviven` |
 | 5 | T6 | `tests/test_componente.py::test_caso_5_componente_abc` |
 | 6 | T6 | `tests/test_componente.py::test_caso_6_ya_fuertemente_conexa` |

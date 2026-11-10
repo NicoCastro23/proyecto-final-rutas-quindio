@@ -1,0 +1,5 @@
+red,V,E,representacion,supuesto,bytes,MB
+Red descargada,8877,20245,Matriz de adyacencia,"V x V celdas, cada una con 2 float64 (distancia y tiempo) = 16 B",1260818064,1260.818064
+Red descargada,8877,20245,Listas de adyacencia,por arista: 2 pesos float64 + 1 destino = 24 B; por nodo: 8 B de referencia,556896,0.556896
+Componente fuertemente conexa,8791,20132,Matriz de adyacencia,"V x V celdas, cada una con 2 float64 (distancia y tiempo) = 16 B",1236506896,1236.506896
+Componente fuertemente conexa,8791,20132,Listas de adyacencia,por arista: 2 pesos float64 + 1 destino = 24 B; por nodo: 8 B de referencia,553496,0.553496

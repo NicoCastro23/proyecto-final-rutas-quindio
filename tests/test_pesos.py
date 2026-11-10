@@ -1,6 +1,7 @@
 """Pruebas de rutas/r1/pesos.py (casos 2, 3, 4, 4b y bordes de pesos)."""
 import math
 
+import pandas as pd
 import pytest
 
 from rutas.r1.pesos import (VELOCIDADES, agregar_pesos, maxspeed_original,
@@ -47,8 +48,9 @@ def test_caso_4b_maxspeed_lista_y_none():
 
 
 def test_tabla_velocidades_completa():
-    # La tabla de la spec tiene 16 tipos (el plan y las tareas decían 18 por error).
-    assert len(VELOCIDADES) == 16
+    # La tabla de la spec tiene 17 tipos (16 más 'ladder', agregado tras la corrida real).
+    assert len(VELOCIDADES) == 17
+    assert VELOCIDADES["ladder"] == 20
     for padre in ("motorway", "trunk", "primary", "secondary", "tertiary"):
         assert VELOCIDADES[padre + "_link"] == VELOCIDADES[padre]
     assert VELOCIDADES["road"] == 30
@@ -129,8 +131,12 @@ def test_resumen_velocidades():
     agregar_pesos(G)
     resumen = resumen_velocidades(G)
     assert list(resumen.columns) == [
-        "highway", "aristas", "con_maxspeed_osm", "pct_osm", "pct_imputado"]
+        "highway", "velocidad_tabla_kmh", "aristas", "con_maxspeed_osm", "pct_osm",
+        "pct_imputado"]
     fila = resumen.set_index("highway")
+    assert fila.loc["residential", "velocidad_tabla_kmh"] == 30
+    assert fila.loc["primary", "velocidad_tabla_kmh"] == 60
+    assert pd.isna(fila.loc["Total", "velocidad_tabla_kmh"])
     assert fila.loc["residential", "aristas"] == 2
     assert fila.loc["residential", "con_maxspeed_osm"] == 1
     assert fila.loc["residential", "pct_osm"] == pytest.approx(50.0)
@@ -152,3 +158,22 @@ def test_resumen_highway_lista_usa_primero():
     fila = resumen_velocidades(G).set_index("highway")
     assert fila.loc["tertiary", "aristas"] == 2
     assert "residential" not in fila.index
+
+
+def test_caso_4d_ladder_20_kmh():
+    G = agregar_pesos(una_arista(length=1000.0, highway="ladder"))
+    assert datos_arista(G)["speed_kph"] == pytest.approx(20.0)
+    assert datos_arista(G)["travel_time"] == pytest.approx(180.0)
+    # Con lista, OSMnx usa el primer elemento: residential (30 km/h).
+    G = agregar_pesos(una_arista(length=1000.0, highway=["residential", "ladder"]))
+    assert datos_arista(G)["speed_kph"] == pytest.approx(30.0)
+    assert datos_arista(G)["travel_time"] == pytest.approx(120.0)
+
+
+def test_resumen_ladder_en_tabla():
+    G = grafo_sintetico(NODOS, [
+        (1, 2, 0, {"length": 100.0, "highway": "ladder"}),
+        (2, 1, 0, {"length": 100.0, "highway": "residential"}),
+    ])
+    agregar_pesos(G)
+    assert resumen_velocidades(G).set_index("highway").loc["ladder", "velocidad_tabla_kmh"] == 20

@@ -29,15 +29,17 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 - [x] T4 · Velocidades y tiempos con la tabla del grupo (punto 2; casos 2, 3, 4, 4b y bordes de pesos)
   - Archivos: `rutas/r1/pesos.py` (`VELOCIDADES`, `maxspeed_original`, `agregar_pesos`, `verificar_velocidades`)
-  - Test primero: `tests/test_pesos.py::test_caso_2_maxspeed_36_da_100s`, `::test_caso_3_maxspeed_30mph` (48,2802 km/h, ≈ 37,28 s ± 0,1), `::test_caso_4_tabla_por_tipo` (parametrizada: residential 120 s, primary 60 s, primary_link 60 s, track 180 s, grafo sin `maxspeed`), `::test_caso_4b_maxspeed_lista_y_none` (["30","50"] → 90 s; "none" + tertiary → 90 s), `::test_tabla_velocidades_completa` (16 claves, `*_link` = padre, road = 30), `::test_highway_lista_usa_primero`, `::test_longitud_cero_tiempo_cero`, `::test_tipo_fuera_de_tabla_se_imputa` (finito > 0), `::test_velocidad_invalida_lanza_error`, `::test_maxspeed_original` ("36" y ["30","50"] → True; "none", "signals", ausente → False), `::test_travel_time_formula_1e9` (`travel_time == length / (speed_kph / 3.6)` ± 1e-9)
+  - Test primero: `tests/test_pesos.py::test_caso_2_maxspeed_36_da_100s`, `::test_caso_3_maxspeed_30mph` (48,2802 km/h, ≈ 37,28 s ± 0,1), `::test_caso_4_tabla_por_tipo` (parametrizada: residential 120 s, primary 60 s, primary_link 60 s, track 180 s, grafo sin `maxspeed`), `::test_caso_4b_maxspeed_lista_y_none` (["30","50"] → 90 s; "none" + tertiary → 90 s), `::test_tabla_velocidades_completa` (17 claves desde el cambio de `ladder`; antes 16; `*_link` = padre, road = 30, ladder = 20), `::test_highway_lista_usa_primero`, `::test_longitud_cero_tiempo_cero`, `::test_tipo_fuera_de_tabla_se_imputa` (finito > 0), `::test_velocidad_invalida_lanza_error`, `::test_maxspeed_original` ("36" y ["30","50"] → True; "none", "signals", ausente → False), `::test_travel_time_formula_1e9` (`travel_time == length / (speed_kph / 3.6)` ± 1e-9)
   - Verificar: `.venv/bin/python -m pytest tests/test_pesos.py`
   - Nota: la tabla de la spec tiene 16 tipos, no 18 como decían el plan y estas tareas (error de conteo); la prueba verifica 16. Se agregaron `::test_marca_maxspeed_original_en_aristas` y `::test_resumen_highway_lista_usa_primero`.
+  - Nota (cambio de la corrida real, 2026-11-10): `ladder` entra en la tabla con 20 km/h (17 tipos) por decisión del usuario; casos 4d (`tests/test_pesos.py::test_caso_4d_ladder_20_kmh`, `tests/test_red_real.py::test_caso_4d_ladder_real_20_kmh` y `::test_ningun_tipo_fuera_de_la_tabla`). Se regeneró el grafo: solo cambiaron `speed_kph` y `travel_time` de las 4 aristas `ladder` (48,125 → 20 km/h); lo demás quedó idéntico.
 
 - [x] T5 · Resumen de velocidades por tipo de vía (punto 2, porcentajes OSM/imputado)
   - Archivos: `rutas/r1/pesos.py` (`resumen_velocidades`)
   - Test primero: `tests/test_pesos.py::test_resumen_velocidades` (grafo sintético con 2 residential —una con `maxspeed`— y 1 primary sin él → residential 50 %/50 %, primary 0 %/100 %, Total 33,3 %/66,7 %; columnas `highway, aristas, con_maxspeed_osm, pct_osm, pct_imputado`)
   - Verificar: `.venv/bin/python -m pytest tests/test_pesos.py -k resumen`
 
+  - Nota (cambio de la corrida real, 2026-11-10): `resumen_velocidades` agrega la columna `velocidad_tabla_kmh` (vacía en `Total`); `construir_red` redondea `pct_osm` y `pct_imputado` a 1 decimal solo en el CSV y escribe la velocidad como entero; `tablas.py` muestra la columna. Caso 4e: `tests/test_construir_red.py::test_caso_4e_formato_de_velocidades_csv`, `tests/test_pesos.py::test_resumen_velocidades` y `::test_resumen_ladder_en_tabla`, `tests/test_tablas.py::test_velocidades_muestra_velocidad_de_tabla`.
 - [x] T6 · Componente fuertemente conexa más grande (punto 3; casos 5, 6)
   - Archivos: `rutas/r1/componente.py` (`obtener_componente`, `contar`)
   - Test primero: `tests/test_componente.py::test_caso_5_componente_abc` (A→B, B→C, C→A, C→D, D→E → {A,B,C}, V = 3, E = 3, igual a `max(nx.strongly_connected_components(G), key=len)`), `::test_caso_6_ya_fuertemente_conexa` (ciclo → V = 3, E = 3), `::test_contar_incluye_paralelas`
@@ -77,42 +79,47 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
   - Test primero: `tests/test_construir_red.py::test_pipeline_sintetico_escribe_salidas` (red cruda sintética con coordenadas en el Quindío, con una parte no fuertemente conexa, guardada en `tmp_path`; catálogo real; existen el grafo, `lugares_nodos.csv`, `metadatos.json` y los 3 CSV; columnas y nombres de fila del plan; `V_antes > V_despues`), `::test_memoria_cuatro_filas_dos_redes` (`r1_memoria.csv` con columnas exactas `red, V, E, representacion, supuesto, bytes, MB`; 4 filas en el orden del plan; `V, E` de "Red descargada" = `V_antes, E_antes` de `metadatos.json` y de "Componente fuertemente conexa" = `V_despues, E_despues`; `bytes` = `estimar_memoria` de cada par), `::test_pipeline_con_graphml` (`--graphml` → `metadatos["fuente"] == "GraphML del docente"`), `::test_alertas_se_conservan` (42 filas en `lugares_nodos.csv` aunque haya alertas), `::test_pipeline_comprime_si_supera_umbral` (`umbral_gz=0` → queda `grafo_componente.graphml.gz`, `metadatos["comprimido"] is True`, y `cargar_grafo_procesado` lo lee)
   - Verificar: `.venv/bin/python -m pytest tests/test_construir_red.py`
 
-- [ ] T13 · Ejecutar la descarga y la construcción reales (requiere internet; punto 5)
+- [x] T13 · Ejecutar la descarga y la construcción reales (requiere internet; punto 5)
   - Archivos: genera `data/raw/*` (ignorado por git) y `data/processed/*`, `results/r1/r1_tamanos.csv`, `r1_memoria.csv`, `r1_velocidades.csv` (no se edita código)
   - Test primero: no aplica (es la ejecución que alimenta T14); el criterio es T14
   - Verificar: `.venv/bin/python -m rutas.r1.descargar && .venv/bin/python -m rutas.r1.construir_red`; revisar en `data/processed/metadatos.json` la fecha de descarga, `addresstype = "state"`, V/E antes y después y `comprimido`; `ls -lh data/processed/` muestra **una sola** forma del grafo (`.graphml` < 100 MB, o `.graphml.gz`) y anotar su tamaño en el reporte; `git status --short data/` no lista nada bajo `data/raw/`; `r1_memoria.csv` tiene 4 filas. Solo si el `.gz` aun así pasa de 100 MB, reportarlo al usuario. Si la descarga falla: `--graphml <ruta del docente>` y copiar ese archivo a `data/raw/departamento.graphml`
+  - Nota: la ejecutó el usuario. Después se corrigió `construir_red` para que `r1_velocidades.csv` se calcule sobre la componente (Total = E_despues = 20 132), como dice el plan, y se regeneraron los resultados: grafo, `lugares_nodos.csv`, `metadatos.json`, `r1_tamanos.csv` y `r1_memoria.csv` quedaron idénticos byte a byte. También se agregó argparse a `rutas/r1/descargar.py` (`cli(argv)`; `--help` no descarga) con `tests/test_descarga.py::test_help_no_descarga_nada`, y `tests/test_construir_red.py::test_velocidades_se_calculan_sobre_la_componente`.
 
-- [ ] T14 · Pruebas con la red real (casos 11 real, 14, 15 y componente en radio 2 km)
+- [x] T14 · Pruebas con la red real (casos 11 real, 14, 15 y componente en radio 2 km)
   - Archivos: `tests/test_red_real.py` (todas con `@pytest.mark.red`)
   - Test primero: `tests/test_red_real.py::test_caso_14_velocidades_y_tiempos` (toda arista `speed_kph` finito > 0 y `travel_time == length / (speed_kph / 3.6)` ± 1e-6), `::test_caso_15_asociacion_contra_ckdtree` (42 lugares con nodo de la componente; distancia propia = `cKDTree.query` < 1e-6 m), `::test_componente_radio_2km_igual_a_networkx` (nodos de `obtener_componente` = mayor de `nx.strongly_connected_components` sobre `data/raw/radio_2km.graphml`), `::test_caso_11_guardar_cargar_real` (cargar el procesado con `cargar_grafo_procesado(DATA_PROCESSED)` —sirve con cualquiera de las dos formas—, guardarlo en `tmp_path` con el mismo umbral, volver a cargar: V, E, suma de `travel_time` ± 1e-6, arista por arista ± 1e-9; `lugares_nodos.csv` idéntico), `::test_metadatos_antes_despues` (V y E de `metadatos.json` = los del grafo cargado; `comprimido` coincide con la forma presente en disco), `::test_memoria_real_coincide_con_tamanos` (las `V, E` de `r1_memoria.csv` son las de `r1_tamanos.csv` para cada red)
   - Verificar: `.venv/bin/python -m pytest -m red`
+  - Nota: se agregó `::test_tipos_fuera_de_tabla_tienen_velocidad_imputada` ('ladder', 4 aristas en la componente y 14 en la red cruda, recibe 48,125 km/h = promedio general imputado por OSMnx; la tabla del grupo no se tocó). Las pruebas pasaron al primer intento porque verifican código ya hecho; se comprobó que pueden fallar mutando temporalmente `obtener_componente`, `nodo_mas_cercano` y `r1_memoria.csv`.
 
 ## B5 · Medición y tablas (sección 6)
 
-- [ ] T15 · Cronómetro modo (a), mismo proceso: mediana, una repetición si > 1 min, preparación fuera (sección 6; Puerta 2)
+- [x] T15 · Cronómetro modo (a), mismo proceso: mediana, una repetición si > 1 min, preparación fuera (sección 6; Puerta 2)
   - Archivos: `rutas/medicion.py` (`ResultadoMedicion`, `medir_en_proceso(funcion, preparar, repeticiones=5, umbral_una_s=60.0, limite_s=300.0)`, `info_maquina`)
   - Test primero: `tests/test_medicion.py::test_en_proceso_cinco_repeticiones_y_mediana` (`time.sleep`, `preparar=lambda: (0.02,)` → 5 repeticiones, `completada`, mediana entre 18 y 60 ms), `::test_en_proceso_una_sola_repeticion_si_supera_umbral` (`umbral_una_s=0.05`, sleep 0,1 s → `repeticiones == 1`), `::test_en_proceso_preparar_fuera_del_cronometro` (`preparar` que duerme 0,3 s y función trivial → mediana < 100 ms), `::test_en_proceso_preparar_en_cada_repeticion` (contador → `preparar` se llama 5 veces y la función recibe cada vez un objeto distinto), `::test_en_proceso_no_completada_si_supera_limite` (`limite_s=0.05`, `umbral_una_s=0.01`, sleep 0,1 s → `completada is False`, `tiempo_ms is None`, `repeticiones == 0`), `::test_info_maquina_tiene_campos` (`procesador, ram_gb, so, python`)
   - Verificar: `.venv/bin/python -m pytest tests/test_medicion.py -k "en_proceso or info_maquina"`
 
-- [ ] T15b · Cronómetro modo (b), proceso hijo con límite de 5 min (sección 6; Puerta 2; lo usarán R2 lineal y R4)
+- [x] T15b · Cronómetro modo (b), proceso hijo con límite de 5 min (sección 6; Puerta 2; lo usarán R2 lineal y R4)
   - Archivos: `rutas/medicion.py` (`_cronometrar_en_hijo(funcion, args, cola)` de nivel de módulo; `medir_en_hijo(funcion, args=(), repeticiones=5, umbral_una_s=60.0, limite_s=300.0)` con contexto `spawn`, `Queue`, `join(timeout=limite_s)`, `terminate()`; código corto y comentado: es material de sustentación)
   - Test primero: `tests/test_medicion.py::test_en_hijo_no_incluye_arranque_del_proceso` (`medir_en_hijo(time.sleep, (0.05,), repeticiones=1)` → `45 <= tiempo_ms <= 150`, aunque el tiempo de pared de la llamada medido por la prueba sea mayor), `::test_en_hijo_no_completada_si_supera_limite` (`time.sleep`, `(3,)`, `limite_s=0.5` → `completada is False`, `tiempo_ms is None`, `repeticiones == 0`, y la llamada vuelve en menos de 2,5 s: el hijo se terminó), `::test_en_hijo_cinco_repeticiones_y_mediana` (sleep 0,02 s → 5 repeticiones, mediana entre 18 y 60 ms), `::test_en_hijo_una_sola_repeticion_si_supera_umbral` (`umbral_una_s=0.05`, sleep 0,1 s → `repeticiones == 1`), `::test_en_hijo_error_en_el_hijo` (`math.sqrt`, `(-1,)` → `RuntimeError`, sin esperar al límite)
   - Verificar: `.venv/bin/python -m pytest tests/test_medicion.py -k en_hijo`
+  - Nota: `::test_en_hijo_error_en_el_hijo` exige `match="hijo"` en el mensaje: con el stub `NotImplementedError` (subclase de `RuntimeError`) la versión sin `match` pasaba en falso.
 
-- [ ] T16 · Script de medición de `largest_component` en el mismo proceso (punto 3, sección 6)
+- [x] T16 · Script de medición de `largest_component` en el mismo proceso (punto 3, sección 6)
   - Archivos: `rutas/r1/medir_componente.py` (`fila_tiempos(nombre, V, E, resultado) -> dict`; `preparar_copia(G)` → función sin argumentos que devuelve `(G.copy(),)`; `main(raw=..., salida=...)`: para cada red cruda la carga una vez y cuenta V y E fuera del cronómetro, llama `medir_en_proceso(obtener_componente, preparar_copia(G))`, escribe `r1_tiempos_componente.csv` y `maquina.json`)
   - Test primero: `tests/test_medir_componente.py::test_fila_tiempos_calcula_us_por_elemento` (`tiempo_por_elemento_us = tiempo_ms · 1000 / (V + E)`), `::test_fila_no_completada` (`tiempo_ms == "no completada"`, `repeticiones == 0`), `::test_preparar_copia_da_grafo_nuevo` (dos llamadas → objetos distintos, iguales en nodos y aristas al original; modificar la copia no toca el original), `::test_main_con_redes_sinteticas` (5 GraphML sintéticos pequeños en `tmp_path` con los nombres del plan → CSV con columnas `red, V, E, V_mas_E, tiempo_ms, tiempo_por_elemento_us, repeticiones`, 5 filas en orden Radio de 2 km … Departamento completo, `repeticiones == 5`, `maquina.json` presente), `::test_main_usa_modo_mismo_proceso` (`monkeypatch` de `medir_en_hijo` para que falle si se llama → `main` termina bien)
   - Verificar: `.venv/bin/python -m pytest tests/test_medir_componente.py`
 
-- [ ] T17 · Tablas Markdown generadas desde los CSV
+- [x] T17 · Tablas Markdown generadas desde los CSV
   - Archivos: `rutas/r1/tablas.py` (`a_markdown(df) -> str`; `main(results=..., processed=..., catalogo=...)` → `results/r1/tablas_r1.md` con: tamaños antes/después; tiempos (ms) y µs por elemento; memoria con columnas red, V, E, representación, supuesto, B y MB (4 filas, dos redes); velocidades (%); lugares con `alerta_500m` con nombre y distancia (m))
   - Test primero: `tests/test_tablas.py::test_tablas_salen_de_los_csv` (CSV pequeños escritos en `tmp_path` → cada valor aparece en el Markdown), `::test_unidades_en_encabezados` ("(ms)", "(µs)", "(MB)", "(m)"), `::test_memoria_muestra_ambas_redes` (la tabla de memoria tiene 4 filas con "Red descargada" y "Componente fuertemente conexa", cada una con matriz y listas, y sus V y E), `::test_tabla_alertas_solo_alertados`, `::test_no_completada_se_muestra`
   - Verificar: `.venv/bin/python -m pytest tests/test_tablas.py`
+  - Nota: se agregó `::test_a_markdown_forma`. Velocidades con 1 decimal, tiempos con 2 (ms) y 3 (µs).
 
-- [ ] T18 · Ejecutar la medición real y generar las tablas
+- [x] T18 · Ejecutar la medición real y generar las tablas
   - Archivos: genera `results/r1/r1_tiempos_componente.csv`, `results/r1/maquina.json`, `results/r1/tablas_r1.md`
   - Test primero: no aplica (usa T15–T17 ya verificados)
   - Verificar: `.venv/bin/python -m rutas.r1.medir_componente && .venv/bin/python -m rutas.r1.tablas`; revisar que haya 5 filas, que `tiempo_por_elemento_us` sea del mismo orden entre filas y anotar en el reporte si alguna red ya era fuertemente conexa o fue "no completada". Correr con la máquina enchufada y sin otros procesos pesados
+  - Nota: medición en batería (no enchufada) y sin otros procesos pesados; ninguna red era ya fuertemente conexa; ninguna 'no completada'.
 
 ## Cierre
 
@@ -133,7 +140,8 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 |---|---|
 | 1, 1b | T2 |
 | Memoria con dos redes (Puerta 2) | T2, T12, T14, T17 |
-| 2, 3, 4, 4b | T4 |
+| 2, 3, 4, 4b, 4d | T4 |
+| 4e | T5, T12 |
 | 4c | T10 |
 | 5, 6 | T6 |
 | 7, 8, 9 | T9 |

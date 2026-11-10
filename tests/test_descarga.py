@@ -182,3 +182,18 @@ def test_caso_16e_script_reintenta_solo_la_red_que_fallo(monkeypatch, tmp_path):
     assert len(dobles.place) == 1      # el departamento no se repite
     assert len(dobles.guardados) == 5
     assert esperas == [30]
+
+
+def test_help_no_descarga_nada(monkeypatch, capsys):
+    """`--help` muestra la ayuda y sale con código 0 sin llamar a osmnx ni a main()."""
+    def prohibido(*args, **kwargs):
+        raise AssertionError("--help no debe descargar nada")
+
+    for nombre in ("graph_from_place", "graph_from_point", "geocode_to_gdf", "save_graphml"):
+        monkeypatch.setattr(ox, nombre, prohibido)
+    monkeypatch.setattr(descargar, "main", prohibido)
+
+    with pytest.raises(SystemExit) as salida:
+        descargar.cli(["--help"])
+    assert salida.value.code == 0
+    assert "usage" in capsys.readouterr().out.lower()

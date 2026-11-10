@@ -6,6 +6,7 @@ no vuelve a descargar lo que ya llegó. Si OSMnx se queda mostrando reintentos c
 (504/429 de Overpass), corte con Ctrl+C y reintente más tarde o use el Plan B (--graphml
 en rutas.r1.construir_red).
 """
+import argparse
 import json
 import logging
 import platform
@@ -63,6 +64,17 @@ def main(carpeta=DATA_RAW, dormir=time.sleep):
     LOG.info("Listo: %s", carpeta / "descarga.json")
 
 
+def cli(argv=None):
+    """Lee los argumentos y, solo si no se pidió ayuda, descarga. `--help` sale antes."""
+    analizador = argparse.ArgumentParser(
+        description="Descarga las 5 redes crudas (departamento y radios de 2, 5, 10 y 20 km) "
+                    "a data/raw/. Necesita internet y puede tardar varios minutos.")
+    analizador.add_argument("--carpeta", default=str(DATA_RAW),
+                            help="carpeta de destino (por defecto data/raw)")
+    argumentos = analizador.parse_args(argv)    # --help imprime la ayuda y sale aquí
+    main(carpeta=argumentos.carpeta)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
-    main()
+    cli()
