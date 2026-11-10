@@ -1,0 +1,7 @@
+{
+  "semilla": 2026,
+  "generador": "random.Random",
+  "cercanos": 10,
+  "lejanos": 10,
+  "regla": "10 pares 'cercano' (mismo municipio, un par por municipio por vuelta, municipios ordenados y barajados) y 10 'lejano' (municipios distintos, al azar); pares ordenados, sin repetir y con nodos distintos"
+}

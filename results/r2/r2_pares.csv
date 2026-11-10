@@ -1,0 +1,21 @@
+origen,destino,tipo,municipio_origen,municipio_destino,nodo_origen,nodo_destino
+T05,T02,cercano,Armenia,Armenia,2978288220,2752461008
+F08,C07,cercano,Génova,Génova,2274612106,4466303404
+C03,F04,cercano,Calarcá,Calarcá,3003932856,7630171741
+C04,A14,cercano,Circasia,Circasia,535905977,4365544194
+A09,C11,cercano,Quimbaya,Quimbaya,4443172721,3989083941
+A11,C05,cercano,Córdoba,Córdoba,7626166681,3192289523
+F06,C08,cercano,La Tebaida,La Tebaida,2457533656,5278717846
+A03,F01,cercano,Salento,Salento,1543526033,2922930733
+A15,F07,cercano,Pijao,Pijao,4818636931,5811037392
+A01,F02,cercano,Montenegro,Montenegro,11276245850,7624343682
+F06,T05,lejano,La Tebaida,Armenia,2457533656,2978288220
+C05,A10,lejano,Córdoba,Calarcá,3192289523,6334517962
+C06,F09,lejano,Filandia,Calarcá,1341833467,10917232734
+F08,A07,lejano,Génova,Salento,2274612106,2107061017
+A07,F03,lejano,Salento,Quimbaya,2107061017,4983308953
+C10,T06,lejano,Pijao,Quimbaya,2735374250,3989083883
+C02,A12,lejano,Buenavista,Calarcá,4591256984,6020831890
+A12,F03,lejano,Calarcá,Quimbaya,6020831890,4983308953
+F01,C06,lejano,Salento,Filandia,2922930733,1341833467
+A14,T02,lejano,Circasia,Armenia,4365544194,2752461008
