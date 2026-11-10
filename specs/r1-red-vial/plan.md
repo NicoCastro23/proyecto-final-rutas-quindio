@@ -84,7 +84,7 @@ def validar_catalogo(df: pd.DataFrame) -> None            # lanza CatalogoInvali
 
 ```python
 # rutas/r1/pesos.py
-VELOCIDADES: dict[str, float]   # tabla de la spec, 18 claves (incluye *_link y road)
+VELOCIDADES: dict[str, float]   # tabla de la spec, 16 claves (incluye *_link y road)
 def maxspeed_original(valor) -> bool
     # True si OSMnx 2.1.1 obtendría una velocidad numérica de ese maxspeed.
     # Reutiliza ox.routing._collapse_multiple_maxspeed_values y _clean_maxspeed

@@ -24,12 +24,12 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
   4. Estimación del grupo sin fuente (A12 Ecoparque Peñas Blancas, 180 min), a reemplazar si aparece una fuente.
 
 **Salidas** (bajo `data/processed/`; resultados de experimentos bajo `results/r1/`)
-- `data/processed/grafo_componente.graphml`: MultiDiGraph de la componente, **con todas sus aristas paralelas**. Nodos con `y` (lat), `x` (lon), `x_utm`, `y_utm`; aristas con `length` (m, = distancia), `speed_kph`, `travel_time` (s), `highway`, `maxspeed_original` (bool: si la velocidad vino de OSM). Se guarda con `ox.save_graphml` y se lee con `ox.load_graphml`.
+- `data/processed/grafo_componente.graphml`: MultiDiGraph de la componente, **con todas sus aristas paralelas**. Nodos con `y` (lat), `x` (lon), `x_utm`, `y_utm`; aristas con `length` (m, = distancia), `speed_kph`, `travel_time` (s), `highway`, `maxspeed_original` (bool: si la velocidad vino de OSM). Se guarda con `ox.save_graphml` y se lee con `ox.load_graphml`. **Decisión de la Puerta 2:** `data/processed/` se versiona en git y `data/raw/` (redes crudas, regenerables con el script de descarga) va en `.gitignore`; si el GraphML pasa de 100 MB (límite de GitHub) se guarda comprimido como `grafo_componente.graphml.gz` (gzip, sin Git LFS) y el cargador acepta cualquiera de las dos formas con el mismo resultado.
 - `data/processed/lugares_nodos.csv`: `id_lugar, id_nodo, distancia_al_nodo_m, alerta_500m`.
 - `data/processed/metadatos.json`: fecha de descarga, versiones, parámetros de descarga, V y E antes y después.
 - `results/r1/r1_tamanos.csv`: columnas `red, nodos, aristas` (filas "Red descargada", "Componente fuertemente conexa"), formato del Anexo.
 - `results/r1/r1_tiempos_componente.csv`: `red, V, E, V_mas_E, tiempo_ms, tiempo_por_elemento_us, repeticiones`, filas Radio de 2/5/10/20 km y Departamento completo (columnas del Anexo ampliadas, no reducidas).
-- `results/r1/r1_memoria.csv`: `representacion, supuesto, bytes, MB` con los V y E reales de la componente.
+- `results/r1/r1_memoria.csv`: `red, V, E, representacion, supuesto, bytes, MB`, con **dos redes** (decisión de la Puerta 2): la red descargada del departamento y la componente fuertemente conexa, cada una con su fila de matriz y su fila de listas (4 filas).
 - `results/r1/r1_velocidades.csv`: porcentaje de aristas con `maxspeed` de OSM y porcentaje imputado, por tipo de vía.
 - `results/r1/maquina.json`: procesador, RAM, SO, versión de Python.
 - Tablas (Markdown) generadas **desde** esos CSV por un script, nunca a mano.
@@ -70,6 +70,7 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 - Lugar a > 500 m → alertado y reportado, nunca descartado en silencio.
 - Red ya fuertemente conexa → `largest_component` la devuelve igual.
 - Descarga falla → se usa el GraphML del docente.
+- **Servidor saturado (condición de la Puerta 2).** Cada descarga (las 5 redes y la geocodificación del polígono) pasa por `con_reintentos(funcion, esperas=(30, 60, 120, 240), dormir=time.sleep)`: si la llamada lanza un error HTTP **502 o 504**, espera 30 s y reintenta, luego 60, 120 y 240 s (la espera se duplica); tras el cuarto reintento fallido se rinde y relanza el error con un mensaje que dice cuántas veces se intentó y sugiere el Plan B (GraphML del docente). Cualquier otro error (p. ej. 400, polígono inválido) se relanza de inmediato, sin reintentar. Las esperas se registran en el log. Cómo llegan esos errores en OSMnx 2.1.1 (verificado en `osmnx/_http.py` y `_overpass.py`): un 502 llega como `osmnx._errors.ResponseStatusCodeError` (subclase de `ValueError`) cuyo mensaje contiene el código; un 504 (y un 429) de **Overpass** OSMnx ya lo reintenta por su cuenta cada 55 s, sin límite, antes de que nuestro código lo vea; un 504 de Nominatim sí llega como `ResponseStatusCodeError`. **Decisión del grupo (Puerta 2):** no se agrega un tiempo máximo total; el reintento interno y sin límite de OSMnx para 429/504 de Overpass se acepta tal cual y se documenta en el README ("si la descarga queda esperando indefinidamente con mensajes de reintento cada 55 s, cortarla con Ctrl+C y volver a intentar más tarde o usar el Plan B"). Por eso `con_reintentos` solo verá en la práctica los 502 y los 504 de Nominatim. El código del error se lee de `e.response.status_code` si existe y, si no, del mensaje. Las respuestas buenas quedan en la caché de OSMnx (`cache/`), así que un reintento no repite lo que ya se descargó.
 - Catálogo con `id` repetido, categoría inválida, conteo distinto o coordenada fuera del recuadro → error claro.
 
 ## Casos de prueba
@@ -90,6 +91,7 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 11b. Arista elegida: con las aristas paralelas del caso 4c (A→B, clave 0: 50 s y 800 m; clave 1: 40 s y 900 m con geometría propia) → `mejor_arista(G, A, B)` devuelve clave 1, 40 s, 900 m y su geometría. Empate en tiempo → menor `key`. Sin `geometry` → segmento recto A–B.
 12. Catálogo real (`data/catalogo.csv`): 42 filas, conteos (12, 15, 9, 6), ids únicos, 15 atractivos con duración > 0 y fuente, todas verificadas, coordenadas dentro del recuadro (Cocora lon −75,489 y PANACA −75,819 adentro). Catálogos sintéticos con un id repetido, una categoría inválida o una latitud 5,5 → error.
 13. Parámetros de descarga: con la función de descarga sustituida por un doble (mock), las 5 descargas se piden con `network_type="drive"` y `retain_all=True`; la prueba falla si alguna usa los valores por defecto.
+16. Reintentos (con `dormir` falso que solo registra las esperas, sin dormir de verdad): (a) la función simulada lanza `ResponseStatusCodeError("... responded: 502 Bad Gateway ...")` dos veces y luego devuelve un grafo → devuelve el grafo, 3 llamadas, esperas registradas [30, 60]; (b) siempre 502 → tras 5 llamadas relanza el error con mensaje que menciona 5 intentos y el Plan B, esperas [30, 60, 120, 240]; (c) 504 una vez y luego éxito → esperas [30]; (d) error 400 o `ValueError` sin código → se relanza en la primera llamada, sin esperas; (e) en el script de descarga, un 502 en la red de 5 km no repite las demás: con un mock de `osmnx.graph_from_point` que falla una vez con 502 para `dist=5000`, se hacen 6 llamadas en total y se escriben las 5 redes.
 14. Velocidades: en el grafo procesado real, toda arista tiene `speed_kph` finito > 0 y `travel_time` = `length / (speed_kph / 3.6)` (tolerancia 1e-6).
 15. Asociación real: los 42 lugares tienen nodo y ese nodo pertenece a la componente; la distancia propia coincide con `scipy.spatial.cKDTree` (< 1e-6 m) para todos.
 
@@ -107,7 +109,8 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 - Catálogo: coordenadas ya revisadas en mapa por el grupo; validación automática del caso 12.
 
 ## Medición (sección 6)
-- Qué: solo la llamada `ox.truncate.largest_component(G, strongly=True)`; la red se descarga y carga antes del cronómetro (`time.perf_counter_ns`), y se pasa una copia nueva en cada repetición por si la función mutara algo.
+- Qué: solo la llamada `ox.truncate.largest_component(G, strongly=True)`; la red se descarga y carga antes del cronómetro (`time.perf_counter_ns`), y se pasa una copia nueva en cada repetición (hecha fuera del cronómetro) por si la función mutara algo.
+- **Cronómetro (decisión de la Puerta 2, compartido con R2 a R4):** R1 se mide **en el mismo proceso**, sin proceso hijo, porque tarda milisegundos. El módulo de medición compartido ofrece dos modos: en el mismo proceso (R1, Dijkstra con cola, envolvente) y en proceso hijo solo para lo que puede acercarse al límite (fuerza bruta y Held-Karp en R4, Dijkstra lineal en R2). En el modo con proceso hijo, el cronómetro va **dentro** del hijo, alrededor de la llamada al algoritmo, para que crear el proceso y pasarle los datos no cuente; el padre solo espera hasta 5 min y, si se pasa, termina el hijo y reporta "no completada".
 - Redes: radios 2, 5, 10 y 20 km y departamento completo, todas con `retain_all=True`.
 - 5 repeticiones, mediana, en **ms**; si una repetición pasa de 1 min se mide una vez; si pasa de 5 min se reporta "no completada".
 - Misma máquina para todo R1; se guardan procesador, RAM, SO y versión de Python en `maquina.json`.
@@ -118,6 +121,8 @@ Python 3.13.8, **OSMnx 2.1.1**, **NetworkX 3.7** (las del `.venv`; se fijan en `
 Tabla antes/después, tabla de tiempos, estimación de memoria con la elección justificada, explicación del algoritmo de componentes con sus fuentes, tratamiento de velocidades con porcentajes, lugares a > 500 m con su explicación, párrafo de por qué conviene la componente, fecha de descarga. Uso de IA anotado en `docs/anexo-ia.md`.
 
 ## Decisiones
-Resueltas por el grupo: Python 3.13; OSMnx 2.1.1 y NetworkX 3.7 fijadas; listas de adyacencia; tabla de velocidades de arriba con `*_link` = tipo padre y `road` = 30; aristas paralelas conservadas; `network_type="drive"` y `retain_all=True` en todas las descargas; `dist_type="bbox"` aclarado; lugares a > 500 m conservados y reportados; catálogo de 42 lugares (12, 15, 9, 6) exportado a `data/catalogo.csv`; criterios 1 a 4 de duración de visita.
+Resueltas por el grupo: Python 3.13; OSMnx 2.1.1 y NetworkX 3.7 fijadas; listas de adyacencia; tabla de velocidades de arriba con `*_link` = tipo padre y `road` = 30; aristas paralelas conservadas; memoria estimada para red descargada y componente; `data/raw/` fuera de git y GraphML comprimido si pasa de 100 MB; R1 medido en el mismo proceso; `network_type="drive"` y `retain_all=True` en todas las descargas; `dist_type="bbox"` aclarado; lugares a > 500 m conservados y reportados; catálogo de 42 lugares (12, 15, 9, 6) exportado a `data/catalogo.csv`; criterios 1 a 4 de duración de visita.
+
+**`.gitignore` (decisión del usuario):** conserva `docs/` y `.DS_Store` como los dejó Nicolás; ningún agente lo modifica sin preguntar al usuario. `docs/anexo-ia.md` existe localmente pero hoy no se versiona; si sube al repo o va solo en el documento técnico lo deciden Santiago y Nicolás.
 
 Abierta (no bloquea): fuente para A12 (Ecoparque Peñas Blancas, hoy estimación del grupo, criterio 4).

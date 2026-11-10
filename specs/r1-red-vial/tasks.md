@@ -4,11 +4,15 @@ Spec: `spec.md` · Plan: `plan.md`. Todas las órdenes se corren desde la raíz 
 
 Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fecha, herramienta, qué se generó, cómo se verificó).
 
+
+> **Reglas del usuario para lo que falta:** (1) cada bloque termina con todas sus pruebas en verde y el trabajo se **detiene**: no se empieza el bloque siguiente hasta que el usuario haga su commit; (2) test primero **tarea por tarea**: escribir la prueba de una tarea, verla fallar por la razón correcta (módulo con `raise NotImplementedError` si hace falta, no un `ModuleNotFoundError` global) y solo entonces escribir su código; el reporte de cada bloque lo confirma.
+
+> **Regla del usuario:** no modificar `.gitignore` sin preguntarle (debe conservar `docs/` y `.DS_Store`). `docs/` está ignorada: `docs/anexo-ia.md` se mantiene localmente; su versionado está pendiente de decisión del grupo. En T19, el README además debe avisar que si la descarga queda reintentando cada 55 s (504/429 de Overpass, reintento interno de OSMnx) se corta con Ctrl+C y se reintenta más tarde o se usa el Plan B.
 ## B1 · Base, memoria y catálogo (sin internet)
 
 - [x] T1 · Base del proyecto: dependencias fijadas, configuración de pytest, paquete, constantes y `.gitignore`
-  - Archivos: `requirements.txt` (osmnx==2.1.1, networkx==3.7, numpy==2.5.3, pandas==3.0.5, geopandas==1.2.0, pyproj==3.8.0, scipy==1.18.1, shapely==2.2.0, matplotlib==3.11.2, pytest==9.2.0, psutil==7.2.2, Flask==3.1.3, folium==0.20.0, requests==2.34.2), `pyproject.toml` (solo `[tool.pytest.ini_options]`: `pythonpath = ["."]`, `testpaths = ["tests"]`, `markers = ["red: usa la red real descargada y data/processed"]`), `rutas/__init__.py`, `rutas/r1/__init__.py`, `rutas/config.py` (incluye `UMBRAL_GZ_BYTES = 100_000_000`), `tests/conftest.py` (fábrica `grafo_sintetico(nodos, aristas)` con `crs = "epsg:4326"` y `x, y`; fixtures `grafo_procesado_real` y `red_radio_2km` que hacen `pytest.skip` si falta el archivo; `grafo_procesado_real` acepta `.graphml` o `.graphml.gz`), `.gitignore` (agregar `data/raw/`, `cache/`, `__pycache__/`, `.pytest_cache/`; conservar `estudio/`; **no** ignorar `data/processed/`), `docs/anexo-ia.md` (encabezado y tabla: fecha · integrante · herramienta · para qué · cómo se verificó)
-  - Test primero: `tests/test_config.py::test_rutas_y_constantes` (existe `CATALOGO`; `EPSG_UTM == 32618`; `RADIOS_M == (2000, 5000, 10000, 20000)`; `UMBRAL_ALERTA_M == 500`; `UMBRAL_GZ_BYTES == 100_000_000`), `::test_fabrica_grafo_sintetico` (la fábrica produce un `MultiDiGraph` con `crs` y `x, y`), `::test_gitignore_excluye_data_raw` (`.gitignore` tiene la línea `data/raw/` y ninguna línea que ignore `data/processed`)
+  - Archivos: `requirements.txt` (osmnx==2.1.1, networkx==3.7, numpy==2.5.3, pandas==3.0.5, geopandas==1.2.0, pyproj==3.8.0, scipy==1.18.1, shapely==2.2.0, matplotlib==3.11.2, pytest==9.2.0, psutil==7.2.2, Flask==3.1.3, folium==0.20.0, requests==2.34.2), `pyproject.toml` (solo `[tool.pytest.ini_options]`: `pythonpath = ["."]`, `testpaths = ["tests"]`, `markers = ["red: usa la red real descargada y data/processed"]`), `rutas/__init__.py`, `rutas/r1/__init__.py`, `rutas/config.py` (incluye `UMBRAL_GZ_BYTES = 100_000_000`), `tests/conftest.py` (fábrica `grafo_sintetico(nodos, aristas)` con `crs = "epsg:4326"` y `x, y`; fixtures `grafo_procesado_real` y `red_radio_2km` que hacen `pytest.skip` si falta el archivo; `grafo_procesado_real` acepta `.graphml` o `.graphml.gz`), `.gitignore` (agregar `data/raw/`, `cache/`, `__pycache__/`, `.pytest_cache/`; conservar `estudio/`, `docs/` y `.DS_Store` como los dejó el grupo; **no** ignorar `data/processed/`), `docs/anexo-ia.md` (encabezado y tabla: fecha · integrante · herramienta · para qué · cómo se verificó)
+  - Test primero: `tests/test_config.py::test_rutas_y_constantes` (existe `CATALOGO`; `EPSG_UTM == 32618`; `RADIOS_M == (2000, 5000, 10000, 20000)`; `UMBRAL_ALERTA_M == 500`; `UMBRAL_GZ_BYTES == 100_000_000`), `::test_fabrica_grafo_sintetico` (la fábrica produce un `MultiDiGraph` con `crs` y `x, y`), `::test_gitignore_excluye_data_raw` (`.gitignore` tiene la línea `data/raw/` y ninguna línea que ignore `data/processed`; sobre `docs/` no exige nada, su versionado está pendiente de decisión del grupo)
   - Verificar: `.venv/bin/python -m pytest tests/test_config.py && .venv/bin/pip check && git check-ignore data/raw/x.graphml && ! git check-ignore data/processed/x.graphml`
 
 - [x] T2 · Estimación de memoria matriz vs listas para dos redes (punto 1; casos 1, 1b; Puerta 2)
@@ -23,22 +27,23 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B2 · Pesos, componente y aristas paralelas (sin internet)
 
-- [ ] T4 · Velocidades y tiempos con la tabla del grupo (punto 2; casos 2, 3, 4, 4b y bordes de pesos)
+- [x] T4 · Velocidades y tiempos con la tabla del grupo (punto 2; casos 2, 3, 4, 4b y bordes de pesos)
   - Archivos: `rutas/r1/pesos.py` (`VELOCIDADES`, `maxspeed_original`, `agregar_pesos`, `verificar_velocidades`)
-  - Test primero: `tests/test_pesos.py::test_caso_2_maxspeed_36_da_100s`, `::test_caso_3_maxspeed_30mph` (48,2802 km/h, ≈ 37,28 s ± 0,1), `::test_caso_4_tabla_por_tipo` (parametrizada: residential 120 s, primary 60 s, primary_link 60 s, track 180 s, grafo sin `maxspeed`), `::test_caso_4b_maxspeed_lista_y_none` (["30","50"] → 90 s; "none" + tertiary → 90 s), `::test_tabla_velocidades_completa` (18 claves, `*_link` = padre, road = 30), `::test_highway_lista_usa_primero`, `::test_longitud_cero_tiempo_cero`, `::test_tipo_fuera_de_tabla_se_imputa` (finito > 0), `::test_velocidad_invalida_lanza_error`, `::test_maxspeed_original` ("36" y ["30","50"] → True; "none", "signals", ausente → False), `::test_travel_time_formula_1e9` (`travel_time == length / (speed_kph / 3.6)` ± 1e-9)
+  - Test primero: `tests/test_pesos.py::test_caso_2_maxspeed_36_da_100s`, `::test_caso_3_maxspeed_30mph` (48,2802 km/h, ≈ 37,28 s ± 0,1), `::test_caso_4_tabla_por_tipo` (parametrizada: residential 120 s, primary 60 s, primary_link 60 s, track 180 s, grafo sin `maxspeed`), `::test_caso_4b_maxspeed_lista_y_none` (["30","50"] → 90 s; "none" + tertiary → 90 s), `::test_tabla_velocidades_completa` (16 claves, `*_link` = padre, road = 30), `::test_highway_lista_usa_primero`, `::test_longitud_cero_tiempo_cero`, `::test_tipo_fuera_de_tabla_se_imputa` (finito > 0), `::test_velocidad_invalida_lanza_error`, `::test_maxspeed_original` ("36" y ["30","50"] → True; "none", "signals", ausente → False), `::test_travel_time_formula_1e9` (`travel_time == length / (speed_kph / 3.6)` ± 1e-9)
   - Verificar: `.venv/bin/python -m pytest tests/test_pesos.py`
+  - Nota: la tabla de la spec tiene 16 tipos, no 18 como decían el plan y estas tareas (error de conteo); la prueba verifica 16. Se agregaron `::test_marca_maxspeed_original_en_aristas` y `::test_resumen_highway_lista_usa_primero`.
 
-- [ ] T5 · Resumen de velocidades por tipo de vía (punto 2, porcentajes OSM/imputado)
+- [x] T5 · Resumen de velocidades por tipo de vía (punto 2, porcentajes OSM/imputado)
   - Archivos: `rutas/r1/pesos.py` (`resumen_velocidades`)
   - Test primero: `tests/test_pesos.py::test_resumen_velocidades` (grafo sintético con 2 residential —una con `maxspeed`— y 1 primary sin él → residential 50 %/50 %, primary 0 %/100 %, Total 33,3 %/66,7 %; columnas `highway, aristas, con_maxspeed_osm, pct_osm, pct_imputado`)
   - Verificar: `.venv/bin/python -m pytest tests/test_pesos.py -k resumen`
 
-- [ ] T6 · Componente fuertemente conexa más grande (punto 3; casos 5, 6)
+- [x] T6 · Componente fuertemente conexa más grande (punto 3; casos 5, 6)
   - Archivos: `rutas/r1/componente.py` (`obtener_componente`, `contar`)
   - Test primero: `tests/test_componente.py::test_caso_5_componente_abc` (A→B, B→C, C→A, C→D, D→E → {A,B,C}, V = 3, E = 3, igual a `max(nx.strongly_connected_components(G), key=len)`), `::test_caso_6_ya_fuertemente_conexa` (ciclo → V = 3, E = 3), `::test_contar_incluye_paralelas`
   - Verificar: `.venv/bin/python -m pytest tests/test_componente.py`
 
-- [ ] T7 · `mejor_arista(G, u, v)` entre paralelas (precisión Puerta 1; caso 11b en memoria)
+- [x] T7 · `mejor_arista(G, u, v)` entre paralelas (precisión Puerta 1; caso 11b en memoria)
   - Archivos: `rutas/r1/aristas.py` (`AristaElegida`, `mejor_arista`)
   - Test primero: `tests/test_aristas.py::test_caso_11b_menor_tiempo` (clave 0: 50 s, 800 m; clave 1: 40 s, 900 m con `LineString` propia → clave 1, 40 s, 900 m y esa geometría), `::test_caso_11b_empate_menor_key`, `::test_caso_11b_sin_geometria_segmento_recto` (`LineString([(x_u, y_u), (x_v, y_v)])`), `::test_no_mezcla_atributos` (length, travel_time y geometry salen de la misma clave), `::test_sin_arista_lanza_keyerror`
   - Verificar: `.venv/bin/python -m pytest tests/test_aristas.py`

@@ -3,3 +3,11 @@ estudio/
 
 docs/
 .DS_Store
+
+# Redes crudas (se regeneran con rutas.r1.descargar) y caché HTTP de OSMnx
+data/raw/
+cache/
+
+# Python / pytest
+__pycache__/
+.pytest_cache/
