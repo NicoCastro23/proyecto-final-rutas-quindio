@@ -1,0 +1,11 @@
+{
+  "pares_asimetricos": 845,
+  "par_max": [
+    "F05",
+    "F06"
+  ],
+  "diferencia_max": 383.19186911391307,
+  "M_ij": 2841.850628359411,
+  "M_ji": 3225.042497473324,
+  "tolerancia": 1e-06
+}

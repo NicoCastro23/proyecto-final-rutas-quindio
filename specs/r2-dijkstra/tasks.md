@@ -74,25 +74,27 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B3 · Pares, matriz de tiempos y asimetría
 
-- [ ] T9 · Selección de pares con semilla 2026 (caso 17)
+- [x] T9 · Selección de pares con semilla 2026 (caso 17)
   - Archivos: `rutas/r2/pares.py` (`SEMILLA = 2026`, `seleccionar_pares(catalogo, lugares_nodos, semilla=SEMILLA)` con el procedimiento exacto del plan: `sorted` + `shuffle` de municipios, un par por municipio por vuelta con `rng.sample(lugares, 2)` repetido hasta válido, luego 10 lejanos con `rng.sample(ids, 2)`)
   - Test primero: `tests/test_pares.py::test_caso_17_catalogo_real` (con `cargar_catalogo()` y `cargar_lugares_nodos()`; se salta si falta `lugares_nodos.csv`: 20 filas, columnas del plan; 10 `cercano` de 10 municipios distintos con `municipio_origen == municipio_destino` y `nodo_origen != nodo_destino`; 10 `lejano` con municipios distintos; sin pares ordenados repetidos; ningún par {T03, T05}; nodos = los de `lugares_nodos.csv`), `::test_misma_semilla_mismos_pares` (dos llamadas → `DataFrame` iguales; con otra semilla cambian), `::test_mismo_nodo_excluido_sintetico` (catálogo sintético de 3 municipios donde dos lugares comparten nodo: nunca aparecen juntos), `::test_municipio_sin_pares_validos_se_salta` (municipio de 2 lugares en el mismo nodo)
   - Verificar: `.venv/bin/python -m pytest tests/test_pares.py`
   - anotar en `docs/anexo-ia.md`
+  - Nota: `seleccionar_pares` recibe además `cercanos=10, lejanos=10` (por defecto los de la spec) para poder probar con catálogos pequeños; no escribe `r2_pares.csv/json` (eso queda en T12, como dice el plan). Se agregaron `test_varias_vueltas_si_hay_menos_municipios_que_cercanos` y se probó el nodo compartido con 30 semillas.
 
-- [ ] T10 · Matriz: cálculo, guardado sin redondear, lectura y asimetría (casos 16 sintético y 23; bordes)
+- [x] T10 · Matriz: cálculo, guardado sin redondear, lectura y asimetría (casos 16 sintético y 23; bordes)
   - Archivos: `rutas/r2/matriz.py` (stubs primero; `calcular_matriz(red, nodos)` (nodos en ids; `dijkstra_cola(red.adyacencia, red.indice[n])` sin destino por fila y lectura `dist[red.indice[m]]`), `guardar_matriz(matriz, ids, ruta)` con el módulo `csv`, encabezado `id` y `repr(float)`, `cargar_matriz(ruta)` con `index_col=0` y `float_precision="round_trip"`, `asimetria(matriz, ids, tolerancia=1e-6)`)
   - Test primero: `tests/test_matriz.py::test_caso_23_asimetria_clase` (matriz 7 × 7 calculada con `calcular_matriz(red, [1, …, 7])` sobre `cargar_red_clase()` = `R2.matriz_min.filas`; `asimetria` → 9 pares, `par_max` = [4, 7] (o [7, 4] normalizado a i < j por el orden de `ids`), `diferencia_max` = 10, `M_ij` = 4, `M_ji` = 14), `::test_mismo_nodo_da_cero` (dos ids con el mismo nodo → celdas 0 y diagonal 0), `::test_inf_es_error` (G1 con `red_desde_aristas` y F como lugar → `ValueError`), `::test_nodo_ausente_keyerror` (un id que no está en la red → `KeyError`), `::test_guardar_cargar_round_trip_byte_a_byte` (valores como `0.1 + 0.2` y `1/3`: lo leído es igual exacto al `float` original; guardar lo leído en otro archivo → mismos bytes; encabezado e índice en el orden dado)
   - Verificar: `.venv/bin/python -m pytest tests/test_matriz.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T11 · Script de la matriz y pruebas con la red real (casos 14 y 16, marcador `red`)
+- [x] T11 · Script de la matriz y pruebas con la red real (casos 14 y 16, marcador `red`)
   - Archivos: `rutas/r2/matriz.py` (`main(processed=DATA_PROCESSED, catalogo=CATALOGO, salida=RESULTS_R2)`: carga grafo, catálogo y lugares; construye la `Red` con `construir_adyacencia`; calcula la matriz en el orden del catálogo; escribe `MATRIZ_TIEMPOS` y `results/r2/r2_asimetria.json`; imprime cuántos pares son asimétricos); `tests/test_red_real_r2.py`
   - Test primero: `tests/test_matriz.py::test_main_sintetico` (carpeta `processed` sintética en `tmp_path` con un grafo de `grafo_sintetico` fuertemente conexo guardado con `guardar_procesado` de R1 y un catálogo/lugares de 3 lugares: escribe la matriz 3 × 3 y el JSON con las claves del plan); `tests/test_red_real_r2.py::test_caso_14_lineal_igual_a_cola` (10 cercanos de `seleccionar_pares`, con `consultar(red, nodo_o, nodo_d, version)`: |Δt| ≤ 1e-6, misma ruta y mismos explorados), `::test_caso_14_ruta_y_networkx` (20 pares con `consultar(..., "cola_prioridad")`: `detalle_ruta(G, ruta)[0]` = tiempo ± 1e-6 y `nx.dijkstra_path_length(G, o, d, weight="travel_time")` = tiempo ± 1e-6), `::test_caso_16_matriz_real` (se salta si falta `matriz_tiempos.csv`: 42 × 42, ids en el orden del catálogo, diagonal 0, sin `inf`, T03↔T05 = 0, al menos un par asimétrico; `M[i][j]` = `consultar(red, nodo_i, nodo_j, "cola_prioridad")[0]` ± 1e-6 en 20 pares de `random.Random(2026)` y en los 20 de `seleccionar_pares`; reescribir con `guardar_matriz` en `tmp_path` da los mismos bytes)
   - Ejecutar (no es una medición de tiempo; decisión 3 de la Puerta 2: la corre el implementer): `.venv/bin/python -m rutas.r2.matriz` para generar `data/processed/matriz_tiempos.csv` y `results/r2/r2_asimetria.json`
   - Ver fallar: `test_main_sintetico` con el stub; las `red` con una mutación temporal (p. ej. escribir la matriz con `round(x, 2)` → falla el caso 16) y restaurar
   - Verificar: `.venv/bin/python -m pytest tests/test_matriz.py && .venv/bin/python -m pytest tests/test_red_real_r2.py`
   - anotar en `docs/anexo-ia.md`
+  - Nota: `main` lee el catálogo con `pandas.read_csv` (solo necesita los ids en orden) y no con `cargar_catalogo`, porque esa función exige los 42 lugares y la prueba sintética usa 3. La matriz real se generó con `python -m rutas.r2.matriz` (845 pares asimétricos de 861).
 
 **Fin de B3:** `.venv/bin/python -m pytest` en verde (ninguna `red` saltada). **Detenerse** y entregar el reporte con el número de pares asimétricos y el par de mayor diferencia. Esperar el commit del usuario.
 
