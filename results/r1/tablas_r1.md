@@ -13,11 +13,11 @@ Generadas por `rutas/r1/tablas.py` desde los CSV de `results/r1/`.
 
 | Red | V | E | V + E | Tiempo (ms) | Tiempo por elemento (µs) | Repeticiones |
 |---|---|---|---|---|---|---|
-| Radio de 2 km | 1659 | 3670 | 5329 | 12.34 | 2.315 | 5 |
-| Radio de 5 km | 4316 | 9717 | 14033 | 32.82 | 2.339 | 5 |
-| Radio de 10 km | 6010 | 13508 | 19518 | 45.95 | 2.354 | 5 |
-| Radio de 20 km | 8850 | 20141 | 28991 | 70.58 | 2.435 | 5 |
-| Departamento completo | 8877 | 20245 | 29122 | 70.80 | 2.431 | 5 |
+| Radio de 2 km | 1659 | 3670 | 5329 | 12.32 | 2.311 | 5 |
+| Radio de 5 km | 4316 | 9717 | 14033 | 34.05 | 2.426 | 5 |
+| Radio de 10 km | 6010 | 13508 | 19518 | 46.12 | 2.363 | 5 |
+| Radio de 20 km | 8850 | 20141 | 28991 | 71.47 | 2.465 | 5 |
+| Departamento completo | 8877 | 20245 | 29122 | 70.88 | 2.434 | 5 |
 
 ## Memoria: matriz vs listas de adyacencia
 
