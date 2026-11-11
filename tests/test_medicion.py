@@ -85,3 +85,27 @@ def test_en_hijo_error_en_el_hijo():
     with pytest.raises(RuntimeError, match="hijo"):
         medir_en_hijo(math.sqrt, (-1,))
     assert time.perf_counter() - inicio < 30       # falla ya, no espera el límite de 300 s
+
+
+# ---------- devolver_valor (R4, T17): el valor viaja después de parar el cronómetro ----------
+
+def test_en_hijo_devuelve_valor():
+    r = medir_en_hijo(math.sqrt, (16.0,), repeticiones=2, devolver_valor=True)
+    assert r.completada and r.valor == 4.0
+
+
+def test_en_hijo_sin_valor_por_defecto():
+    r = medir_en_hijo(math.sqrt, (16.0,), repeticiones=2)
+    assert r.completada and r.valor is None
+
+
+def test_en_hijo_valor_no_completada():
+    r = medir_en_hijo(time.sleep, (3,), limite_s=0.5, devolver_valor=True)
+    assert r.completada is False and r.valor is None
+
+
+def test_en_hijo_devuelve_tupla_con_lista():
+    from rutas.r4.held_karp import held_karp
+    from tests.test_tsp_clase import T_CLASE
+    r = medir_en_hijo(held_karp, (T_CLASE, 0, [1, 2, 3]), repeticiones=1, devolver_valor=True)
+    assert r.valor == (35.0, [0, 1, 3, 2, 0])
