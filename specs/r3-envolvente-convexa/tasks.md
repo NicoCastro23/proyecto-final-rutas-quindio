@@ -90,21 +90,21 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B3 · Red real, archivos de la envolvente y gráfica
 
-- [ ] T11 · Puntos de la red y envolvente real (caso 14, marcador `red`)
+- [x] T11 · Puntos de la red y envolvente real (caso 14, marcador `red`)
   - Archivos: `rutas/r3/puntos.py` (implementar `puntos_de_grafo(G)`: `x_utm`, `y_utm` de `sorted(G.nodes)` → `preparar_puntos`); `tests/test_red_real_r3.py` (crear con `pytestmark = pytest.mark.red`; usa la fixture `grafo_procesado_real`)
   - Test primero: `tests/test_puntos_r3.py::test_puntos_de_grafo_sintetico` (no `red`: `grafo_sintetico` de 3 nodos con `x_utm`/`y_utm` puestos a mano, dos de ellos iguales tras redondear → 2 puntos `int`), `tests/test_red_real_r3.py::test_caso_14_red_real` (8 791 puntos distintos; `envolvente` = `vertices_scipy` (por conjunto y normalizados); **14** vértices; `abs(area(v) − ConvexHull(numpy.array(puntos)).volume) ≤ 1`; `comprobar_envolvente` con los 8 791 puntos; todas las coordenadas dentro de x 401 796–446 623, y 464 304–520 840)
   - Ver fallar: `puntos_de_grafo` con `NotImplementedError`; la `red` con una mutación temporal (repartir con `>= 0` en lugar de `> 0` en `_lado`, que agrega alineados como vértices o rompe la igualdad con SciPy) y restaurar
   - Verificar: `.venv/bin/python -m pytest tests/test_puntos_r3.py && .venv/bin/python -m pytest tests/test_red_real_r3.py -k caso_14`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T12 · Archivos de la envolvente para R5 (caso 17; Requerimiento 5 «ver la envolvente»)
+- [x] T12 · Archivos de la envolvente para R5 (caso 17; Requerimiento 5 «ver la envolvente»)
   - Archivos: `rutas/r3/archivos.py` (stubs primero; luego `escribir_envolvente(vertices, carpeta=DATA_PROCESSED)` y `main(processed=DATA_PROCESSED)` como en el plan; `if __name__ == "__main__": main()`); `tests/test_archivos_r3.py`; `tests/test_red_real_r3.py`
   - Test primero: `tests/test_archivos_r3.py::test_caso_17_sintetico` (un polígono de 4 vértices en coordenadas UTM del Quindío (p. ej. alrededor de x 420 000, y 500 000) en `tmp_path`: el CSV tiene encabezado `orden,x_utm,y_utm,lat,lon`, 4 filas, `orden` 1..4, `x_utm`/`y_utm` enteros; el GeoJSON es `FeatureCollection` con un `Polygon` cuyo anillo tiene 5 posiciones y la última = la primera, `properties.vertices == 4` y `area_km2 == area(v) / 1e6`; ida y vuelta `a_utm(lon, lat)` vs `x_utm`, `y_utm` con error < 1 m en cada vértice), `::test_main_sintetico` (carpeta `processed` en `tmp_path` con un grafo de `grafo_sintetico` + `agregar_utm_a_nodos` guardado con `guardar_grafo`: escribe los dos archivos), `::test_main_no_escribe_si_difiere_de_scipy` (`monkeypatch` de `vertices_scipy` en el módulo para devolver otra lista → `ValueError` y no existe ningún archivo), `tests/test_red_real_r3.py::test_caso_17_archivos_reales` (se salta si falta `data/processed/envolvente.csv`: 14 filas = vértices de `envolvente` sobre la red; GeoJSON cerrado con 15 posiciones; ida y vuelta < 1 m; `area_km2` ≈ 1 631,5 ± 1)
   - Ejecutar (no es una medición de tiempo; lo corre el implementer, como la matriz de R2): `.venv/bin/python -m rutas.r3.archivos` para generar `data/processed/envolvente.csv` y `data/processed/envolvente.geojson`
   - Verificar: `.venv/bin/python -m pytest tests/test_archivos_r3.py && .venv/bin/python -m pytest tests/test_red_real_r3.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T13 · Gráfica del polígono desde los datos (`r3_envolvente.png`)
+- [x] T13 · Gráfica del polígono desde los datos (`r3_envolvente.png`)
   - Archivos: `rutas/r3/tablas.py` (crear con `grafica_envolvente` y `main` como stubs; implementar aquí `grafica_envolvente(processed=DATA_PROCESSED, salida=RESULTS_R3)`: crea la carpeta si no existe, lee el grafo y `envolvente.csv`, dibuja nodos grises pequeños, polígono cerrado en rojo con marcadores, ejes «x UTM (m)» / «y UTM (m)», aspecto igual, título con n y número de vértices; `matplotlib.use("Agg")`)
   - Test primero: `tests/test_tablas_r3.py::test_grafica_crea_png` (carpeta sintética como en `test_main_sintetico` de T12, con `escribir_envolvente`: el PNG existe y no está vacío), `::test_grafica_titulo_con_n_y_vertices` (espiando `Axes.set_title` como en `tests/test_tablas_r2.py`: el título contiene n y el número de vértices)
   - Ejecutar (no es medición): `.venv/bin/python -c "from rutas.r3.tablas import grafica_envolvente; print(grafica_envolvente())"` → `results/r3/r3_envolvente.png`

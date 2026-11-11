@@ -2,7 +2,8 @@
 import numpy as np
 import pytest
 
-from rutas.r3.puntos import LADO, SEMILLA, preparar_puntos, puntos_cuadrado, redondear
+from rutas.r3.puntos import LADO, SEMILLA, preparar_puntos, puntos_cuadrado, puntos_de_grafo, redondear
+from tests.conftest import grafo_sintetico
 
 
 def test_caso_9_redondeo():
@@ -39,3 +40,12 @@ def test_puntos_cuadrado_semilla():
     assert 990 < len(puntos) <= 1000
     assert all(0 <= x < LADO and 0 <= y < LADO for x, y in puntos)
     assert puntos == sorted(set(puntos))
+
+
+def test_puntos_de_grafo_sintetico():
+    # Tres nodos; el 1 y el 2 coinciden tras redondear (10.4 -> 10 y 9.6 -> 10): quedan 2 puntos
+    G = grafo_sintetico({1: (0, 0), 2: (0, 0), 3: (0, 0)}, [])
+    for id_nodo, (x, y) in {1: (10.4, 20.2), 2: (9.6, 19.8), 3: (-3.5, 7.0)}.items():
+        G.nodes[id_nodo]["x_utm"], G.nodes[id_nodo]["y_utm"] = x, y
+    assert puntos_de_grafo(G) == [(-3, 7), (10, 20)]
+    assert all(type(x) is int and type(y) is int for x, y in puntos_de_grafo(G))

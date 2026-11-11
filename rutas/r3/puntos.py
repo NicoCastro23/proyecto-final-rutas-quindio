@@ -22,7 +22,9 @@ def preparar_puntos(xs, ys):
 
 
 def puntos_de_grafo(G):
-    raise NotImplementedError
+    """Puntos enteros distintos de los nodos de G, desde x_utm, y_utm (metros, EPSG:32618, ya en R1)."""
+    ids = sorted(G.nodes)
+    return preparar_puntos([G.nodes[n]["x_utm"] for n in ids], [G.nodes[n]["y_utm"] for n in ids])
 
 
 def puntos_cuadrado(n, semilla=SEMILLA, lado=LADO):
