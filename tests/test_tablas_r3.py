@@ -71,7 +71,7 @@ def test_tablas_salen_de_los_archivos(resultados, processed):
     assert "2026" in md and "CPU de prueba" in md and "100.000" in md
     posiciones = [md.index(f[0]) for f in FILAS]
     assert posiciones == sorted(posiciones)                      # los cuatro nombres en orden
-    assert "1003" in md                                          # n pedido del primer cuadrado
+    assert "1 003" in md                                        # n pedido del primer cuadrado
 
 
 def test_no_completada_se_muestra(resultados, processed):
@@ -91,3 +91,12 @@ def test_main_genera_todo(resultados, processed):
     tablas.main(resultados, processed)
     assert (resultados / "tablas_r3.md").exists()
     assert (resultados / "r3_envolvente.png").read_bytes().startswith(b"\x89PNG")
+
+
+def test_n_con_espacio_de_miles_y_frase_con_mayuscula(resultados, processed):
+    # Revisión 1: la columna n dice "10 000" como el nombre del conjunto, no "10000"; solo presentación
+    tablas.main(resultados, processed)
+    md = (resultados / "tablas_r3.md").read_text(encoding="utf-8")
+    assert "| 8 791 |" in md and "| 1 000 |" in md and "| 10 000 |" in md and "| 50 000 |" in md
+    assert "| 10000 |" not in md and "| 1003 |" not in md and "| 1 003 |" in md   # n pedido también
+    assert "Cada cuadrado usa su propio Random(2026)" in md        # la frase empieza en mayúscula

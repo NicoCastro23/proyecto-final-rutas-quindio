@@ -156,7 +156,10 @@ Pruebas:
 .venv/bin/python -m pytest -m "not red"                 # sin datos descargados
 .venv/bin/python -m pytest tests/test_red_real_r3.py    # sobre la red real de R3 (necesita data/processed)
 .venv/bin/python -m pytest                              # todas
+.venv/bin/python -m pytest --lento tests/test_envolvente.py   # además, la prueba lenta del peor caso
 ```
+
+La prueba lenta (`test_peor_caso_2k_4k_sin_recursion_error`, marcador `lento`) **no corre por defecto** en ninguna invocación, ni siquiera con `-m red` o `-m "not red"`; solo con `--lento`. Comprueba el peor caso real de QuickHull: los 1 050 puntos (2^k, 4^k), k = 0 … 1 049, dejan la recursión en profundidad n − 1 (más de 1 000, por encima del límite por defecto de Python), así que sin `sys.setrecursionlimit` fallaría con `RecursionError`. Verifica que los 1 050 sean vértices y los invariantes geométricos. Tarda unos 3 s en este portátil.
 
 ### Notas
 

@@ -5,9 +5,11 @@ Un punto es una tupla (x, y) de int de Python. Los giros se calculan solo con en
 import sys
 
 # QuickHull es recursivo porque sigue la recurrencia del informe. Con particiones parejas la
-# profundidad es O(log n), pero en el peor caso llega a O(n) y el límite por defecto de Python
-# (~1 000 llamadas) cortaría la ejecución con RecursionError. 20 000 cubre los 8 791 nodos de la
-# red y los 5 000 puntos de la parábola de las pruebas.
+# profundidad es O(log n): 11 con el círculo de 2 000 puntos y 14 con la parábola de 5 000, y la
+# red de 8 791 nodos tampoco la necesita. El peor caso real son puntos como (2^k, 4^k): cada
+# paso deja casi todos los puntos de un solo lado, la profundidad llega a n - 1 y con n > 1 000
+# el límite por defecto de Python (~1 000 llamadas) cortaría la ejecución con RecursionError.
+# Por eso se sube el límite a 20 000 (spec, caso 18).
 sys.setrecursionlimit(max(sys.getrecursionlimit(), 20_000))
 
 

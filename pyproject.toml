@@ -1,4 +1,7 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-markers = ["red: usa la red real descargada y data/processed"]
+markers = [
+    "red: usa la red real descargada y data/processed",
+    "lento: tarda más de unos segundos; no corre por defecto, solo con --lento",
+]

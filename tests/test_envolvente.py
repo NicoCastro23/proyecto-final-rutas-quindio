@@ -131,3 +131,13 @@ def test_invariantes_detectan_errores():
 def test_limite_de_recursion():
     # QuickHull es recursivo: el módulo sube el límite de Python para el peor caso (profundidad O(n))
     assert sys.getrecursionlimit() >= 20_000
+
+
+@pytest.mark.lento
+def test_peor_caso_2k_4k_sin_recursion_error():
+    # Caso 18: con (2^k, 4^k) cada paso deja casi todos los puntos de un lado: profundidad ~ n - 1 > 1 000
+    n = 1_050
+    puntos = [(2 ** k, 4 ** k) for k in range(n)]
+    vertices = envolvente(puntos)           # sin RecursionError gracias a sys.setrecursionlimit
+    assert len(vertices) == n               # todos son vértices (están sobre una curva convexa)
+    comprobar_envolvente(vertices, puntos)

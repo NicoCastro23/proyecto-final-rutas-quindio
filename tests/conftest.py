@@ -10,6 +10,21 @@ from rutas.r1.utm import agregar_utm_a_nodos
 from rutas.r2.adyacencia import construir_adyacencia
 
 
+def pytest_addoption(parser):
+    parser.addoption("--lento", action="store_true", default=False,
+                     help="corre también las pruebas marcadas como lento (p. ej. el peor caso de R3)")
+
+
+def pytest_collection_modifyitems(config, items):
+    """Las pruebas `lento` se saltan salvo con --lento, sin importar el filtro -m que se use."""
+    if config.getoption("--lento"):
+        return
+    saltar = pytest.mark.skip(reason="prueba lenta: se corre con --lento")
+    for prueba in items:
+        if "lento" in prueba.keywords:
+            prueba.add_marker(saltar)
+
+
 def grafo_sintetico(nodos, aristas):
     """Construye un MultiDiGraph pequeño con el formato que deja OSMnx.
 

@@ -62,9 +62,15 @@ def _numero_o_texto(valor):
     return valor if valor == "no completada" else float(valor)
 
 
+def _con_miles(serie):
+    """Enteros con espacio de miles ("10 000"), como en el nombre del conjunto. Solo presentación."""
+    return [f"{int(v):,}".replace(",", " ") for v in serie]
+
+
 def _tabla_anexo(df):
     """La tabla del Anexo (conjunto, n, vértices, tiempos en ms y cociente) más las repeticiones."""
     df = df.copy()
+    df["n"] = _con_miles(df["n"])
     for columna in ("tiempo_propio_ms", "tiempo_scipy_ms", "cociente"):
         df[columna] = [_numero_o_texto(v) for v in df[columna]]
     df = df.rename(columns={"conjunto": "Conjunto de puntos", "vertices": "Vértices de la envolvente",
@@ -77,14 +83,17 @@ def _tabla_anexo(df):
 def _tabla_vertices_esperados(df):
     """Solo los cuadrados (la red no es uniforme): vértices obtenidos frente a (8/3) ln n."""
     cuadrados = df[df["conjunto"] != NOMBRE_RED]
-    tabla = pd.DataFrame({"Conjunto de puntos": cuadrados["conjunto"], "n": cuadrados["n"],
+    tabla = pd.DataFrame({"Conjunto de puntos": cuadrados["conjunto"], "n": _con_miles(cuadrados["n"]),
                           "Vértices obtenidos": cuadrados["vertices"],
                           "(8/3) ln n": [referencia_renyi_sulanke(n) for n in cuadrados["n"]]})
     return a_markdown(tabla, {"(8/3) ln n": 1})
 
 
 def _tabla_puntos(puntos):
-    tabla = pd.DataFrame(puntos["conjuntos"]).rename(columns={
+    tabla = pd.DataFrame(puntos["conjuntos"])
+    for columna in ("n_pedido", "n_obtenido"):
+        tabla[columna] = _con_miles(tabla[columna])
+    tabla = tabla.rename(columns={
         "conjunto": "Conjunto de puntos", "n_pedido": "n pedido", "n_obtenido": "n obtenido"})
     return a_markdown(tabla)
 
@@ -105,7 +114,7 @@ def main(results=RESULTS_R3, processed=DATA_PROCESSED):
         "## Vértices frente a (8/3) ln n\n\n" + _tabla_vertices_esperados(df),
         f"## Puntos y semilla\n\nSemilla: {puntos['semilla']} (`{puntos['generador']}`). "
         f"Cuadrado [0, {puntos['lado']}) x [0, {puntos['lado']}) m, redondeo `{puntos['redondeo']}`. "
-        f"{puntos['nota']}.\n\n" + _tabla_puntos(puntos),
+        f"{puntos['nota'][:1].upper() + puntos['nota'][1:]}.\n\n" + _tabla_puntos(puntos),
         "## Envolvente de la red\n\n"
         f"- Vértices: {propiedades['vertices']}\n- Área: {propiedades['area_km2']:.3f} km²",
         "## Máquina\n\n" + "\n".join(f"- {k}: {v}" for k, v in maquina.items()),

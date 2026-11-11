@@ -159,6 +159,13 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
   - Verificar: todas pasan y ninguna `red` saltada; `envolvente.csv` y `.geojson` sin cambios respecto a B3 (mismo grafo → mismos bytes); `results/r3/` con los 5 archivos de la spec (`r3_envolvente.csv`, `r3_puntos.json`, `maquina.json`, `tablas_r3.md`, `r3_envolvente.png`)
   - Nota: la medición real la ejecutó el usuario con el portátil enchufado; en esta sesión no se regeneró nada, solo se corrió `pytest -q` (294 passed).
 
+## Revisión 1 (sugerencias del reviewer)
+
+- [x] R1.1 · Comentario de `rutas/r3/envolvente.py` sobre `setrecursionlimit`: profundidad O(log n) con particiones parejas (círculo 11, parábola 14); el peor caso real (2^k, 4^k) llega a n − 1. Sin cambio de código.
+- [x] R1.2 · Caso 18: `test_peor_caso_2k_4k_sin_recursion_error` (marcador `lento`), opción `--lento` y `pytest_collection_modifyitems` en `tests/conftest.py`, marcador en `pyproject.toml`, mecanismo probado con pytester en `tests/test_opcion_lento.py`, y explicación en el README («Reproducir R3»).
+  - Nota: la spec estima 15–20 s; en esta máquina tarda unos 2,6 s.
+- [x] R1.3 · `rutas/r3/tablas.py`: n con espacio de miles y frase de la nota con mayúscula inicial (solo presentación); `tablas_r3.md` regenerado desde el CSV existente, sin medir.
+
 ## Cobertura
 
 | Caso / punto | Tarea |
