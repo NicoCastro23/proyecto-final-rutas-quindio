@@ -6,6 +6,7 @@ import math
 import pytest
 
 from rutas.r4.fuerza_bruta import fuerza_bruta
+from rutas.r4.held_karp import held_karp
 from rutas.r4.recorrido import costo_recorrido, validar_entrada
 from rutas.r4.vecino import vecino_mas_cercano
 
@@ -13,7 +14,7 @@ from rutas.r4.vecino import vecino_mas_cercano
 T_CLASE = [[0, 10, 15, 20], [5, 0, 9, 10], [6, 13, 0, 12], [8, 8, 9, 0]]
 
 # Métodos que deben cumplir los casos 6 a 10; crece con los bloques (T6: vecino, T8: Held-Karp).
-METODOS_CLASE = [fuerza_bruta, vecino_mas_cercano]
+METODOS_CLASE = [fuerza_bruta, vecino_mas_cercano, held_karp]
 
 # Matriz de la vía (caso 4b): posiciones A = 0, B = 1, C = -2, D = 5; T[i][j] = |pos_i - pos_j|.
 POSICIONES_VIA = [0, 1, -2, 5]
@@ -30,6 +31,8 @@ def test_caso_1_seis_recorridos():
 def test_caso_5_asimetria():
     assert costo_recorrido(T_CLASE, [0, 2, 3, 1, 0]) == 40
     assert costo_recorrido(T_CLASE, [0, 2, 3, 1, 0]) != 35
+    # El recorrido óptimo de Held-Karp no es el inverso del otro sentido.
+    assert held_karp(T_CLASE, 0, [1, 2, 3])[1] != [0, 2, 3, 1, 0]
 
 
 def test_costo_recorrido_bordes():
@@ -55,11 +58,20 @@ def test_caso_1_2_fuerza_bruta():
     assert fuerza_bruta(T_CLASE, 0, [1, 2, 3]) == (35, [0, 1, 3, 2, 0])
 
 
+def test_caso_2_held_karp():
+    assert held_karp(T_CLASE, 0, [1, 2, 3]) == (35, [0, 1, 3, 2, 0])
+
+
 def test_caso_4b_via():
     costos = sorted(costo_recorrido(T_VIA, [0, *p, 0])
                     for p in itertools.permutations([1, 2, 3]))
     assert costos == [14, 14, 14, 14, 16, 16]
     assert fuerza_bruta(T_VIA, 0, [1, 2, 3]) == (14, [0, 1, 3, 2, 0])
+    # Held-Karp: costo 14 y un recorrido válido cuyo costo, recalculado desde T, es 14.
+    tiempo_hk, recorrido_hk = held_karp(T_VIA, 0, [1, 2, 3])
+    assert tiempo_hk == 14
+    assert recorrido_hk[0] == recorrido_hk[-1] == 0 and sorted(recorrido_hk[1:-1]) == [1, 2, 3]
+    assert costo_recorrido(T_VIA, recorrido_hk) == 14
     # El voraz cae en 16 y su brecha es 14,29 %.
     tiempo, recorrido = vecino_mas_cercano(T_VIA, 0, [1, 2, 3])
     assert (tiempo, recorrido) == (16, [0, 1, 2, 3, 0])
@@ -109,6 +121,10 @@ def test_caso_10_errores(metodo, lugares):
 def test_caso_17_desempate():
     T = [[0 if i == j else 1 for j in range(4)] for i in range(4)]
     assert fuerza_bruta(T, 0, [1, 2, 3]) == (4, [0, 1, 2, 3, 0])
+    tiempo_hk, recorrido_hk = held_karp(T, 0, [1, 2, 3])
+    assert tiempo_hk == 4
+    assert recorrido_hk[0] == recorrido_hk[-1] == 0 and sorted(recorrido_hk[1:-1]) == [1, 2, 3]
+    assert costo_recorrido(T, recorrido_hk) == 4
 
 
 @pytest.mark.parametrize("metodo", METODOS_CLASE)

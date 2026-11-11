@@ -66,33 +66,33 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
 
 ## B2 · Held-Karp con su tabla, contador, conteos, memoria y propiedades
 
-- [ ] T7 · Tabla de Held-Karp (caso 3; Comportamiento 3)
+- [x] T7 · Tabla de Held-Karp (caso 3; Comportamiento 3)
   - Archivos: `rutas/r4/held_karp.py` (implementar `tabla_held_karp(T, s, lugares, contador=None)` según el plan: `L = sorted(lugares)`; `costo` y `padre` de 2^k listas de k elementos con `math.inf`/`None`; base `costo[1 << j][j] = T[s][L[j]]`; máscaras crecientes con ≥ 2 bits; para cada j del conjunto, i en orden creciente con `<` estricto; lectura `T[L[i]][L[j]]` una vez por transición; el contador todavía no se usa; `held_karp` sigue como stub)
   - Test primero: `tests/test_held_karp.py::test_caso_3_tabla` (`T_CLASE`, s = 0, lugares `[1, 2, 3]`: las 12 celdas usadas de la spec, escritas como `{(mascara, lugar): (C, padre_lugar)}` y traducidas en la prueba con índice local = lugar − 1; p. ej. `costo[0b001][0] == 10` y `padre[0b001][0] is None`; `costo[0b011][0] == 28` y `padre[0b011][0] == 1` (lugar 2); `costo[0b111][1] == 29` y `padre[0b111][1] == 2` (lugar 3)), `::test_tabla_celdas_no_usadas` (máscara 0 y las celdas con j ∉ S quedan `inf` / `None`; dimensiones 8 × 3), `::test_tabla_lugares_desordenados` (lugares `[3, 1, 2]` → misma tabla que `[1, 2, 3]`)
   - Verificar: `.venv/bin/python -m pytest tests/test_held_karp.py -k "tabla"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T8 · `held_karp`: cierre y reconstrucción del recorrido (casos 2, 4b, 5–10, 17; punto 1 «devolver el recorrido»)
+- [x] T8 · `held_karp`: cierre y reconstrucción del recorrido (casos 2, 4b, 5–10, 17; punto 1 «devolver el recorrido»)
   - Archivos: `rutas/r4/held_karp.py` (implementar `held_karp` según el esqueleto del plan: `validar_entrada`; k = 0 → `(0.0, [s])`; cierre con `<` estricto (gana el menor j); `ValueError("no hay recorrido finito")` si el óptimo es `inf`; reconstrucción con `padre` hacia atrás, invertida, traducida con `L`)
   - Test primero: agregar `held_karp` a `METODOS_CLASE` (casos 6–10); `tests/test_tsp_clase.py::test_caso_2_held_karp` (`(35, [0, 1, 3, 2, 0])`), `::test_caso_4b_via` (ampliar: HK → costo 14 y recorrido válido con `costo_recorrido` = 14), `::test_caso_5_asimetria` (ampliar: el recorrido de HK no es el inverso `[0, 2, 3, 1, 0]`), `::test_caso_17_desempate` (ampliar: HK → costo 4, recorrido permutación válida de `[1, 2, 3]` con `costo_recorrido` = 4)
   - Ver fallar: con `NotImplementedError` del stub
   - Verificar: `.venv/bin/python -m pytest tests/test_tsp_clase.py tests/test_held_karp.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T9 · Contador opcional de transiciones (caso 15, parte medida; sección 6.2)
+- [x] T9 · Contador opcional de transiciones (caso 15, parte medida; sección 6.2)
   - Archivos: `rutas/r4/held_karp.py` (en `tabla_held_karp`, si `contador is not None`: `contador[0] += k` en la base y `+= len(bits) * (len(bits) - 1)` **una vez por máscara**, nunca dentro del ciclo interno; en `held_karp`, `+= k` en el cierre)
   - Test primero: `tests/test_held_karp.py::test_caso_15_contador` (parametrizada k = 3, 5, 8, 10, 12 con matrices aleatorias de enteros 1..100, `random.Random(2026)`: `c = [0]; held_karp(T, 0, list(range(1, k + 1)), contador=c)` → `c[0]` = 18, 170, 3 600, 23 060, 135 192), `::test_contador_igual_a_lecturas_de_T` (k = 3, 5, 8: cada fila envuelta en `class FilaContada(list)` cuyo `__getitem__` suma 1 a un contador compartido; las lecturas de `T` durante `held_karp` son iguales a `c[0]`), `::test_sin_contador_por_defecto` (`inspect.signature(held_karp).parameters["contador"].default is None` y `held_karp(T, s, lugares)` con 3 argumentos funciona)
   - Ver fallar: `c[0]` queda en 0 con el código de T8 (el contador aún no se incrementa)
   - Verificar: `.venv/bin/python -m pytest tests/test_held_karp.py -k "contador or lecturas"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T10 · Memoria estimada y conteos teóricos (casos 14 y 15, parte teórica; punto 1 «estimar memoria»)
+- [x] T10 · Memoria estimada y conteos teóricos (casos 14 y 15, parte teórica; punto 1 «estimar memoria»)
   - Archivos: `rutas/r4/conteos.py` (`memoria_held_karp(k)` y `conteos_teoricos(k)` según el plan; `math.factorial` está permitido: no es un algoritmo del enunciado)
   - Test primero: `tests/test_conteos_r4.py::test_caso_14_memoria` (k = 5: 160 celdas, 1 920 B; k = 8: 2 048, 24 576; k = 10: 10 240, 122 880; k = 12: 49 152 celdas, 589 824 B, `mb_estimados == pytest.approx(0.589824)`), `::test_caso_15_conteos_teoricos` (transiciones k = 3, 5, 8, 10, 12 → 18, 170, 3 600, 23 060, 135 192; k = 12: `permutaciones_fb == 479_001_600`, `tramos_fb == 6_227_020_800`), `::test_conteos_bordes` (k = 0 → 0 transiciones; k = 1 → 2)
   - Verificar: `.venv/bin/python -m pytest tests/test_conteos_r4.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T11 · Propiedades: FB = HK, FB = `itertools`, voraz ≥ óptimo y bordes (casos 11, 12; bordes de la spec)
+- [x] T11 · Propiedades: FB = HK, FB = `itertools`, voraz ≥ óptimo y bordes (casos 11, 12; bordes de la spec)
   - Archivos: `tests/test_tsp_propiedad.py` (solo pruebas)
   - Test primero: `::test_caso_11_fb_igual_hk_y_voraz` (`random.Random(2026)`; 100 instancias: n = k + 1 con k entre 1 y 8, `T[i][j]` entero de 1 a 100 para i ≠ j (asimétrica), s = 0, `lugares = list(range(1, n))` barajados; FB y HK con el mismo tiempo (±1e-6); el recorrido de HK empieza y termina en `s`, contiene cada lugar una vez y su `costo_recorrido` coincide (±1e-6); voraz ≥ óptimo − 1e-9), `::test_caso_12_fb_contra_itertools` (mismas instancias, regeneradas con la misma semilla: el tiempo de FB = `min` de los costos de `itertools.permutations(lugares)`), `::test_costo_cero_entre_lugares` (dos lugares con `T` = 0 entre ellos, como T03/T05: los tres métodos sin error y FB = HK), `::test_matriz_simetrica` (matriz simétrica aleatoria: el inverso del recorrido de HK cuesta lo mismo; FB = HK)
   - Ver fallar: el código ya existe; se valida con una **mutación temporal** en `tabla_held_karp` (sumar `T[L[j]][L[i]]` en lugar de `T[L[i]][L[j]]`) que debe hacer fallar el caso 11, y se restaura. Anotar en el reporte el resultado de la mutación
