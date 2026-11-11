@@ -1,6 +1,7 @@
 """Pruebas de rutas/r4/tablas.py con CSV/JSON de ejemplo escritos en tmp_path (nunca los reales)."""
 import json
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from matplotlib.axes import Axes
@@ -75,6 +76,23 @@ def test_cocientes_medidos_y_predichos():
     assert celdas[1:] == ["6.00", "7.20", "2.50", "2.88"]
     # FB no resuelve 11: no hay cociente de 10 a 11 ni de 11 a 12
     assert "—" in next(l for l in md.splitlines() if l.startswith("| 10 a 11 |"))
+
+
+def test_grafica_marcas_enteras_en_k(tmp_path, monkeypatch):
+    # Con solo k = 5..8 (como en una corrida corta) matplotlib ponía marcas 5,5 / 6,5...
+    filas = [[k, m, 1.0 + k, 5, "ok", 9000.5, "C01-A-B-C01"]
+             for k in range(5, 9) for m in ("fuerza_bruta", "held_karp")]
+    pd.DataFrame(filas, columns=COLUMNAS_EXACTAS).to_csv(tmp_path / "r4_exactas.csv", index=False)
+    marcas = []
+    savefig = plt.Figure.savefig
+    def guardar(fig, *a, **k):
+        fig.canvas.draw()
+        marcas.extend(fig.axes[0].get_xticks())
+        return savefig(fig, *a, **k)
+    monkeypatch.setattr(plt.Figure, "savefig", guardar)
+    tablas.grafica_tiempo_vs_k(tmp_path)
+    visibles = [m for m in marcas if 5 <= m <= 8]
+    assert visibles and all(float(m).is_integer() for m in visibles)
 
 
 def test_caso_20_grafica(tmp_path, monkeypatch):

@@ -19,6 +19,8 @@
       "jornada_antes_min": 1255.2167694454724,
       "jornada_despues_min": 809.5959564868207,
       "ahorro_min": 445.62081295865175,
+      "visita_min": 420.0,
+      "desvio_min": 25.620812958651754,
       "lugar": "Parque Nacional del Café"
     },
     {
@@ -26,6 +28,8 @@
       "jornada_antes_min": 809.5959564868207,
       "jornada_despues_min": 613.1265113559894,
       "ahorro_min": 196.46944513083133,
+      "visita_min": 180.0,
+      "desvio_min": 16.469445130831332,
       "lugar": "Ecoparque Peñas Blancas"
     }
   ],

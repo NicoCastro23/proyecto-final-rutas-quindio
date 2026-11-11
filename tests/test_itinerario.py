@@ -79,6 +79,21 @@ def test_filas_y_acumulado():
     assert totales["visitas_min"] == 360
 
 
+def test_filas_siguen_el_recorrido_de_held_karp():
+    """Anillo dirigido 0 -> 3 -> 1 -> 5 -> 2 -> 6 -> 4 -> 0 con arcos de 1 min y el resto de 100:
+    el único orden óptimo no es el creciente, así que las filas deben seguir a Held-Karp."""
+    anillo = [0, 3, 1, 5, 2, 6, 4, 0]
+    T = [[6000.0] * 7 for _ in range(7)]
+    for a, b in zip(anillo, anillo[1:]):
+        T[a][b] = 60.0
+    for i in range(7):
+        T[i][i] = 0.0
+    filas, _, totales = itinerario_dia(T, IDS, 0, [1, 2, 3, 4, 5, 6], VISITA, jornada_max_min=1000)
+    assert [f["id"] for f in filas[:-1]] == [IDS[i] for i in anillo[1:-1]]
+    assert totales["desplazamientos_min"] == pytest.approx(7.0)
+    assert [f["desplazamiento_min"] for f in filas] == pytest.approx([1.0] * 7)
+
+
 def test_cabe_de_entrada_no_quita():
     _, quitados, totales = itinerario_dia(matriz_frontera(), IDS, 0, [1, 2, 3, 4, 5, 6], VISITA,
                                           jornada_max_min=1000)
@@ -162,3 +177,12 @@ def test_main_sintetico(tmp_path):
     main(matriz=matriz, catalogo=catalogo, salida=salida, partida="C01", atractivos=ids[1:])
     assert (salida / "r4_itinerario.csv").exists()
     assert (salida / "r4_itinerario.json").exists()
+
+
+def test_quitado_separa_visita_y_desvio():
+    """ahorro_min = visita_min + desvio_min: X6 ahorra 241 = 60 de visita + 181 de desvío."""
+    _, quitados, _ = itinerario_dia(matriz_frontera(1), IDS, 0, [1, 2, 3, 4, 5, 6], VISITA)
+    q = quitados[0]
+    assert q["visita_min"] == 60
+    assert q["desvio_min"] == pytest.approx(181)
+    assert q["ahorro_min"] == pytest.approx(q["visita_min"] + q["desvio_min"])

@@ -1,18 +1,22 @@
 """Pruebas del generador propio de permutaciones y guardia de dependencias de R4."""
 import itertools
+import re
 
 from rutas import config
 from rutas.r4.permutaciones import permutaciones_lexicograficas
 
 
 def test_sin_itertools_ni_networkx():
-    # Guardia para todo R4: los algoritmos no pueden usar itertools, NetworkX ni NumPy.
+    # Guardia para todo R4: los algoritmos no pueden usar itertools, NetworkX, SciPy ni NumPy.
     archivos = sorted((config.RAIZ / "rutas" / "r4").glob("*.py"))
     assert archivos, "no hay módulos en rutas/r4"
     for archivo in archivos:
         texto = archivo.read_text(encoding="utf-8")
-        for prohibido in ("itertools", "networkx", "import numpy"):
+        for prohibido in ("itertools", "networkx", "scipy"):
             assert prohibido not in texto, f"{archivo.name} contiene {prohibido}"
+        # NumPy se detecta solo como importación (por_ids.py nombra numpy.float64 en un comentario).
+        assert not re.search(r"^\s*(import|from)\s+(numpy|scipy|networkx|itertools)\b", texto,
+                             re.MULTILINE), f"{archivo.name} importa una librería prohibida"
 
 
 def test_caso_13_orden_lexicografico():

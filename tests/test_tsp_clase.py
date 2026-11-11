@@ -127,6 +127,16 @@ def test_caso_17_desempate():
     assert costo_recorrido(T, recorrido_hk) == 4
 
 
+def test_held_karp_desempates_menor_i_y_menor_j():
+    # Todos los arcos valen 1. Cierre: gana el menor j (el lugar 1 queda de último). Paso: gana
+    # el menor i (antes de 1 va 2, y antes de 2 va 3). Reconstruido hacia atrás: 0, 3, 2, 1, 0.
+    T = [[0 if i == j else 1 for j in range(4)] for i in range(4)]
+    assert held_karp(T, 0, [1, 2, 3]) == (4, [0, 3, 2, 1, 0])
+    assert held_karp(T, 0, [3, 1, 2]) == (4, [0, 3, 2, 1, 0])
+    T5 = [[0 if i == j else 1 for j in range(5)] for i in range(5)]
+    assert held_karp(T5, 0, [1, 2, 3, 4]) == (5, [0, 4, 3, 2, 1, 0])
+
+
 @pytest.mark.parametrize("metodo", METODOS_CLASE)
 def test_no_modifica_entradas(metodo):
     T, lugares = copy.deepcopy(T_CLASE), [3, 1, 2]

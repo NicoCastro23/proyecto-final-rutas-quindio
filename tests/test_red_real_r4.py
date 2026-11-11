@@ -56,6 +56,14 @@ def test_caso_19c_itinerario(red_real):
     assert totales["jornada_min"] == pytest.approx(613.1, abs=0.1)
     assert totales["atractivos_finales"] == 6
     assert totales["cabe"]
+    # Las filas siguen el recorrido de Held-Karp (no el orden de los índices) y suman la jornada.
+    assert [f["id"] for f in filas[:-1]] == ["A04", "A07", "A06", "A14", "A05", "A08"]
+    finales = [ids.index(f["id"]) for f in filas[:-1]]
+    recorrido = held_karp(T, ids.index("C01"), finales)[1]
+    assert [f["id"] for f in filas[:-1]] == [ids[i] for i in recorrido[1:-1]]
+    desplazamientos = sum(f["desplazamiento_min"] for f in filas)
+    assert desplazamientos == pytest.approx(totales["jornada_min"] - totales["visitas_min"])
+    assert quitados[0]["visita_min"] + quitados[0]["desvio_min"] == pytest.approx(quitados[0]["ahorro_min"])
 
 
 def test_archivos_itinerario_reales(red_real):

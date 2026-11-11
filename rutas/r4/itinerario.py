@@ -54,9 +54,13 @@ def itinerario_dia(T, ids, s, atractivos, visita_min, jornada_max_min=JORNADA_MA
             if mejor is None or j < mejor[0]:          # '<' estricto: empate, gana el menor índice
                 mejor = (j, a, r)
         nueva_jornada, quitado, recorrido = mejor
+        ahorro = jornada - nueva_jornada
+        # El ahorro se explica en dos partes: la visita que ya no se hace y el desvío que se evita.
         quitados.append({"id": ids[quitado], "jornada_antes_min": jornada,
                          "jornada_despues_min": nueva_jornada,
-                         "ahorro_min": jornada - nueva_jornada})
+                         "ahorro_min": ahorro,
+                         "visita_min": visita_min[quitado],
+                         "desvio_min": ahorro - visita_min[quitado]})
         actuales.remove(quitado)
         jornada = nueva_jornada
 

@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")           # sin ventana: la gráfica solo se guarda en un archivo
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.ticker import MaxNLocator  # noqa: E402
 import pandas as pd  # noqa: E402
 
 from rutas.config import RESULTS_R4  # noqa: E402
@@ -87,6 +88,7 @@ def grafica_tiempo_vs_k(results=RESULTS_R4):
         if len(sin_completar):
             etiqueta += f" (no completada desde k = {int(sin_completar['k'].min())})"
         ax.plot(list(tiempos), list(tiempos.values()), marker="o", label=etiqueta)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))   # k es entero: sin marcas como 5,5
     ax.set_yscale("log")                  # FB crece como k! y HK como 2^k: en lineal no se ve HK
     ax.set_xlabel("k (lugares a visitar)")
     ax.set_ylabel("Tiempo (ms, escala logarítmica)")

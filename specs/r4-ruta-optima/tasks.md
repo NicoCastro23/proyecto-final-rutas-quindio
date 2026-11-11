@@ -189,6 +189,13 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
   - Nota: las pruebas de `comprobar_resultados_r4` con CSV alterados se pusieron en `tests/test_medir_exactas.py` (importan la función de `tests/test_red_real_r4.py`). `test_resultados_medidos` se salta mientras no exista `results/r4/r4_exactas.csv`.
   - anotar en `docs/anexo-ia.md`
 
+### Ronda 1, sugerencias del reviewer (aplicadas después de la aprobación)
+- [x] S1 Orden del itinerario: `tests/test_itinerario.py::test_filas_siguen_el_recorrido_de_held_karp` (anillo dirigido donde el orden importa) y aserciones nuevas en el caso 19c (`A04, A07, A06, A14, A05, A08`, igual al recorrido de Held-Karp, y desplazamientos = jornada − visitas). La mutación `sorted(recorrido[1:-1])` ahora falla.
+- [x] S2 Desempates de HK: `tests/test_tsp_clase.py::test_held_karp_desempates_menor_i_y_menor_j`. Nota: con todos los arcos = 1, HK devuelve `[0, 3, 2, 1, 0]` (no `[0, 1, 2, 3, 0]`): el cierre elige el menor j (el lugar 1 queda de último) y el paso el menor i, y la reconstrucción va hacia atrás. Es coherente con la spec; se fijó ese recorrido. Cambiar `<` por `<=` en el paso o en el cierre hace fallar la prueba.
+- [x] S3 Guardia de librerías: busca `itertools`, `networkx` y `scipy` como texto, y `numpy`/`scipy`/`networkx`/`itertools` como `import`/`from` (por_ids.py nombra `numpy.float64` en un comentario, por eso numpy no se busca como texto).
+- [x] S4 Gráfica con `MaxNLocator(integer=True)`; prueba `test_grafica_marcas_enteras_en_k` con k = 5..8.
+- [x] S5 `quitados` del itinerario con `visita_min` y `desvio_min` (= ahorro − visita); `results/r4/r4_itinerario.json` regenerado; el CSV y `tablas_r4.md` no cambian.
+
 **Fin de B4:** `.venv/bin/python -m pytest -m "not red"` en verde, `r4_memoria.csv`, `r4_calidad*.csv` y `tablas_r4.md` (parcial) generados, y el comando de T22 entregado. **Detenerse.** El usuario corre la medición y hace su commit.
 
 ## Cierre
