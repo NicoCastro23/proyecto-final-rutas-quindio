@@ -43,3 +43,7 @@ def test_rutas_r3():
     assert config.ENVOLVENTE_GEOJSON.name == "envolvente.geojson"
     assert config.ENVOLVENTE_CSV.parent == config.DATA_PROCESSED
     assert config.ENVOLVENTE_GEOJSON.parent == config.DATA_PROCESSED
+
+
+def test_rutas_r4():
+    assert config.RESULTS_R4 == config.RAIZ / "results" / "r4"
