@@ -143,13 +143,13 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## Cierre
 
-- [ ] T17 · Anexo de IA y «Reproducir R3» en el README
+- [x] T17 · Anexo de IA y «Reproducir R3» en el README
   - Archivos: `docs/anexo-ia.md` (local; entradas de R3: plan y tareas con el agente planner; código y pruebas con el implementer; cómo se verificó: casos a mano 1–9, red de la clase (10), propiedad y cuadrados contra SciPy (11, 12), invariantes (13), red real contra SciPy y área (14), círculo y parábola (15, 16), ida y vuelta de coordenadas (17), mutaciones temporales); `README.md` (sección «Reproducir R3» después de «Reproducir R2»: requisito de haber corrido R1; tabla con `rutas.r3.archivos`, `rutas.r3.medir_envolvente`, `rutas.r3.tablas` y lo que deja cada uno; semilla 2026 y regla de redondeo; nota de medir enchufado; pruebas `pytest -m "not red"`, `pytest tests/test_red_real_r3.py` y `pytest`)
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "R3" docs/anexo-ia.md && grep -n "rutas.r3.medir_envolvente" README.md`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T18 · Suite completa y regeneración de todos los resultados de R3 (la ejecuta el usuario con el portátil enchufado)
+- [x] T18 · Suite completa y regeneración de todos los resultados de R3 (la ejecuta el usuario con el portátil enchufado)
   - Archivos: ninguno nuevo (regenera `data/processed/envolvente.csv`, `data/processed/envolvente.geojson` y `results/r3/*`)
   - Test primero: no aplica
   - Comando que se entrega al usuario:
@@ -157,6 +157,7 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
     cd /Users/santiagopolaniapinzon/proyecto-final-rutas-quindio && .venv/bin/python -m rutas.r3.archivos && .venv/bin/python -m rutas.r3.medir_envolvente && .venv/bin/python -m rutas.r3.tablas && .venv/bin/python -m pytest
     ```
   - Verificar: todas pasan y ninguna `red` saltada; `envolvente.csv` y `.geojson` sin cambios respecto a B3 (mismo grafo → mismos bytes); `results/r3/` con los 5 archivos de la spec (`r3_envolvente.csv`, `r3_puntos.json`, `maquina.json`, `tablas_r3.md`, `r3_envolvente.png`)
+  - Nota: la medición real la ejecutó el usuario con el portátil enchufado; en esta sesión no se regeneró nada, solo se corrió `pytest -q` (294 passed).
 
 ## Cobertura
 

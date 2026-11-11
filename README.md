@@ -137,3 +137,30 @@ Pruebas:
 
 - Las pruebas de los casos de la clase usan la copia versionada `tests/datos/red_clase.json`, así que no necesitan datos descargados.
 - La semilla de los pares (2026) queda documentada en `results/r2/r2_pares.json`.
+
+## Reproducir R3
+
+Todas las órdenes se corren desde la raíz del repositorio, con el mismo entorno de R1. **Requisito:** haber hecho R1 (debe existir `data/processed/` con el grafo).
+
+### Comandos, en orden
+
+| Orden | Qué hace | Deja |
+|---|---|---|
+| `.venv/bin/python -m rutas.r3.archivos` | Calcula la envolvente convexa (QuickHull propio) de la red real y la compara con SciPy antes de escribir; si difieren, no escribe nada. No mide tiempos. | `data/processed/envolvente.csv` y `data/processed/envolvente.geojson` (para R5) |
+| `.venv/bin/python -m rutas.r3.medir_envolvente` | Mide la envolvente propia frente a SciPy en la red real y en cuadrados de 1 000, 10 000 y 50 000 puntos (semilla 2026, coordenadas en [0, 10⁶)²). Antes comprueba que ambas den los mismos vértices; si no, no escribe nada. 5 repeticiones, mediana en ms. Tarda unos segundos. Medir con el portátil enchufado y sin otros procesos pesados. | `results/r3/r3_envolvente.csv`, `r3_puntos.json` y `maquina.json` |
+| `.venv/bin/python -m rutas.r3.tablas` | Genera las tablas y la gráfica desde los CSV, no a mano. | `results/r3/tablas_r3.md` y `r3_envolvente.png` |
+
+Pruebas:
+
+```bash
+.venv/bin/python -m pytest -m "not red"                 # sin datos descargados
+.venv/bin/python -m pytest tests/test_red_real_r3.py    # sobre la red real de R3 (necesita data/processed)
+.venv/bin/python -m pytest                              # todas
+```
+
+### Notas
+
+- Los puntos se pasan a UTM 18N y se redondean con floor(x + 0.5) a enteros, quitando duplicados.
+- SciPy recibe un arreglo float64 construido fuera del cronómetro; solo se mide la llamada a `ConvexHull`. Lo mismo para el algoritmo propio: la preparación de puntos queda fuera.
+- Los casos de la clase usan la sección R3 de la copia versionada `tests/datos/red_clase.json`, así que no necesitan datos descargados.
+- La semilla de los cuadrados (2026) queda documentada en `results/r3/r3_puntos.json`.
