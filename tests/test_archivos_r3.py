@@ -4,12 +4,11 @@ import json
 
 import pytest
 
-from rutas.r1.persistencia import guardar_grafo
-from rutas.r1.utm import a_utm, agregar_utm_a_nodos
+from rutas.r1.utm import a_utm
 from rutas.r3 import archivos
 from rutas.r3.archivos import escribir_envolvente, main
 from rutas.r3.envolvente import area
-from tests.conftest import grafo_sintetico
+from tests.conftest import carpeta_sintetica
 
 # Cuadrilátero antihorario en coordenadas UTM del Quindío
 VERTICES = [(420_000, 500_000), (430_000, 501_000), (429_000, 510_000), (419_500, 508_000)]
@@ -46,17 +45,8 @@ def test_caso_17_sintetico(tmp_path):
     comprobar_archivos(ruta_csv, ruta_geojson, VERTICES)
 
 
-def _carpeta_sintetica(tmp_path):
-    """Carpeta processed con un grafo de 6 nodos (cerca de Armenia) con x_utm, y_utm."""
-    nodos = {1: (-75.70, 4.50), 2: (-75.60, 4.50), 3: (-75.60, 4.60), 4: (-75.70, 4.60),
-             5: (-75.65, 4.55), 6: (-75.65, 4.50)}
-    G = agregar_utm_a_nodos(grafo_sintetico(nodos, [(1, 2, {}), (2, 3, {})]))
-    guardar_grafo(G, tmp_path)
-    return tmp_path
-
-
 def test_main_sintetico(tmp_path):
-    main(_carpeta_sintetica(tmp_path))
+    main(carpeta_sintetica(tmp_path))
     filas = leer_csv(tmp_path / "envolvente.csv")
     assert len(filas) == 4                      # el nodo 5 es interior y el 6 está sobre un lado
     assert (tmp_path / "envolvente.geojson").exists()
@@ -65,6 +55,6 @@ def test_main_sintetico(tmp_path):
 def test_main_no_escribe_si_difiere_de_scipy(tmp_path, monkeypatch):
     monkeypatch.setattr(archivos, "vertices_scipy", lambda puntos: [(0, 0), (1, 0), (0, 1)])
     with pytest.raises(ValueError):
-        main(_carpeta_sintetica(tmp_path))
+        main(carpeta_sintetica(tmp_path))
     assert not (tmp_path / "envolvente.csv").exists()
     assert not (tmp_path / "envolvente.geojson").exists()

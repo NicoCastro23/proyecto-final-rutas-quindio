@@ -5,6 +5,8 @@ import networkx as nx
 import pytest
 
 from rutas.config import DATA_PROCESSED, DATA_RAW, RAIZ
+from rutas.r1.persistencia import guardar_grafo
+from rutas.r1.utm import agregar_utm_a_nodos
 from rutas.r2.adyacencia import construir_adyacencia
 
 
@@ -81,6 +83,15 @@ def comprobar_envolvente(vertices, puntos):
         a, b = vertices
         assert all(cruz(a, b, p) == 0 for p in puntos), "con 2 vértices todos deben estar alineados"
         assert all(a <= p <= b for p in puntos), "los puntos deben estar entre los dos extremos"
+
+
+def carpeta_sintetica(tmp_path):
+    """Carpeta processed con un grafo de 6 nodos (cerca de Armenia) con x_utm, y_utm."""
+    nodos = {1: (-75.70, 4.50), 2: (-75.60, 4.50), 3: (-75.60, 4.60), 4: (-75.70, 4.60),
+             5: (-75.65, 4.55), 6: (-75.65, 4.50)}
+    G = agregar_utm_a_nodos(grafo_sintetico(nodos, [(1, 2, {}), (2, 3, {})]))
+    guardar_grafo(G, tmp_path)
+    return tmp_path
 
 
 def _ruta_grafo_procesado():
