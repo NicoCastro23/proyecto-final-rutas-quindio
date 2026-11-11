@@ -1,0 +1,48 @@
+{
+  "partida": {
+    "id": "C01",
+    "lugar": "Plaza de Bolívar de Armenia"
+  },
+  "atractivos_iniciales": [
+    "A05",
+    "A08",
+    "A04",
+    "A14",
+    "A06",
+    "A07",
+    "A12",
+    "A01"
+  ],
+  "quitados": [
+    {
+      "id": "A01",
+      "jornada_antes_min": 1255.2167694454724,
+      "jornada_despues_min": 809.5959564868207,
+      "ahorro_min": 445.62081295865175,
+      "lugar": "Parque Nacional del Café"
+    },
+    {
+      "id": "A12",
+      "jornada_antes_min": 809.5959564868207,
+      "jornada_despues_min": 613.1265113559894,
+      "ahorro_min": 196.46944513083133,
+      "lugar": "Ecoparque Peñas Blancas"
+    }
+  ],
+  "atractivos_finales": [
+    "A04",
+    "A07",
+    "A06",
+    "A14",
+    "A05",
+    "A08"
+  ],
+  "totales": {
+    "visitas_min": 510.0,
+    "desplazamientos_min": 103.12651135598938,
+    "jornada_min": 613.1265113559894,
+    "jornada_h": 10.21877518926649
+  },
+  "jornada_max_min": 660,
+  "cabe": true
+}

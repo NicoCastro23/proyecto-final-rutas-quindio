@@ -103,33 +103,34 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
 
 ## B3 · Instancias, envoltorio por ids, itinerario y pruebas con la red real
 
-- [ ] T12 · Instancias con semilla fija y `r4_instancias.json` (caso 19d; párrafo inicial de R4; sección 6.5)
+- [x] T12 · Instancias con semilla fija y `r4_instancias.json` (caso 19d; párrafo inicial de R4; sección 6.5)
   - Archivos: `rutas/r4/instancias.py` (constantes, `otros_ids`, `muestra_anidada`, `instancias_calidad` y `main(catalogo=CATALOGO, salida=RESULTS_R4)` según el plan; `if __name__ == "__main__": main()`)
   - Test primero: `tests/test_instancias_r4.py::test_caso_19d_muestra_anidada` (ids de `data/catalogo.csv`: `muestra_anidada(ids) == ["C09", "A10", "F07", "T04", "C08", "A04", "F01", "F06", "F03", "A05", "C02", "A09"]`; sin marcador `red`, solo usa el catálogo versionado), `::test_otros_ids` (41 ids, sin `C01`, en orden del catálogo), `::test_instancias_calidad` (40 instancias, 10 por k en el orden `K_CALIDAD` × `SEMILLAS_CALIDAD`; cada una con k ids distintos sin `C01`; reproducible: dos llamadas dan lo mismo; la de k = 5 y semilla 2027 es `random.Random(2027).sample(otros, 5)`), `::test_main_escribe_json` (`tmp_path`: claves del plan, `"semilla": 2026`, 12 ids en `muestra_anidada`, 40 en `calidad`)
   - Ejecutar (no es medición): `.venv/bin/python -m rutas.r4.instancias` → `results/r4/r4_instancias.json`
   - Verificar: `.venv/bin/python -m pytest tests/test_instancias_r4.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T13 · Envoltorio por ids (caso 18; consumidor R5)
+- [x] T13 · Envoltorio por ids (caso 18; consumidor R5)
   - Archivos: `rutas/r4/por_ids.py` (`METODOS`, `matriz_a_listas`, `resolver_por_ids` según el plan)
   - Test primero: `tests/test_por_ids.py::test_caso_18_por_ids` (`DataFrame` con índice y columnas `["C01", "A01", "A02", "A03"]` y los valores de `T_CLASE`: `resolver_por_ids(df, "C01", ["A01", "A02", "A03"], "held_karp") == (35, ["C01", "A01", "A03", "A02", "C01"])`; igual con `"fuerza_bruta"`; con `"vecino_mas_cercano"` → `(39, ["C01", "A01", "A02", "A03", "C01"])`), `::test_matriz_a_listas_floats_de_python` (`type(T[0][1]) is float`, no `numpy.float64`; ids en el orden del índice), `::test_errores` (método desconocido, id desconocido y columnas ≠ índice → `ValueError`), `::test_matriz_csv_ida_y_vuelta` (escribir la matriz con `rutas.r2.matriz.guardar_matriz` en `tmp_path`, leerla con `cargar_matriz` y resolver: mismo resultado)
   - Verificar: `.venv/bin/python -m pytest tests/test_por_ids.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T14 · Itinerario de un día (caso 16; bordes del itinerario; punto 4)
+- [x] T14 · Itinerario de un día (caso 16; bordes del itinerario; punto 4)
   - Archivos: `rutas/r4/itinerario.py` (`JORNADA_MAX_MIN`, `ATRACTIVOS_DIA` e `itinerario_dia` según el plan; `visitas_del_catalogo`, `escribir_itinerario` y `main` quedan como stubs hasta T15)
   - Test primero: `tests/test_itinerario.py` con la matriz del plan (partida 0; atractivos 1..5 en un punto P con arcos 0 entre ellos; 6 en Q; en minutos 0↔P = 60, P↔Q = 90, 0↔Q = 150; `T` en segundos; `visita_min = {1: 60, …, 6: 60}`; `ids = ["S", "X1", …, "X6"]`): `::test_matriz_frontera_por_enumeracion` (con `itertools.permutations` el óptimo es 300 min, y 301 en la variante con 0↔Q = 151; en la variante, quitar 6 deja 120 min y quitar cualquiera de 1..5 deja 301), `::test_caso_16_cabe_justo` (jornada 660,0 → `cabe` y `quitados == []`), `::test_caso_16_quita_uno` (variante 301: jornada inicial 661; `quitados` tiene un solo elemento con id `X6`, `jornada_antes_min == 661`, `jornada_despues_min == 420`, `ahorro_min == 241` (todos con `pytest.approx`); `totales["cabe"]`), `::test_filas_y_acumulado` (en el caso 660: 6 filas numeradas 1..6 y la fila `Regreso` con `id == "S"` y `visita_min is None`; `acumulado_h` creciente; el de `Regreso` = `jornada_min / 60`; Σ `desplazamiento_min` = `totales["desplazamientos_min"]` = `held_karp(...)[0] / 60`), `::test_cabe_de_entrada_no_quita`, `::test_errores` (5 atractivos, 9 atractivos, un índice que no está en `visita_min`, repetidos, partida entre los atractivos → `ValueError`), `::test_queda_uno_si_nunca_cabe` (`jornada_max_min` muy pequeña: termina con un atractivo y `cabe` falso, sin error)
   - Verificar: `.venv/bin/python -m pytest tests/test_itinerario.py`
+  - Nota: la matriz de frontera del plan (0↔Q = 151 simétrica) no da 301 por enumeración: 0→P→Q→P→0 cuesta 300 sin importar 0↔Q. Se usó una línea S–P–Q con Q→P = 91 y Q→S = 151 (asimétrica), que da 300 en el caso base, 301 en la variante, 120 sin el 6 y 301 sin cualquiera de 1..5; la propia prueba lo comprueba por enumeración. `totales["atractivos_finales"]` es el número de atractivos (el JSON trae la lista de ids).
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T15 · Archivos del itinerario por defecto (`r4_itinerario.csv` y `.json`; Anexo, Requerimiento 4)
+- [x] T15 · Archivos del itinerario por defecto (`r4_itinerario.csv` y `.json`; Anexo, Requerimiento 4)
   - Archivos: `rutas/r4/itinerario.py` (implementar `visitas_del_catalogo(catalogo_df, ids)` (solo filas con `categoria == "Atractivo turístico"`), `escribir_itinerario(...)` y `main(matriz=MATRIZ_TIEMPOS, catalogo=CATALOGO, salida=RESULTS_R4, partida=PARTIDA, atractivos=ATRACTIVOS_DIA)` (lee el catálogo con `pd.read_csv`); `if __name__ == "__main__": main()`; imprime los quitados, la jornada final y si cabe)
   - Test primero: `tests/test_itinerario.py::test_visitas_del_catalogo` (con el catálogo real: 15 entradas; A01 → 420, A05 → 60; C01 no está), `::test_escribir_itinerario` (`tmp_path`, datos del caso 16 variante 301: CSV con encabezado `orden,id,lugar,desplazamiento_min,visita_min,acumulado_h`, 6 filas, la última `Regreso` con visita `—`; JSON con `quitados[0]["id"] == "X6"`, `ahorro_min == 241`, `cabe` verdadero, totales en min y h), `::test_main_sintetico` (matriz escrita con `guardar_matriz` y catálogo mínimo de 7 filas en `tmp_path`: escribe los dos archivos)
   - Ejecutar (no es medición): `.venv/bin/python -m rutas.r4.itinerario` → `results/r4/r4_itinerario.csv` y `.json`
   - Verificar: `.venv/bin/python -m pytest tests/test_itinerario.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T16 · Pruebas con la red real (casos 19a, 19b, 19c; marcador `red`)
+- [x] T16 · Pruebas con la red real (casos 19a, 19b, 19c; marcador `red`)
   - Archivos: `tests/test_red_real_r4.py` (crear con `pytestmark = pytest.mark.red`; fixture que carga `MATRIZ_TIEMPOS` con `cargar_matriz` y `matriz_a_listas`, y se salta si el archivo no existe)
   - Test primero: `::test_caso_19a_fb_igual_hk` (parametrizada k = 5..8: muestra anidada, s = índice de C01; FB y HK con el mismo tiempo ±1e-6), `::test_caso_19b_hk_k12` (k = 12: recorrido de HK empieza y termina en C01, visita los 12 una vez y `costo_recorrido` = valor ±1e-6), `::test_caso_19c_itinerario` (partida C01 y `ATRACTIVOS_DIA` con `visitas_del_catalogo`: `[q["id"] for q in quitados] == ["A01", "A12"]`, `abs(totales["jornada_min"] − 613.1) ≤ 0.1`, 6 atractivos finales, `cabe`; la jornada inicial ≈ 1 255,2 y tras quitar A01 ≈ 809,6, ±0,1), `::test_archivos_itinerario_reales` (se salta si falta `results/r4/r4_itinerario.json`: coincide con 19c)
   - Ver fallar: el código ya existe; se valida con una **mutación temporal** en `itinerario_dia` (quitar el atractivo con **menor** ahorro) que debe hacer fallar el 19c, y se restaura

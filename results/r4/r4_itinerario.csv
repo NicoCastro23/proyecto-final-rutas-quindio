@@ -1,0 +1,8 @@
+orden,id,lugar,desplazamiento_min,visita_min,acumulado_h
+1,A04,Jardín Botánico del Quindío,8.482752554370128,180.0,3.1413792092395023
+2,A07,Mirador Alto de la Cruz,28.00064122916133,30.0,4.108056563058858
+3,A06,Mirador de Filandia (Colina Iluminada),27.16114491222726,30.0,5.060742311595979
+4,A14,Cementerio Libre de Circasia,23.907690676827375,30.0,5.959203822876435
+5,A05,Museo del Oro Quimbaya,7.376755384898164,60.0,7.082149745958072
+6,A08,Parque de la Vida,4.165108704243078,180.0,10.151568224362121
+Regreso,C01,Plaza de Bolívar de Armenia,4.0324178942620446,—,10.21877518926649

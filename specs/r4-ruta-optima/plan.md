@@ -354,6 +354,8 @@ Semillas: **2026** para la muestra anidada y la propiedad (casos 11 y 12); **202
 
 Construcción de la matriz del caso 16 (propuesta; la prueba la comprueba por enumeración antes de usarla, para no depender de que el razonamiento esté bien): partida 0; atractivos 1..5 en un mismo punto P (arcos 0 entre ellos, como T03↔T05) y el atractivo 6 en un punto Q; en minutos, 0↔P = 60 en ambos sentidos, P↔Q = 90, 0→Q = Q→0 = 150. Todo recorrido óptimo cuesta 60 + 90 + 150 = **300 min** → con 6 visitas de 60 min la jornada es 660 y **cabe**. Variante 301: 0→Q = Q→0 = 151 → 661, no cabe; quitar el 6 deja 0→P→0 = 120 min (jornada 420, ahorro 241), y quitar cualquiera de 1..5 deja 301 min (jornada 601, ahorro 60): se quita **exactamente uno, el 6**, que es único. La matriz se escribe en segundos (× 60).
 
+**Corrección (B3, 2026-11-11):** la propuesta anterior es incorrecta. El recorrido 0→P→Q→P→0 cuesta 60 + 90 + 90 + 60 = 300 min sin importar cuánto valga 0↔Q, así que la variante no llega a 301. La prueba usa una línea S–P–Q asimétrica: Q→P = 91 y Q→S = 151, el resto igual. Por enumeración da 300 en el caso base, 301 en la variante, 120 sin el 6 y 301 sin cualquiera de 1..5. El resultado del caso 16 de la spec no cambia: se quita X6, con un ahorro de 241 min.
+
 Cada prueba se escribe antes del código y se ve fallar con el `NotImplementedError` del stub. Las que verifican código ya hecho (propiedad, red real) se validan con una **mutación temporal** que debe hacerlas fallar y luego se restaura (p. ej. en HK sumar `T[L[j]][L[i]]` en lugar de `T[L[i]][L[j]]`, que rompe la asimetría; en el itinerario quitar el de menor ahorro).
 
 ## Medición (sección 6)
