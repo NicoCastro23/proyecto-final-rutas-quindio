@@ -60,6 +60,29 @@ def cargar_casos_r3():
     return nodos, datos["R3"]
 
 
+def comprobar_envolvente(vertices, puntos):
+    """Invariantes geométricos de una envolvente (caso 13), sin usar SciPy. Lanza AssertionError."""
+    from rutas.r3.envolvente import cruz
+    puntos = set(puntos)
+    h = len(vertices)
+    assert len(set(vertices)) == h, "vértices repetidos"
+    assert set(vertices) <= puntos, "hay vértices que no son puntos de la entrada"
+    if h:
+        assert vertices[0] == min(vertices, key=lambda p: (p[1], p[0])), "no empieza por el menor (y, x)"
+    if h >= 3:
+        for i in range(h):
+            # Tres vértices seguidos giran siempre a la izquierda: antihorario y sin alineados
+            assert cruz(vertices[i], vertices[(i + 1) % h], vertices[(i + 2) % h]) > 0, "no es convexo estricto"
+        if set(vertices) != puntos:       # si todos son vértices no hay nada que comprobar (y sería O(n*h))
+            for i in range(h):
+                lado = (vertices[i], vertices[(i + 1) % h])
+                assert all(cruz(*lado, p) >= 0 for p in puntos), "hay un punto fuera del polígono"
+    if h == 2:
+        a, b = vertices
+        assert all(cruz(a, b, p) == 0 for p in puntos), "con 2 vértices todos deben estar alineados"
+        assert all(a <= p <= b for p in puntos), "los puntos deben estar entre los dos extremos"
+
+
 def _ruta_grafo_procesado():
     for nombre in ("grafo_componente.graphml", "grafo_componente.graphml.gz"):
         if (DATA_PROCESSED / nombre).exists():

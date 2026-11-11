@@ -50,34 +50,36 @@ Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fe
 
 ## B2 · QuickHull, casos a mano y de la clase, invariantes y comparación con SciPy
 
-- [ ] T6 · QuickHull recursivo (`envolvente` y `_lado`) con los casos a mano (casos 1–8; bordes; invariantes del caso 13)
+- [x] T6 · QuickHull recursivo (`envolvente` y `_lado`) con los casos a mano (casos 1–8; bordes; invariantes del caso 13)
   - Archivos: `rutas/r3/envolvente.py` (implementar `envolvente` y `_lado` según el esqueleto del plan: A = `min`, B = `max`; listas estrictas `cruz > 0`; en `_lado`, mayor `cruz(a, b, c)` y en empate el menor lexicográfico; ciclo horario `[A] + _lado(izq_AB, A, B) + [B] + _lado(izq_BA, B, A)`, invertido y rotado al de menor `(y, x)`); `tests/conftest.py` (agregar `comprobar_envolvente(vertices, puntos)` con los invariantes del plan)
   - Test primero: `tests/test_envolvente.py` (cada caso compara la lista exacta y llama a `comprobar_envolvente`): `::test_caso_1_cuadrado_con_extras` → `[(0,0), (4,0), (4,4), (0,4)]`, `::test_caso_2_desempate` → `[(0,0), (10,0), (8,5), (2,5)]` y `(5,5)` no está, `::test_caso_3_rectangulo_lados` → `[(0,0), (10,0), (10,10), (0,10)]`, `::test_caso_4_pentagono` → `[(0,0), (5,0), (6,3), (3,6), (-1,3)]`, `::test_caso_5_duplicados` (con el repetido, **sin** pasar por `preparar_puntos`) → `[(0,0), (1,0), (0,1)]`, `::test_caso_6_alineados` → `[(0,0), (3,3)]` (y en orden inverso de entrada, igual), `::test_caso_7_bordes_pequenos` (`[]` → `[]`; `[(7,7)]` → `[(7,7)]`; `[(7,7), (7,7)]` → `[(7,7)]`; `[(1,0), (0,0)]` → `[(0,0), (1,0)]`), `::test_caso_8_coordenadas_grandes` → `[(0,0), (3*10**9, 0), (0, 3*10**9)]`, `::test_coordenadas_negativas` (el cuadrado del caso 1 trasladado a (−10⁶, −10⁶)), `::test_orden_de_entrada_no_importa` (casos 1–4 con la entrada barajada con `random.Random(2026)` → misma salida), `::test_no_modifica_entrada` (copia antes y comparación después), `::test_invariantes_detectan_errores` (`comprobar_envolvente` lanza `AssertionError` con un polígono en sentido horario, con un vértice alineado y con un punto por fuera)
   - Ver fallar: todas con `NotImplementedError` del stub (salvo la de invariantes, que prueba solo el helper)
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T7 · Referencia SciPy y contraste de los casos a mano (casos 1–4, 6, 7, 8)
+- [x] T7 · Referencia SciPy y contraste de los casos a mano (casos 1–4, 6, 7, 8)
   - Archivos: `rutas/r3/referencia.py` (stub primero; luego `vertices_scipy(puntos)`: `ConvexHull(numpy.array(puntos, dtype=numpy.float64))`, vértices `hull.vertices` → tuplas de `int` de Python → `normalizar`; deja pasar `QhullError`)
   - Test primero: `tests/test_envolvente_clase.py::test_casos_a_mano_contra_scipy` (parametrizada con los puntos de los casos 1, 2, 3, 4 y 8: `set(envolvente(p)) == set(vertices_scipy(p))` y `normalizar(envolvente(p)) == vertices_scipy(p)`), `::test_scipy_falla_en_degenerados` (con `R3.scipy_falla.colineales`, `dos_puntos` y los alineados del caso 6: `pytest.raises(scipy.spatial.QhullError)` en `vertices_scipy`, y `envolvente` da los dos extremos sin error), `::test_vertices_scipy_son_int` (tipo `int` de Python, no `numpy.int64`)
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente_clase.py -k "scipy"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T8 · Casos de la clase desde la copia versionada (casos 2, 3, 10)
+- [x] T8 · Casos de la clase desde la copia versionada (casos 2, 3, 10)
   - Archivos: solo pruebas en `tests/test_envolvente_clase.py` (usan `cargar_casos_r3()`)
   - Test primero: `::test_caso_10_red_clase` (los 9 nodos de `red.nodos`: `envolvente` traducida a ids con un `dict` coordenada → id da `R3.nodos_red.vertices` = `[9, 7, 8, 3, 2]`; los nodos 4 y 6 (`no_vertices_sobre_lado`) no están; `area(vertices) == R3.nodos_red.area_m2 == 585000`; igual a `vertices_scipy`; `comprobar_envolvente`), `::test_caso_2_empate_json` (`R3.empate.puntos` → `R3.empate.vertices` como tuplas), `::test_caso_3_rectangulo_json` (`R3.rectangulo`)
   - Ver fallar: el código ya existe; se valida con una **mutación temporal** en `_lado` (desempatar por el **mayor** lexicográfico, o repartir con `>= 0`) que debe hacer fallar al menos el caso 2 o el 10, y se restaura
+  - Nota: desempatar por el mayor lexicográfico es un mutante equivalente (mismos vértices; el desempate solo da determinismo). La mutación efectiva fue elegir el punto de en medio del empate (falla el caso 2) y `>= 0` en `_lado` (falla todo con RecursionError).
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente_clase.py`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T9 · Propiedad contra SciPy y cuadrados aleatorios (casos 11, 12, 13)
+- [x] T9 · Propiedad contra SciPy y cuadrados aleatorios (casos 11, 12, 13)
   - Archivos: `tests/test_envolvente_propiedad.py` (solo pruebas)
   - Test primero: `::test_caso_11_aleatorios_vs_scipy` (`random.Random(2026)`; 100 conjuntos con `n` entre 3 y 200 y coordenadas enteras en `[-10, 10]` (pequeñas para forzar alineados y repetidos), pasados **sin** `preparar_puntos` para ejercitar los repetidos; cada uno: `comprobar_envolvente`; si `len(envolvente(p)) ≥ 3` → `set` igual y normalizado igual a `vertices_scipy(p)`; si no (degenerado) se salta SciPy y se cuenta; al final al menos 90 conjuntos comparados con SciPy), `::test_caso_12_cuadrados` (parametrizada con 1 000, 10 000 y 50 000: `puntos_cuadrado(n)` → `envolvente` = `vertices_scipy` normalizado; `comprobar_envolvente`; `0.5 * e ≤ h ≤ 2 * e` con `e = (8/3) * math.log(len(puntos))`)
   - Ver fallar: mutación temporal en `envolvente.py` (repartir con `>= 0` en lugar de `> 0`, que mete alineados como vértices) que debe hacer fallar el caso 11; restaurar
+  - Nota: la mutación sugerida (`>= 0` solo en el reparto inicial de `envolvente`) sobrevivía al caso 11 original (coordenadas en [-10, 10] con n uniforme casi nunca dejan a todos los puntos de un lado de A→B). Se varió el tamaño y el rango por conjunto (n hasta 8, 30 o 200; rango 2, 5 o 10), siempre dentro de la spec (n entre 3 y 200), y ahora esa mutación sí falla.
   - Verificar: `.venv/bin/python -m pytest tests/test_envolvente_propiedad.py -k "caso_11 or caso_12"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T10 · Todos los puntos son vértices: círculo y parábola sin `RecursionError` (casos 15, 16)
+- [x] T10 · Todos los puntos son vértices: círculo y parábola sin `RecursionError` (casos 15, 16)
   - Archivos: `tests/test_envolvente_propiedad.py`, `tests/test_envolvente.py`
   - Test primero: `tests/test_envolvente_propiedad.py::test_caso_15_circulo` (2 000 puntos `(redondear(10**6 * cos(2πk/2000)), redondear(10**6 * sin(2πk/2000)))`, `k = 0 … 1999`: los 2 000 son distintos y la salida tiene 2 000 vértices; igual a `vertices_scipy`; `comprobar_envolvente`), `::test_caso_16_parabola` (`(k, k*k)` para `k = 0 … 4 999`: 5 000 vértices, el primero `(0, 0)`, `comprobar_envolvente` (convexidad estricta exacta con enteros; la contención se omite porque todos son vértices)); `tests/test_envolvente.py::test_limite_de_recursion` (tras `import rutas.r3.envolvente`, `sys.getrecursionlimit() >= 20_000`)
   - Ver fallar: el código ya existe; se valida comentando temporalmente el `setrecursionlimit` y corriendo `test_limite_de_recursion` (falla); restaurar. Anotar en el reporte la profundidad máxima observada en el círculo y la parábola (se espera O(log n) por particiones parejas, ver plan)

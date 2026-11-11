@@ -20,11 +20,42 @@ def cruz(o, a, b):
 
 
 def envolvente(puntos):
-    raise NotImplementedError
+    """Vértices de la envolvente convexa (QuickHull), en sentido antihorario desde el de menor (y, x).
+
+    [] si no hay puntos; [p] si hay un solo punto distinto; los dos extremos si todos están alineados.
+    Tolera repetidos y no modifica la lista de entrada.
+    """
+    if not puntos:
+        return []
+    a = min(puntos)                      # extremo izquierdo (x, luego y): seguro es vértice
+    b = max(puntos)                      # extremo derecho
+    if a == b:
+        return [a]
+    # Estrictamente a la izquierda de cada recta; los alineados con a y b se descartan
+    arriba = [p for p in puntos if cruz(a, b, p) > 0]
+    abajo = [p for p in puntos if cruz(b, a, p) > 0]
+    # Recorrido horario: a, parte de arriba, b, parte de abajo. Se invierte una sola vez al final.
+    ciclo = [a] + _lado(arriba, a, b) + [b] + _lado(abajo, b, a)
+    ciclo.reverse()
+    inicio = min(range(len(ciclo)), key=lambda i: (ciclo[i][1], ciclo[i][0]))
+    return ciclo[inicio:] + ciclo[:inicio]
 
 
 def _lado(puntos, a, b):
-    raise NotImplementedError
+    """Vértices entre a y b (sin incluirlos), en el orden en que se recorren de a a b.
+
+    Todos los `puntos` están estrictamente a la izquierda de a->b. El más lejano de la recta ab es
+    vértice seguro; los que quedan dentro del triángulo a, c, b no pueden serlo y se descartan.
+    T(n) = T(n1) + T(n2) + O(n), con n1 + n2 <= n - 1.
+    """
+    if not puntos:
+        return []
+    # Mayor cruz = más lejos de la recta. En empate (misma paralela) se toma el menor lexicográfico:
+    # es un extremo del grupo, el otro extremo saldrá en la recursión y los de en medio quedan alineados.
+    c = min(puntos, key=lambda p: (-cruz(a, b, p), p))
+    fuera_ac = [p for p in puntos if cruz(a, c, p) > 0]
+    fuera_cb = [p for p in puntos if cruz(c, b, p) > 0]
+    return _lado(fuera_ac, a, c) + [c] + _lado(fuera_cb, c, b)
 
 
 def _doble_area_con_signo(vertices):
