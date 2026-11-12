@@ -53,41 +53,44 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 
 ## B2 · Servicios: ruta, itinerario y resultados (sin Flask) y pruebas con la red real
 
-- [ ] T6 · Coordenadas que siguen la geometría (caso 15)
+- [x] T6 · Coordenadas que siguen la geometría (caso 15)
   - Archivos: `rutas/r5/servicios.py` (`coordenadas_de(G, ids_nodos)`)
   - Test primero: `tests/test_servicios_r5.py::test_caso_15_geometria_curva` (nodos 1→2 → `[(4.50, -75.70), (4.505, -75.69), (4.50, -75.68)]` en ese orden), `::test_sin_duplicar_uniones` (1→2→3 → 4 puntos, el último `(4.50, -75.66)`; ningún par consecutivo repetido), `::test_segmento_recto_sin_geometria` (2→3 → `[(4.50, -75.68), (4.50, -75.66)]`), `::test_un_nodo_sin_linea` (`[1]` → `[]`)
   - Ver fallar: con `NotImplementedError` del stub
   - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "caso_15 or uniones or recto or un_nodo"`
+  - Nota: las pruebas de T6 a T10 usan `M.loc[fila, columna]` en vez de `M[...][...]` (pandas invierte el sentido con la segunda forma).
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T7 · `ruta_entre` y `validar_lugar` (casos 3 y 4 sintéticos; borde «lugar desconocido»)
+- [x] T7 · `ruta_entre` y `validar_lugar` (casos 3 y 4 sintéticos; borde «lugar desconocido»)
   - Archivos: `rutas/r5/servicios.py` (`ErrorEntrada`, `validar_lugar`, `ruta_entre` según el plan: `consultar(..., "cola_prioridad")` con `perf_counter` alrededor, `detalle_ruta`, `coordenadas_de`, `aviso`)
   - Test primero: `tests/test_servicios_r5.py::test_ruta_sintetica` (C01→A02: `tiempo_s == M["C01"]["A02"]` ± 1e-6, `ids_nodos == [1, 2, 3]`, `distancia_km == 1.0`, `tiempo_min == tiempo_s / 60`, `nodos_explorados > 0`, `computo_ms >= 0`, 4 coordenadas, `aviso is None`), `::test_caso_3_mismo_lugar` (C01→C01: `tiempo_s == 0`, `coordenadas == []`, `aviso == "origen y destino son el mismo lugar"`), `::test_mismo_punto_sintetico` (A02→A06: `tiempo_s == 0`, `aviso == "los dos lugares están en el mismo punto de la red"`), `::test_lugar_desconocido` (`ruta_entre(datos, "X99", "C01")` → `ErrorEntrada` con mensaje `"lugar desconocido: X99"`; igual con el destino), `::test_asimetria_sintetica` (A01→C01 = 90 y C01→A01 = 60)
   - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "ruta or mismo or desconocido or asimetria"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T8 · Validación del itinerario (caso 8 a nivel de servicio)
+- [x] T8 · Validación del itinerario (caso 8 a nivel de servicio)
   - Archivos: `rutas/r5/servicios.py` (`validar_itinerario` con los mensajes y el orden del plan)
   - Test primero: `tests/test_servicios_r5.py::test_caso_8_validacion` (parametrizada, partida y lista → fragmento del mensaje: `C01` + 5 atractivos → «entre 6 y 8»; `C01` + 9 ids → «entre 6 y 8»; `C01` + `[]` → «(llegaron 0)»; `C01` + `A01, A01, A02, A03, A04, A05` → «repetido: A01»; `A01` + `A01..A06` → «la partida A01»; `C01` + `A01..A05, C02` → «C02 no es un atractivo turístico»; `X99` + `A01..A06` → «lugar desconocido: X99»), `::test_validacion_correcta` (`C01` + `A01..A06` no lanza; partida `C02` también vale: cualquier lugar)
   - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "caso_8 or validacion"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T9 · `itinerario`: Held-Karp, voraz, tramos y regla de las 11 h (casos 5, 6 y 7 en sintéticos)
+- [x] T9 · `itinerario`: Held-Karp, voraz, tramos y regla de las 11 h (casos 5, 6 y 7 en sintéticos)
   - Archivos: `rutas/r5/servicios.py` (`itinerario` según el plan: `validar_itinerario`; `resolver_por_ids` para `"held_karp"` y `"vecino_mas_cercano"`; tiempos; tramos con `consultar` + `coordenadas_de`; `diferencia_min`, `brecha_pct` (0 si HK = 0); si HK no cabe, adaptador a `itinerario_dia` con `matriz_a_listas` y `visitas_del_catalogo`, y el dict `jornada` del plan)
   - Test primero: `tests/test_servicios_r5.py::test_itinerario_cabe_sintetico` (C01 + A01..A06: `held_karp.desplazamiento_min * 60 == resolver_por_ids(M, …, "held_karp")[0]` ± 1e-6; `recorrido` igual al de `resolver_por_ids`; `visitas_min == 270` en los dos; `jornada_min == desplazamiento + 270`; `cabe` verdadero; `diferencia_min >= 0`; `jornada is None`), `::test_tramos_igual_a_matriz_sintetico` (por método: un tramo por par consecutivo del recorrido, `tiempo_min * 60 == M[desde][hasta]` ± 1e-6; suma de tramos = desplazamiento ± 1e-6 × 60), `::test_itinerario_no_cabe_sintetico` (carpeta con `visitas=[120] * 6`: `held_karp.cabe` falso, `jornada["quitados"]` no vacío y cada quitado con `id`, `lugar` (nombre del catálogo), `visita_min == 120`, `desvio_min`, `ahorro_min`; `jornada_final_min <= 660`; `recorrido_final` empieza y termina en C01 y **no** contiene los quitados; los tramos y el recorrido de HK siguen siendo los de los 6 elegidos), `::test_no_llama_resolver_si_invalido` (monkeypatch de `rutas.r5.servicios.resolver_por_ids` con contador; 5 atractivos → `ErrorEntrada` y contador en 0)
   - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "itinerario or tramos or resolver"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T10 · `resultados` con la lista fija (caso 11 a nivel de servicio)
+- [x] T10 · `resultados` con la lista fija (caso 11 a nivel de servicio)
   - Archivos: `rutas/r5/servicios.py` (`ARCHIVOS_RESULTADOS` con un comando por archivo, la tabla del plan; `resultados(requerimiento, results=RESULTS)`)
   - Test primero: `tests/test_servicios_r5.py::test_caso_11_resultados_sinteticos` (con `results` sintético: `resultados("r2", results)["imagenes"] == ["r2_tiempo_vs_explorados.png"]`, una tabla con nombre `r2_cociente.csv` cuyo HTML contiene `<table` y la columna `mediana`; `resultados("r4", results)["faltantes"]` contiene `("r4_exactas.csv", ".venv/bin/python -m rutas.r4.medir_exactas")` y `("r4_tiempo_vs_k.png", ".venv/bin/python -m rutas.r4.tablas")`), `::test_texto_escapado` (CSV con una celda `<b>x</b>` → aparece `&lt;b&gt;`), `::test_celdas_vacias` (CSV con una celda vacía no da `nan`), `::test_requerimiento_desconocido` (`"r9"` → `KeyError`), `::test_lista_fija_existe_en_results` (sin `red`, contra `RESULTS` real: todo archivo de `ARCHIVOS_RESULTADOS` existe salvo exactamente `r1_tiempos_componente.png`, `r4_exactas.csv` y `r4_tiempo_vs_k.png`; si el usuario ya corrió alguno, la prueba admite que exista: el conjunto de faltantes ⊆ esos tres)
   - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "resultados or escapado or vacias or desconocido or lista_fija"`
+  - Nota: para ver fallar las pruebas por `NotImplementedError` (y no por `ImportError`) se dejó primero `ARCHIVOS_RESULTADOS = {}` en el stub; `test_lista_fija_existe_en_results` pasaba en vacío hasta llenar la tabla y ahora comprueba los 15 archivos contra `results/` real.
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T11 · Servicios con la red real (casos 1, 4, 5, 6 y 7; `red`)
+- [x] T11 · Servicios con la red real (casos 1, 4, 5, 6 y 7; `red`)
   - Archivos: `tests/test_red_real_r5.py` (`pytestmark = pytest.mark.red`; fixture `datos_reales` con `scope="module"` que hace `pytest.skip` si falta `data/processed/grafo_componente.graphml[.gz]` y llama a `cargar_datos()` una vez)
   - Test primero (verifican código ya hecho: se validan con mutación temporal, ver Verificar): `::test_caso_1_ruta_real` (C01→C12: `tiempo_s == M["C01"]["C12"]` ± 1e-6 y ≈ 1 783,39; `ids_nodos[0] == nodo_de["C01"]`, `ids_nodos[-1] == nodo_de["C12"]`; `detalle_ruta(G, ids_nodos)[0]` igual ± 1e-6; `coordenadas[0]` a menos de 1e-6° de `(G.nodes[n]["y"], G.nodes[n]["x"])` del nodo de C01; `nodos_explorados > 0`), `::test_caso_1_asimetria` (C12→C01 ≈ 1 708,19 ± 0,01 y = matriz ± 1e-6), `::test_caso_3_mismo_lugar_real` (C01→C01 → 0 y aviso), `::test_caso_4_mismo_nodo` (T03→T05 → `tiempo_s == 0` y aviso del mismo punto), `::test_caso_5_itinerario_cabe` (C01 + `A05, A14, A06, A07, A13, A15`: HK 178,66 ± 0,01 min y recorrido `C01, A15, A13, A07, A06, A14, A05, C01`; voraz 190,45 ± 0,01 y `C01, A05, A14, A07, A06, A13, A15, C01`; diferencia 11,79 ± 0,01; brecha 6,60 ± 0,01; visitas 240; jornadas 418,66 y 430,45 ± 0,01, las dos caben; `jornada is None`), `::test_caso_6_itinerario_no_cabe` (C01 + `A05, A08, A04, A14, A06, A07, A12, A01`: HK 145,22 ± 0,01, jornada 1 255,22 ± 0,01, no cabe; voraz 155,39 ± 0,01; diferencia 10,17; brecha 7,01; `[q["id"] for q in jornada["quitados"]] == ["A01", "A12"]`; `jornada_final_min` = `totales.jornada_min` de `results/r4/r4_itinerario.json` ± 1e-6 y ≈ 613,13), `::test_caso_7_tramos` (caso 5, los dos métodos: cada tramo `tiempo_min * 60 == M[desde][hasta]` ± 1e-6; suma = desplazamiento ± 1e-6 × 60)
   - Verificar: `.venv/bin/python -m pytest tests/test_red_real_r5.py -k "caso_1 or caso_3 or caso_4 or caso_5 or caso_6 or caso_7"`; mutaciones temporales que deben hacer fallar y luego se restauran: invertir origen y destino en `ruta_entre` (caso 1), usar el recorrido del voraz en los dos métodos (caso 5)
+  - Nota: mutaciones vistas fallar y restauradas: origen/destino invertidos en `ruta_entre` (fallan `test_caso_1_ruta_real` y `test_caso_1_asimetria`) y recorrido del voraz usado para Held-Karp (fallan casos 5 y 6).
   - Cierre de B2: `.venv/bin/python -m pytest -m "not red" -q` y `.venv/bin/python -m pytest tests/test_red_real_r5.py` en verde. **DETENERSE** hasta el commit del usuario
   - anotar en `docs/anexo-ia.md`
 
