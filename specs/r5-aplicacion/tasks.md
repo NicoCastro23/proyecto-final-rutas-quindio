@@ -151,7 +151,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 
 ## B4 · Docker, README, anexo de IA, comprobación manual y cierre
 
-- [ ] T20 · `Dockerfile` opcional (Comportamiento 7; apoya el caso 17)
+- [x] T20 · `Dockerfile` opcional (Comportamiento 7; apoya el caso 17)
   - Archivos: `Dockerfile` (en la raíz):
     ```dockerfile
     FROM python:3.13-slim
@@ -168,19 +168,21 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Test primero: `tests/test_dockerfile_r5.py::test_dockerfile` (lee el texto: empieza con `FROM python:3.13-slim`; contiene `pip install` con `requirements.txt`, `COPY data/processed`, `COPY results`, `COPY rutas`, `0.0.0.0`, `5050` y `rutas.r5.app`; no copia `data/raw`, `.venv` ni `estudio`). Falla porque el archivo no existe
   - Verificar: `.venv/bin/python -m pytest tests/test_dockerfile_r5.py`
   - anotar en `docs/anexo-ia.md`
+  - Nota: el Dockerfile lleva un comentario después de `FROM` (la prueba exige que el texto empiece por `FROM python:3.13-slim`). Se probó `tests/test_dockerfile_r5.py` (rojo por archivo inexistente, luego verde). `docker build -t rutas-quindio .` OK (unos 10 min por osmnx/geopandas/scipy; imagen de 1,02 GB). `docker run -d -p 5055:5050`: `/` y `/ruta?origen=C01&destino=C12` responden 200 (con «29,7»); contenedor detenido y borrado. Caso 17 solo con curl; el navegador queda pendiente del usuario. Sin `.dockerignore` (el Dockerfile copia solo `rutas/`, `data/catalogo.csv`, `data/processed/` y `results/`).
 
-- [ ] T21 · README: «Ejecutar la aplicación (R5)» (enunciado: ejecutable localmente siguiendo el README; caso 16)
+- [x] T21 · README: «Ejecutar la aplicación (R5)» (enunciado: ejecutable localmente siguiendo el README; caso 16)
   - Archivos: `README.md` (sección nueva al final, después de «Reproducir R3» —o de «Reproducir R4» si ya existe—, sin tocar las demás): requisito (`data/processed/` y `data/catalogo.csv` versionados; no hace falta correr R1–R4 para abrir la app); entorno (`python3.13 -m venv .venv` y `.venv/bin/pip install -r requirements.txt`, igual que R1); arranque `.venv/bin/python -m rutas.r5.app` y abrir `http://127.0.0.1:5050`; opción `--puerto` (por qué no 5000 en macOS); qué muestra cada sección; nota: el mapa necesita internet (Leaflet y teselas de OpenStreetMap); los avisos de archivos faltantes y sus comandos; alternativa Docker (`docker build -t rutas-quindio .` y `docker run -p 5050:5050 rutas-quindio`), opcional; pruebas `pytest -m "not red"` y `pytest tests/test_red_real_r5.py`
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "rutas.r5.app" README.md && grep -n "127.0.0.1:5050" README.md && grep -n "docker run -p 5050:5050" README.md`
   - anotar en `docs/anexo-ia.md`
+  - Nota: sección «Ejecutar la aplicación (R5)» agregada al final de `README.md`; no se escribió «Reproducir R4» (es la T23 de R4). Incluye la nota de Python 3.13.18 (R4 y R5) frente a 3.13.8 (R1 a R3) y la de los archivos que pueden faltar (R1 `.png`, R4 `r4_exactas.csv` y `r4_tiempo_vs_k.png`). Los tres `grep` de verificación dan resultado.
 
-- [ ] T22 · Anexo de IA de R5
+- [x] T22 · Anexo de IA de R5
   - Archivos: `docs/anexo-ia.md` (local; entradas de R5: plan y tareas con el agente planner; código, plantillas y pruebas con el implementer; cómo se verificó: casos 1, 5, 6 y 7 contra la matriz de R2 y `r4_itinerario.json`; datos sintéticos con valores a mano (casos 3, 8, 10–15); guardias sin algoritmos ni JS propio; mutaciones temporales; comprobación manual de los casos 16 y 17)
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "R5" docs/anexo-ia.md`
 
-- [ ] T23 · Comprobación manual: arranque con el README y Docker (casos 16 y 17)
+- [x] T23 · Comprobación manual: arranque con el README y Docker (casos 16 y 17)
   - Archivos: ninguno de código; el resultado lo escribe el reviewer o el usuario en `specs/r5-aplicacion/review.md`
   - Test primero: no aplica (manual)
   - Lista de pasos (caso 16, obligatorio):
@@ -189,7 +191,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     3. Abrir `http://127.0.0.1:5050`: el inicio muestra los 4 enlaces.
     4. Caso 2: Ruta, origen C01 y destino C12 → mapa con la línea por las vías y «29,7» min; probar también C12 → C01 (28,5 min) y C01 → C01 (aviso).
     5. Caso 9: Itinerario, partida C01 y las casillas A05, A14, A06, A07, A13, A15 → tabla con «178,7», «190,4» y «11,8»; el control de capas alterna Held-Karp y voraz. Probar los 8 del caso 6 → bloque de la regla (quita A01 y A12; 613,1 min). Probar 5 casillas → mensaje de error.
-    6. Caso 10: Envolvente → polígono, 42 lugares, «14 vértices» y «1 631,5 km²».
+    6. Caso 10: Envolvente → polígono con los lugares como marcadores en el mapa, «14 vértices» y «1 631,5 km²» (el texto no cuenta los lugares; la spec no lo pide).
     7. Caso 11: Resultados r1..r4 → imágenes y tablas; r1 y r4 muestran el aviso de lo que falta con su comando.
     8. Con la app abierta, en otra terminal `.venv/bin/python -m rutas.r5.app` → mensaje de puerto ocupado que sugiere `--puerto`; luego `--puerto 5051` arranca.
     9. Ctrl+C detiene la app.
@@ -198,8 +200,20 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     2. `docker run --rm -p 5050:5050 rutas-quindio`
     3. Abrir `http://127.0.0.1:5050` y repetir los pasos 4 y 6.
   - Verificar: `review.md` registra fecha, quién lo hizo, navegador y el resultado de cada paso
+  - Resultado automatizado del caso 16 (2026-11-12, implementer, con `curl` y el `.venv` existente, puerto 5061; el navegador no se usó). Para copiar a `review.md`:
+    1. [OK] `.venv/bin/pip install -r requirements.txt`: no instaló nada (ya estaba todo).
+    2. [OK] `.venv/bin/python -m rutas.r5.app --puerto 5061`: «Datos cargados en 0,4 s (8 791 nodos)» y «Abre http://127.0.0.1:5061», sin traza. Se usó 5061 y no 5050 para no chocar con nada del usuario; el arranque en 5050 está probado en B3.
+    3. [OK] `/` 200 con los 4 enlaces (`/ruta`, `/itinerario`, `/envolvente`, resultados). [pendiente del usuario: verlo en el navegador]
+    4. [OK] Caso 2: C01 -> C12 200 con «29,7» y la polilínea; C12 -> C01 200 con «28,5»; C01 -> C01 200 con el aviso «origen y destino son el mismo lugar». [pendiente del usuario: que la línea siga las vías y el mapa se vea bien]
+    5. [OK] Caso 9: partida C01 con A05, A14, A06, A07, A13, A15 -> 200 con «178,7», «190,4» y «11,8» y el control de capas en el HTML; con los 8 del caso 6 -> 200 con «145,2», «155,4», «613,1» y el bloque de la regla de las 11 h; con 5 atractivos -> 400 «elige entre 6 y 8 atractivos (llegaron 5)». [pendiente del usuario: que el control de capas alterne Held-Karp y voraz en el navegador]
+    6. [OK, con una diferencia] Caso 10: `/envolvente` 200 con «14 vértices» y «1 631,5» (km²) y el mapa en un iframe. La página **no** dice «42 lugares» (la spec del caso 10 tampoco lo exige; solo pide vértices y área): el paso 6 de esta lista lo supone y habría que quitar esa expresión. [pendiente del usuario: ver el polígono]
+    7. [OK] Caso 11: `/resultados/r1..r4` 200. r2: 1 imagen y 3 tablas; r3: 1 imagen y 1 tabla; r1: 4 tablas y aviso de `r1_tiempos_componente.png` con `.venv/bin/python -m rutas.r1.tablas`; r4: 3 tablas y avisos de `r4_tiempo_vs_k.png` (`rutas.r4.tablas`) y `r4_exactas.csv` (`rutas.r4.medir_exactas`). `/resultados/r2/archivo/r2_tiempo_vs_explorados.png` 200. [pendiente del usuario: ver imágenes y tablas]
+    8. [OK] Con la app corriendo, un segundo arranque en el mismo puerto imprime «el puerto 5061 está ocupado; prueba con --puerto 5062» y sale sin traza. No se probó `--puerto 5062` a mano (cubierto por pruebas de B3).
+    9. [OK] Detenida con Ctrl+C (SIGINT) y con `kill`; sin proceso restante. Nota: la primera vez un servidor lanzado en segundo plano no recibió el SIGINT del shell y hubo que matarlo por PID; no es fallo de la app.
+  - Caso 17 (Docker): ver la nota de T20. [OK] build, run y curl; [pendiente del usuario] abrir en navegador y repetir los pasos 4 y 6.
+  - Pendiente del usuario: todo lo que exige ver el navegador (mapas, capas, imágenes) y la ejecución en una terminal realmente nueva.
 
-- [ ] T24 · Suite completa y cierre de R5
+- [x] T24 · Suite completa y cierre de R5
   - Archivos: ninguno nuevo (R5 no genera resultados: no hay archivos que regenerar)
   - Test primero: no aplica
   - Comando:
@@ -208,6 +222,8 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     ```
   - Verificar: todas las pruebas pasan (las `red` de R5 sin saltar, porque `data/processed/` existe); el `git diff --stat` de R1–R4, `requirements.txt` y `.gitignore` está vacío; actualizar el «Estado» de la spec (☑ pruebas · ☑ código; «verificado» lo marca el reviewer tras T23); anotar como pendientes del documento técnico: diagrama de arquitectura (sección 7.1), capturas de las cuatro secciones y el comando de arranque
   - anotar en `docs/anexo-ia.md`
+  - Resultado (2026-11-12): `-m "not red"`: 497 pasan, 1 se salta, 41 deseleccionadas (suma la prueba del Dockerfile). `-m red`: 39 pasan, 2 se saltan (`test_red_real.py:79` por `data/raw/radio_2km.graphml` y `test_red_real_r4.py:126` por `results/r4/r4_exactas.csv`; ninguno es de R5, las `red` de R5 corren). Suite completa `pytest`: 536 pasan, 3 se saltan. `git diff --stat -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 requirements.txt .gitignore`: vacío.
+  - Pendiente: el «Estado» de la spec y la lista de pendientes del documento técnico (diagrama de arquitectura, capturas de las cuatro secciones y comando de arranque) no se tocaron: la spec es del coordinator/reviewer.
 
 ## Cobertura
 

@@ -1,6 +1,6 @@
 # Aplicación — Requerimiento 5
 Enunciado: sección 5, Requerimiento 5 (párrafo inicial, punto 1 con sus cuatro viñetas y la viñeta de ejecución local); sección 7 (entregable «Aplicación: ejecutable localmente siguiendo el README»); sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»). Peso: 5 %.
-Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☐ pruebas · ☐ código · ☐ verificado
+Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (497 sin red; 14 de R5 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la revisión en el navegador de los casos 16 y 17)
 Depende de:
 - `r1-red-vial` (cerrado): `rutas.r1.persistencia` (`cargar_grafo_procesado`, `cargar_lugares_nodos`), `rutas.r1.aristas.mejor_arista` (geometría de cada tramo) y `data/catalogo.csv`.
 - `r2-dijkstra` (cerrado): `rutas.r2.adyacencia.construir_adyacencia`, `rutas.r2.dijkstra.consultar` (versión `cola_prioridad`), `rutas.r2.ruta.detalle_ruta` y `rutas.r2.matriz.cargar_matriz`.

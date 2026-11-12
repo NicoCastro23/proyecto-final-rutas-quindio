@@ -167,3 +167,44 @@ La prueba lenta (`test_peor_caso_2k_4k_sin_recursion_error`, marcador `lento`) *
 - SciPy recibe un arreglo float64 construido fuera del cronómetro; solo se mide la llamada a `ConvexHull`. Lo mismo para el algoritmo propio: la preparación de puntos queda fuera.
 - Los casos de la clase usan la sección R3 de la copia versionada `tests/datos/red_clase.json`, así que no necesitan datos descargados.
 - La semilla de los cuadrados (2026) queda documentada en `results/r3/r3_puntos.json`.
+
+## Ejecutar la aplicación (R5)
+
+Todas las órdenes se corren desde la raíz del repositorio. R4 y R5 usan Python 3.13.18 (instalado con Homebrew); R1 a R3 usaron 3.13.8.
+
+**Requisito:** `data/processed/` y `data/catalogo.csv` están versionados, así que **no hace falta correr R1 a R4** para abrir la aplicación.
+
+### Vía principal: entorno virtual
+
+```bash
+python3.13 -m venv .venv                    # igual que en R1; si .venv ya existe, se omite
+.venv/bin/pip install -r requirements.txt   # si ya está instalado, no cambia nada
+.venv/bin/python -m rutas.r5.app
+```
+
+Imprime «Datos cargados en … s» y la dirección; abre `http://127.0.0.1:5050` en el navegador. Detén la aplicación con Ctrl+C.
+
+- **Puerto.** Se usa el 5050 y no el 5000 porque en macOS el 5000 suele estar ocupado por AirPlay. Si el 5050 está ocupado, la aplicación lo avisa y sugiere otro: `.venv/bin/python -m rutas.r5.app --puerto 5051`.
+- **Qué muestra cada sección.**
+  - *Ruta*: elige origen y destino y dibuja la ruta más corta (Dijkstra, R2) sobre las vías, con el tiempo en minutos.
+  - *Itinerario*: elige un lugar de partida y atractivos; muestra el recorrido óptimo (Held-Karp) y el voraz, con tiempos por tramo y la regla de las 11 h (R4).
+  - *Envolvente*: el polígono convexo de los 42 lugares sobre el mapa, con su número de vértices y su área (R3).
+  - *Resultados*: las imágenes y tablas de `results/r1` a `results/r4`.
+- **Internet.** El mapa necesita conexión: Leaflet y las teselas de OpenStreetMap se cargan desde la red.
+- **Archivos que pueden faltar.** La gráfica de R1 (`results/r1/r1_tiempos_componente.png`) y los resultados exactos de R4 (`results/r4/r4_exactas.csv` y `results/r4/r4_tiempo_vs_k.png`) pueden no estar. La sección *Resultados* no falla: avisa qué archivo falta y el comando que lo genera (por ejemplo `.venv/bin/python -m rutas.r1.tablas` o `.venv/bin/python -m rutas.r4.medir_exactas`).
+
+### Alternativa: Docker (opcional)
+
+```bash
+docker build -t rutas-quindio .
+docker run -p 5050:5050 rutas-quindio
+```
+
+Luego abre `http://127.0.0.1:5050`. La imagen incluye `data/processed/` y `results/`; no hace falta descargar nada.
+
+### Pruebas
+
+```bash
+.venv/bin/python -m pytest -m "not red"                 # sin datos descargados
+.venv/bin/python -m pytest tests/test_red_real_r5.py    # sobre la red real (necesita data/processed)
+```
