@@ -111,6 +111,8 @@ def test_caso_2_ruta_en_la_app(cliente_real):
     r = cliente_real.get("/ruta?origen=C01&destino=C12")
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "29,7" in html and "leaflet" in html
+    resultado = html.split('id="resultado-ruta"', 1)[1]
+    assert "C01 Plaza de Bolívar de Armenia → C12 Plaza de Bolívar de Salento" in resultado
 
 
 def test_caso_3_ruta_mismo_lugar_real(cliente_real):

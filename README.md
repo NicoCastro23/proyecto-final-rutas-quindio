@@ -176,8 +176,10 @@ Todas las órdenes se corren desde la raíz del repositorio. R4 y R5 usan Python
 
 ### Vía principal: entorno virtual
 
+Antes de crear `.venv` hace falta tener `python3.13` instalado (por ejemplo `brew install python@3.13` en macOS, o el instalador de python.org).
+
 ```bash
-python3.13 -m venv .venv                    # igual que en R1; si .venv ya existe, se omite
+python3.13 -m venv .venv                    # requiere python3.13 instalado; si .venv ya existe, se omite
 .venv/bin/pip install -r requirements.txt   # si ya está instalado, no cambia nada
 .venv/bin/python -m rutas.r5.app
 ```
@@ -187,7 +189,7 @@ Imprime «Datos cargados en … s» y la dirección; abre `http://127.0.0.1:5050
 - **Puerto.** Se usa el 5050 y no el 5000 porque en macOS el 5000 suele estar ocupado por AirPlay. Si el 5050 está ocupado, la aplicación lo avisa y sugiere otro: `.venv/bin/python -m rutas.r5.app --puerto 5051`.
 - **Qué muestra cada sección.**
   - *Ruta*: elige origen y destino y dibuja la ruta más corta (Dijkstra, R2) sobre las vías, con el tiempo en minutos.
-  - *Itinerario*: elige un lugar de partida y atractivos; muestra el recorrido óptimo (Held-Karp) y el voraz, con tiempos por tramo y la regla de las 11 h (R4).
+  - *Itinerario*: elige un lugar de partida (por defecto Armenia, C01) y de 6 a 8 atractivos; muestra el recorrido óptimo (Held-Karp) y el voraz, con tiempos por tramo y la regla de las 11 h (R4).
   - *Envolvente*: el polígono convexo de los 42 lugares sobre el mapa, con su número de vértices y su área (R3).
   - *Resultados*: las imágenes y tablas de `results/r1` a `results/r4`.
 - **Internet.** El mapa necesita conexión: Leaflet y las teselas de OpenStreetMap se cargan desde la red.

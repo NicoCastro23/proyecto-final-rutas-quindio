@@ -30,7 +30,7 @@ def crear_app(datos, results=RESULTS):
     @app.get("/ruta")
     def ruta():
         origen, destino = request.args.get("origen", ""), request.args.get("destino", "")
-        contexto = {"lugares": lugares, "origen": origen, "destino": destino,
+        contexto = {"lugares": lugares, "nombre_de": datos.nombre_de, "origen": origen, "destino": destino,
                     "ruta": None, "mapa": None, "error": None}
         if not (origen and destino):               # sin los dos parámetros: solo el formulario
             return render_template("ruta.html", **contexto)

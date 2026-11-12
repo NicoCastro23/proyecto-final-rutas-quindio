@@ -16,12 +16,14 @@
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
 {% if ruta %}
-<h2>{{ ruta.origen }} → {{ ruta.destino }}</h2>
+<div id="resultado-ruta">
+<h2>{{ ruta.origen }} {{ nombre_de[ruta.origen] }} → {{ ruta.destino }} {{ nombre_de[ruta.destino] }}</h2>
 <p>Tiempo de viaje: <strong>{{ ruta.tiempo_min|num(1) }} min</strong> ({{ ruta.tiempo_s|num(1) }} s)</p>
 <p>Distancia: {{ ruta.distancia_km|num(2) }} km</p>
 <p>Nodos explorados: {{ ruta.nodos_explorados|num(0) }} ·
    Cómputo: {{ ruta.computo_ms|num(3) }} ms (informativo, no es la medición de R2)</p>
 {% if ruta.aviso %}<p class="aviso">{{ ruta.aviso }}</p>{% endif %}
 <iframe srcdoc="{{ mapa }}"></iframe>
+</div>
 {% endif %}
 {% endblock %}

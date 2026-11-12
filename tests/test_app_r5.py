@@ -63,7 +63,10 @@ def test_ruta_sintetica_app(tmp_path):
     html = r.get_data(as_text=True)
     assert r.status_code == 200
     assert numero(datos_app.matriz.loc["C01", "A02"] / 60, 1) in html
-    assert "leaflet" in html and "Atractivo Dos" in html
+    assert "leaflet" in html
+    # el nombre debe estar en el bloque del resultado, no solo en las <option> del formulario
+    resultado = html.split('id="resultado-ruta"', 1)[1]
+    assert "C01 Cabecera Uno → A02 Atractivo Dos" in resultado
 
 
 def test_caso_3_ruta_mismo_lugar(cliente_app):

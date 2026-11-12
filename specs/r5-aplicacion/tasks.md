@@ -225,6 +225,12 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Resultado (2026-11-12): `-m "not red"`: 497 pasan, 1 se salta, 41 deseleccionadas (suma la prueba del Dockerfile). `-m red`: 39 pasan, 2 se saltan (`test_red_real.py:79` por `data/raw/radio_2km.graphml` y `test_red_real_r4.py:126` por `results/r4/r4_exactas.csv`; ninguno es de R5, las `red` de R5 corren). Suite completa `pytest`: 536 pasan, 3 se saltan. `git diff --stat -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 requirements.txt .gitignore`: vacío.
   - Pendiente: el «Estado» de la spec y la lista de pendientes del documento técnico (diagrama de arquitectura, capturas de las cuatro secciones y comando de arranque) no se tocaron: la spec es del coordinator/reviewer.
 
+## Ronda 1, sugerencias del reviewer
+
+- [x] Sugerencia 1: nombres de origen y destino en el resultado de `/ruta`
+  - Nota: la plantilla `ruta.html` envuelve el resultado en `<div id="resultado-ruta">` y muestra «C01 Nombre → A02 Nombre»; `app.py` pasa `nombre_de` al contexto. Las pruebas (`test_app_r5.py`, `test_red_real_r5.py`) buscan el texto solo dentro de ese bloque; con la plantilla sin nombres la prueba sintética falló (`'C01 Cabecera Uno → A02 Atractivo Dos'` no estaba en el resultado, solo `C01 → A02`).
+- [x] Sugerencia 3: README, sección «Ejecutar la aplicación (R5)»: «de 6 a 8 atractivos», partida por defecto Armenia (C01) y requisito de `python3.13` instalado antes de crear `.venv`.
+
 ## Cobertura
 
 | Caso / punto | Tarea |
