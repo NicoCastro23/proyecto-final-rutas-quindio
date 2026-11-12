@@ -1,8 +1,10 @@
-"""Fixtures y helpers compartidos por las pruebas (R1, R2 y R3)."""
+"""Fixtures y helpers compartidos por las pruebas (R1 a R5)."""
 import json
 
 import networkx as nx
+import pandas as pd
 import pytest
+from shapely.geometry import LineString
 
 from rutas.config import DATA_PROCESSED, DATA_RAW, RAIZ
 from rutas.r1.persistencia import guardar_grafo
@@ -133,3 +135,97 @@ def red_radio_2km():
         pytest.skip("falta data/raw/radio_2km.graphml")
     import osmnx as ox
     return ox.load_graphml(ruta)
+
+
+# ---------------------------------------------------------------------------
+# Datos sintéticos de R5: una carpeta pequeña con todo lo que lee la aplicación
+# ---------------------------------------------------------------------------
+NODOS_APP = {1: (-75.70, 4.50), 2: (-75.68, 4.50), 3: (-75.66, 4.50),
+             4: (-75.66, 4.52), 5: (-75.68, 4.52), 6: (-75.70, 4.52)}
+# (id, nombre, categoría, nodo): A05 comparte nodo con C02 y A06 con A02 (caso del mismo punto)
+LUGARES_APP = [("C01", "Cabecera Uno", "Cabecera municipal", 1),
+               ("C02", "Cabecera Dos", "Cabecera municipal", 4),
+               ("A01", "Atractivo Uno", "Atractivo turístico", 2),
+               ("A02", "Atractivo Dos", "Atractivo turístico", 3),
+               ("A03", "Atractivo Tres", "Atractivo turístico", 5),
+               ("A04", "Atractivo Cuatro", "Atractivo turístico", 6),
+               ("A05", "Atractivo Cinco", "Atractivo turístico", 4),
+               ("A06", "Atractivo Seis", "Atractivo turístico", 3)]
+VISITAS_APP = [30, 60, 30, 60, 30, 60]       # 270 min: la jornada cabe en 11 h
+
+
+def carpeta_app_sintetica(tmp_path, visitas=None):
+    """Escribe en tmp_path los datos de prueba de R5 y devuelve (processed, catalogo, results).
+
+    Grafo de 6 nodos en anillo (1->2->...->6->1 y su inverso, 60 s y 500 m cada arista), salvo
+    2->1 que tarda 90 s (asimetría). La arista 1->2 lleva una geometría curva de 3 puntos.
+    Hay 8 lugares (2 cabeceras y 6 atractivos). Con visitas=[120] * 6 la jornada no cabe en 11 h.
+    """
+    from rutas.r2.matriz import calcular_matriz, guardar_matriz
+
+    visitas = visitas or VISITAS_APP
+    aristas = []
+    for u in range(1, 7):
+        v = u % 6 + 1
+        directa = {"travel_time": 60.0, "length": 500.0}
+        inversa = {"travel_time": 90.0 if (v, u) == (2, 1) else 60.0, "length": 500.0}
+        if (u, v) == (1, 2):
+            directa["geometry"] = LineString([(-75.70, 4.50), (-75.69, 4.505), (-75.68, 4.50)])
+        aristas.append((u, v, directa))
+        aristas.append((v, u, inversa))
+    G = agregar_utm_a_nodos(grafo_sintetico(NODOS_APP, aristas))
+
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    guardar_grafo(G, processed)
+
+    ids = [lugar[0] for lugar in LUGARES_APP]
+    nodos = [lugar[3] for lugar in LUGARES_APP]
+    pd.DataFrame({"id_lugar": ids, "id_nodo": nodos, "distancia_al_nodo_m": 10.0,
+                  "alerta_500m": False}).to_csv(processed / "lugares_nodos.csv", index=False)
+    matriz = calcular_matriz(construir_adyacencia(G), nodos)
+    guardar_matriz(matriz, ids, processed / "matriz_tiempos.csv")
+
+    # catálogo: las visitas se asignan en orden a los 6 atractivos; las cabeceras no tienen
+    duraciones = [None, None] + list(visitas)
+    pd.DataFrame({
+        "id": ids, "nombre": [l[1] for l in LUGARES_APP], "municipio": "Armenia",
+        "categoria": [l[2] for l in LUGARES_APP],
+        "latitud": [NODOS_APP[n][1] for n in nodos], "longitud": [NODOS_APP[n][0] for n in nodos],
+        "duracion_visita_min": duraciones,
+    }).to_csv(tmp_path / "catalogo.csv", index=False)
+
+    cuadrado = [[-75.71, 4.49], [-75.65, 4.49], [-75.65, 4.53], [-75.71, 4.53]]
+    envolvente = {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "properties": {"vertices": 4, "area_km2": 29.6},
+        "geometry": {"type": "Polygon", "coordinates": [cuadrado + [cuadrado[0]]]}}]}
+    (processed / "envolvente.geojson").write_text(json.dumps(envolvente), encoding="utf-8")
+
+    results = tmp_path / "results"
+    (results / "r2").mkdir(parents=True)
+    (results / "r2" / "r2_tiempo_vs_explorados.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+    (results / "r2" / "r2_cociente.csv").write_text("mediana,minimo,maximo\n1.5,1.0,2.0\n", encoding="utf-8")
+    (results / "r2" / "r2_dijkstra.csv").write_text("nodos,tiempo_ms\n10,1.0\n", encoding="utf-8")
+    (results / "r2" / "r2_pares.csv").write_text("origen,destino,tiempo_s\nC01,C02,60\n", encoding="utf-8")
+    (results / "r4").mkdir()
+    (results / "r4" / "r4_calidad.csv").write_text("k,brecha_pct\n6,0.0\n", encoding="utf-8")
+    (results / "r4" / "r4_memoria.csv").write_text("k,bytes\n6,100\n", encoding="utf-8")
+    (results / "r4" / "r4_itinerario.csv").write_text("orden,lugar\n1,A01\n", encoding="utf-8")
+    return processed, tmp_path / "catalogo.csv", results
+
+
+@pytest.fixture
+def datos_app(tmp_path):
+    """DatosApp sobre los datos sintéticos (carga con cargar_datos, igual que la app real)."""
+    from rutas.r5.datos import cargar_datos
+    processed, catalogo, _ = carpeta_app_sintetica(tmp_path)
+    return cargar_datos(processed, catalogo)
+
+
+@pytest.fixture
+def cliente_app(tmp_path):
+    """Cliente de pruebas de Flask sobre los datos sintéticos."""
+    from rutas.r5.app import crear_app
+    from rutas.r5.datos import cargar_datos
+    processed, catalogo, results = carpeta_app_sintetica(tmp_path)
+    return crear_app(cargar_datos(processed, catalogo), results).test_client()

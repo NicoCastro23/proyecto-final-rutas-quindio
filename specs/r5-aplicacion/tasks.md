@@ -1,0 +1,232 @@
+# Tareas — R5 Aplicación (Flask + Folium)
+
+Spec: `spec.md` · Plan: `plan.md`. Todas las órdenes se corren desde la raíz del repositorio (`/Users/nicolascastro/Desktop/proyecto-final-rutas-quindio`) con `.venv/bin/python` (Python 3.13.18, Flask 3.1.3 y Folium 0.20.0 ya instalados; no hay que instalar nada).
+
+Cada tarea en la que se use IA termina con: **anotar en `docs/anexo-ia.md`** (fecha, integrante, herramienta, qué se generó, cómo se verificó).
+
+> **Reglas del usuario:**
+> 1. Cada bloque termina con todas sus pruebas en verde y el trabajo se **DETIENE** hasta que el usuario haga su commit. No se empieza el bloque siguiente antes.
+> 2. Test primero **tarea por tarea**: escribir la prueba de una tarea, verla fallar por la razón correcta (el módulo existe con funciones que hacen `raise NotImplementedError`; no un `ModuleNotFoundError` global) y solo entonces escribir el código. El reporte de cada bloque lo confirma tarea por tarea.
+> 3. No modificar `.gitignore` sin preguntar. `docs/` está ignorada: `docs/anexo-ia.md` se mantiene en local.
+> 4. Nunca `git add`, `git commit` ni `git push`.
+> 5. **R5 no modifica `rutas/r1..r4/`** (Puerta 1). Si algo no encaja, se detiene y se pregunta; no se “arregla” R1–R4.
+> 6. No se agregan dependencias: `requirements.txt` no cambia.
+
+> **Simplicidad:** código legible que cada integrante pueda explicar en la sustentación. `servicios.py` no importa Flask ni produce HTML; `mapas.py` solo arma Folium; `app.py` solo lee parámetros, llama a servicios y mapas, y elige plantilla y código HTTP. Cada ruta de `app.py` cabe en una pantalla. Las plantillas heredan de `base.html` y no llevan `<script>`. Ningún archivo de `rutas/r5/` implementa un algoritmo: Dijkstra, Held-Karp, el voraz y la regla de las 11 h se importan de R2 y R4.
+
+Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red" -q` (hoy: 412 pasan y 1 se salta; cada bloque solo debe sumar pruebas en verde).
+
+## B1 · Configuración, formato, datos sintéticos y carga única
+
+- [x] T1 · Comprobar el entorno
+  - Archivos: ninguno
+  - Pasos: `.venv/bin/python --version` (3.13.x) y que importan `flask`, `folium`, `jinja2`; la suite sin `red` en verde antes de empezar
+  - Test primero: no aplica (entorno)
+  - Verificar: `.venv/bin/python --version && .venv/bin/python -c "import flask, folium, jinja2; print('ok')" && .venv/bin/python -m pytest -m "not red" -q`
+
+- [x] T2 · Paquete `rutas/r5`, constantes y guardia de “sin algoritmos ni JS propio”
+  - Archivos: `rutas/config.py` (agregar al final `RESULTS = RAIZ / "results"`, `HOST_R5 = "127.0.0.1"`, `PUERTO_R5 = 5050`; no tocar lo demás); `rutas/r5/__init__.py` (vacío); stubs con docstrings del plan y `raise NotImplementedError` en `rutas/r5/formato.py`, `datos.py` (`DatosFaltantes` y `DatosApp` ya definidas; `archivos_faltantes`, `cargar_datos` como stubs), `servicios.py`, `mapas.py`, `app.py`; carpeta `rutas/r5/templates/` con `base.html` mínimo (sin `<script>`)
+  - Test primero: `tests/test_config.py::test_rutas_r5` (`RESULTS == RAIZ / "results"`; `RESULTS_R1.parent == RESULTS` … `RESULTS_R4.parent == RESULTS`; `PUERTO_R5 == 5050`; `HOST_R5 == "127.0.0.1"`); `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio` (lee el texto de cada `rutas/r5/*.py`: no contiene `import heapq`, `networkx`, `scipy`, `itertools`; lee cada `rutas/r5/templates/*.html`: no contiene `<script`; `requirements.txt` sigue teniendo `Flask==3.1.3` y `folium==0.20.0`). La primera falla con `ImportError` de `RESULTS`; la segunda pasa con los stubs y queda como guardia
+  - Verificar: `.venv/bin/python -m pytest tests/test_config.py tests/test_app_r5.py -k "r5 or algoritmos"`
+  - anotar en `docs/anexo-ia.md`
+
+- [x] T3 · Números con coma decimal (Puerta 1: coma decimal)
+  - Archivos: `rutas/r5/formato.py` (`numero(valor, decimales=1)` como en el plan)
+  - Test primero: `tests/test_formato_r5.py::test_coma_decimal` (parametrizada: `(29.7239, 1) → "29,7"`, `(1783.39, 1) → "1 783,4"`, `(1631.4960175, 1) → "1 631,5"`, `(6.600187, 2) → "6,60"`, `(0, 1) → "0,0"`, `(7360, 0) → "7 360"`, `(178.6557, 1) → "178,7"`, `(190.4473, 1) → "190,4"`, `(11.7916, 1) → "11,8"`), `::test_acepta_numpy` (`numpy.float64(1.25)` con 2 → `"1,25"`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_formato_r5.py`
+  - anotar en `docs/anexo-ia.md`
+
+- [x] T4 · Datos sintéticos de prueba (fixture compartido)
+  - Archivos: `tests/conftest.py` (agregar al final, sin tocar lo existente: `carpeta_app_sintetica(tmp_path, visitas=None)` → `(processed, catalogo, results)` exactamente como en el plan, «Datos sintéticos de prueba»: 6 nodos, anillo con 2→1 = 90 s, arista 1→2 con geometría curva de 3 puntos, 8 lugares C01, C02, A01..A06 con sus nodos, visitas 30/60/30/60/30/60 o `visitas`, matriz con `calcular_matriz` + `guardar_matriz` de R2, `envolvente.geojson` cuadrado con `vertices: 4`, y `results/r2`, `results/r4` (sin `r4_exactas.csv` ni `r4_tiempo_vs_k.png`); fixtures `datos_app` y `cliente_app` que dependen de `cargar_datos` y `crear_app` y por eso se usan desde T5 y T13)
+  - Test primero: `tests/test_datos_r5.py::test_fixture_sintetico` (la carpeta tiene los 4 archivos de `processed`, el catálogo con 8 filas y 6 atractivos, `matriz_tiempos.csv` 8 × 8 con `M["A01"]["C01"] == 90` y `M["C01"]["A01"] == 60`, el GeoJSON con 5 puntos en el anillo). Falla antes de escribir el helper (`ImportError`/`AttributeError` del helper en `tests.conftest`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_datos_r5.py -k fixture`
+  - Nota: la prueba usa `M.loc[fila, columna]` en vez de la forma `M[...][...]`, porque en pandas `M[col][fila]` invierte el sentido; el valor comprobado es el mismo (A01 -> C01 = 90 s, C01 -> A01 = 60 s).
+  - anotar en `docs/anexo-ia.md`
+
+- [x] T5 · `cargar_datos` y `DatosFaltantes` (caso 13; Comportamiento 1; casos borde «Archivo procesado faltante»)
+  - Archivos: `rutas/r5/datos.py` (`COMANDOS_DATOS`, `archivos_faltantes`, `cargar_datos` según el plan; `nodo_de` con `int()`; `atractivos` en orden del catálogo; `visita_min` como `float`)
+  - Test primero: `tests/test_datos_r5.py::test_carga_sintetica` (`DatosApp` con `len(datos.nodo_de) == 8`, todos los valores `int` de Python, `datos.atractivos == ["A01", …, "A06"]`, `datos.visita_min["A02"] == 60.0`, `datos.nombre_de["C01"]`, `datos.envolvente["features"][0]["properties"]["vertices"] == 4`, `datos.red.ids == sorted(datos.G.nodes)`), `::test_caso_13_carpeta_vacia` (`processed` vacía en `tmp_path` → `DatosFaltantes` cuyo mensaje contiene `grafo_componente.graphml` y `python -m rutas.r1.construir_red`), `::test_cada_faltante_con_su_comando` (parametrizada: se borra uno a uno `lugares_nodos.csv`, `matriz_tiempos.csv`, `envolvente.geojson` y el catálogo de la carpeta sintética → el mensaje nombra ese archivo y su comando: `rutas.r1.construir_red`, `rutas.r2.matriz`, `rutas.r3.archivos`, «restaurarlo con git»), `::test_grafo_comprimido_cuenta` (renombrar a `.graphml.gz` comprimido con `gzip` → no falta)
+  - Verificar: `.venv/bin/python -m pytest tests/test_datos_r5.py`
+  - Cierre de B1: `.venv/bin/python -m pytest -m "not red" -q` en verde. **DETENERSE** hasta el commit del usuario
+  - Nota: `DatosFaltantes` lleva una línea por archivo (`falta <ruta>: <comando>`); `cargar_datos` se probó también con los datos reales (42 lugares, 15 atractivos).
+  - anotar en `docs/anexo-ia.md`
+
+## B2 · Servicios: ruta, itinerario y resultados (sin Flask) y pruebas con la red real
+
+- [ ] T6 · Coordenadas que siguen la geometría (caso 15)
+  - Archivos: `rutas/r5/servicios.py` (`coordenadas_de(G, ids_nodos)`)
+  - Test primero: `tests/test_servicios_r5.py::test_caso_15_geometria_curva` (nodos 1→2 → `[(4.50, -75.70), (4.505, -75.69), (4.50, -75.68)]` en ese orden), `::test_sin_duplicar_uniones` (1→2→3 → 4 puntos, el último `(4.50, -75.66)`; ningún par consecutivo repetido), `::test_segmento_recto_sin_geometria` (2→3 → `[(4.50, -75.68), (4.50, -75.66)]`), `::test_un_nodo_sin_linea` (`[1]` → `[]`)
+  - Ver fallar: con `NotImplementedError` del stub
+  - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "caso_15 or uniones or recto or un_nodo"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T7 · `ruta_entre` y `validar_lugar` (casos 3 y 4 sintéticos; borde «lugar desconocido»)
+  - Archivos: `rutas/r5/servicios.py` (`ErrorEntrada`, `validar_lugar`, `ruta_entre` según el plan: `consultar(..., "cola_prioridad")` con `perf_counter` alrededor, `detalle_ruta`, `coordenadas_de`, `aviso`)
+  - Test primero: `tests/test_servicios_r5.py::test_ruta_sintetica` (C01→A02: `tiempo_s == M["C01"]["A02"]` ± 1e-6, `ids_nodos == [1, 2, 3]`, `distancia_km == 1.0`, `tiempo_min == tiempo_s / 60`, `nodos_explorados > 0`, `computo_ms >= 0`, 4 coordenadas, `aviso is None`), `::test_caso_3_mismo_lugar` (C01→C01: `tiempo_s == 0`, `coordenadas == []`, `aviso == "origen y destino son el mismo lugar"`), `::test_mismo_punto_sintetico` (A02→A06: `tiempo_s == 0`, `aviso == "los dos lugares están en el mismo punto de la red"`), `::test_lugar_desconocido` (`ruta_entre(datos, "X99", "C01")` → `ErrorEntrada` con mensaje `"lugar desconocido: X99"`; igual con el destino), `::test_asimetria_sintetica` (A01→C01 = 90 y C01→A01 = 60)
+  - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "ruta or mismo or desconocido or asimetria"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T8 · Validación del itinerario (caso 8 a nivel de servicio)
+  - Archivos: `rutas/r5/servicios.py` (`validar_itinerario` con los mensajes y el orden del plan)
+  - Test primero: `tests/test_servicios_r5.py::test_caso_8_validacion` (parametrizada, partida y lista → fragmento del mensaje: `C01` + 5 atractivos → «entre 6 y 8»; `C01` + 9 ids → «entre 6 y 8»; `C01` + `[]` → «(llegaron 0)»; `C01` + `A01, A01, A02, A03, A04, A05` → «repetido: A01»; `A01` + `A01..A06` → «la partida A01»; `C01` + `A01..A05, C02` → «C02 no es un atractivo turístico»; `X99` + `A01..A06` → «lugar desconocido: X99»), `::test_validacion_correcta` (`C01` + `A01..A06` no lanza; partida `C02` también vale: cualquier lugar)
+  - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "caso_8 or validacion"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T9 · `itinerario`: Held-Karp, voraz, tramos y regla de las 11 h (casos 5, 6 y 7 en sintéticos)
+  - Archivos: `rutas/r5/servicios.py` (`itinerario` según el plan: `validar_itinerario`; `resolver_por_ids` para `"held_karp"` y `"vecino_mas_cercano"`; tiempos; tramos con `consultar` + `coordenadas_de`; `diferencia_min`, `brecha_pct` (0 si HK = 0); si HK no cabe, adaptador a `itinerario_dia` con `matriz_a_listas` y `visitas_del_catalogo`, y el dict `jornada` del plan)
+  - Test primero: `tests/test_servicios_r5.py::test_itinerario_cabe_sintetico` (C01 + A01..A06: `held_karp.desplazamiento_min * 60 == resolver_por_ids(M, …, "held_karp")[0]` ± 1e-6; `recorrido` igual al de `resolver_por_ids`; `visitas_min == 270` en los dos; `jornada_min == desplazamiento + 270`; `cabe` verdadero; `diferencia_min >= 0`; `jornada is None`), `::test_tramos_igual_a_matriz_sintetico` (por método: un tramo por par consecutivo del recorrido, `tiempo_min * 60 == M[desde][hasta]` ± 1e-6; suma de tramos = desplazamiento ± 1e-6 × 60), `::test_itinerario_no_cabe_sintetico` (carpeta con `visitas=[120] * 6`: `held_karp.cabe` falso, `jornada["quitados"]` no vacío y cada quitado con `id`, `lugar` (nombre del catálogo), `visita_min == 120`, `desvio_min`, `ahorro_min`; `jornada_final_min <= 660`; `recorrido_final` empieza y termina en C01 y **no** contiene los quitados; los tramos y el recorrido de HK siguen siendo los de los 6 elegidos), `::test_no_llama_resolver_si_invalido` (monkeypatch de `rutas.r5.servicios.resolver_por_ids` con contador; 5 atractivos → `ErrorEntrada` y contador en 0)
+  - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "itinerario or tramos or resolver"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T10 · `resultados` con la lista fija (caso 11 a nivel de servicio)
+  - Archivos: `rutas/r5/servicios.py` (`ARCHIVOS_RESULTADOS` con un comando por archivo, la tabla del plan; `resultados(requerimiento, results=RESULTS)`)
+  - Test primero: `tests/test_servicios_r5.py::test_caso_11_resultados_sinteticos` (con `results` sintético: `resultados("r2", results)["imagenes"] == ["r2_tiempo_vs_explorados.png"]`, una tabla con nombre `r2_cociente.csv` cuyo HTML contiene `<table` y la columna `mediana`; `resultados("r4", results)["faltantes"]` contiene `("r4_exactas.csv", ".venv/bin/python -m rutas.r4.medir_exactas")` y `("r4_tiempo_vs_k.png", ".venv/bin/python -m rutas.r4.tablas")`), `::test_texto_escapado` (CSV con una celda `<b>x</b>` → aparece `&lt;b&gt;`), `::test_celdas_vacias` (CSV con una celda vacía no da `nan`), `::test_requerimiento_desconocido` (`"r9"` → `KeyError`), `::test_lista_fija_existe_en_results` (sin `red`, contra `RESULTS` real: todo archivo de `ARCHIVOS_RESULTADOS` existe salvo exactamente `r1_tiempos_componente.png`, `r4_exactas.csv` y `r4_tiempo_vs_k.png`; si el usuario ya corrió alguno, la prueba admite que exista: el conjunto de faltantes ⊆ esos tres)
+  - Verificar: `.venv/bin/python -m pytest tests/test_servicios_r5.py -k "resultados or escapado or vacias or desconocido or lista_fija"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T11 · Servicios con la red real (casos 1, 4, 5, 6 y 7; `red`)
+  - Archivos: `tests/test_red_real_r5.py` (`pytestmark = pytest.mark.red`; fixture `datos_reales` con `scope="module"` que hace `pytest.skip` si falta `data/processed/grafo_componente.graphml[.gz]` y llama a `cargar_datos()` una vez)
+  - Test primero (verifican código ya hecho: se validan con mutación temporal, ver Verificar): `::test_caso_1_ruta_real` (C01→C12: `tiempo_s == M["C01"]["C12"]` ± 1e-6 y ≈ 1 783,39; `ids_nodos[0] == nodo_de["C01"]`, `ids_nodos[-1] == nodo_de["C12"]`; `detalle_ruta(G, ids_nodos)[0]` igual ± 1e-6; `coordenadas[0]` a menos de 1e-6° de `(G.nodes[n]["y"], G.nodes[n]["x"])` del nodo de C01; `nodos_explorados > 0`), `::test_caso_1_asimetria` (C12→C01 ≈ 1 708,19 ± 0,01 y = matriz ± 1e-6), `::test_caso_3_mismo_lugar_real` (C01→C01 → 0 y aviso), `::test_caso_4_mismo_nodo` (T03→T05 → `tiempo_s == 0` y aviso del mismo punto), `::test_caso_5_itinerario_cabe` (C01 + `A05, A14, A06, A07, A13, A15`: HK 178,66 ± 0,01 min y recorrido `C01, A15, A13, A07, A06, A14, A05, C01`; voraz 190,45 ± 0,01 y `C01, A05, A14, A07, A06, A13, A15, C01`; diferencia 11,79 ± 0,01; brecha 6,60 ± 0,01; visitas 240; jornadas 418,66 y 430,45 ± 0,01, las dos caben; `jornada is None`), `::test_caso_6_itinerario_no_cabe` (C01 + `A05, A08, A04, A14, A06, A07, A12, A01`: HK 145,22 ± 0,01, jornada 1 255,22 ± 0,01, no cabe; voraz 155,39 ± 0,01; diferencia 10,17; brecha 7,01; `[q["id"] for q in jornada["quitados"]] == ["A01", "A12"]`; `jornada_final_min` = `totales.jornada_min` de `results/r4/r4_itinerario.json` ± 1e-6 y ≈ 613,13), `::test_caso_7_tramos` (caso 5, los dos métodos: cada tramo `tiempo_min * 60 == M[desde][hasta]` ± 1e-6; suma = desplazamiento ± 1e-6 × 60)
+  - Verificar: `.venv/bin/python -m pytest tests/test_red_real_r5.py -k "caso_1 or caso_3 or caso_4 or caso_5 or caso_6 or caso_7"`; mutaciones temporales que deben hacer fallar y luego se restauran: invertir origen y destino en `ruta_entre` (caso 1), usar el recorrido del voraz en los dos métodos (caso 5)
+  - Cierre de B2: `.venv/bin/python -m pytest -m "not red" -q` y `.venv/bin/python -m pytest tests/test_red_real_r5.py` en verde. **DETENERSE** hasta el commit del usuario
+  - anotar en `docs/anexo-ia.md`
+
+## B3 · Mapas, aplicación Flask y plantillas (cliente de pruebas de Flask)
+
+- [ ] T12 · Mapas con Folium (apoyan los casos 2, 9 y 10)
+  - Archivos: `rutas/r5/mapas.py` (`COLORES`, `centro`, `mapa_ruta`, `mapa_envolvente`, `mapa_itinerario` según el plan; cada una devuelve `mapa.get_root().render()`)
+  - Test primero: `tests/test_mapas_r5.py::test_mapa_ruta` (ruta C01→A02 sintética: el texto contiene `leaflet`, `L.polyline` y la coordenada intermedia `4.505`), `::test_mapa_ruta_sin_linea` (C01→C01: contiene `leaflet` y no `L.polyline`), `::test_mapa_envolvente` (contiene `L.polygon`, las 4 latitudes/longitudes del cuadrado (`-75.71`, `-75.65`, `4.49`, `4.53`) y 8 marcadores: el texto `C01 ·` … `A06 ·` en los tooltips), `::test_mapa_itinerario` (contiene `Held-Karp`, `Vecino más cercano`, `L.control.layers`, los dos colores de `COLORES` y los números de orden `1` … `6` en los `DivIcon`)
+  - Ver fallar: con `NotImplementedError` del stub
+  - Verificar: `.venv/bin/python -m pytest tests/test_mapas_r5.py`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T13 · Fábrica `crear_app`, `base.html` e inicio (Comportamiento 6)
+  - Archivos: `rutas/r5/app.py` (`crear_app(datos, results=RESULTS)`: filtro `num`, `app.config["DATOS"]`, `app.config["RESULTS"]`, ruta `/`); `rutas/r5/templates/base.html` (menú: Inicio, Ruta, Envolvente, Itinerario, Resultados r1..r4; `<style>` en línea; `lang="es"`), `inicio.html`
+  - Test primero: `tests/test_app_r5.py::test_inicio_y_menu` (`GET /` → 200; contiene enlaces a `/ruta`, `/envolvente`, `/itinerario` y `/resultados/r1`; sin `<script` en el HTML propio fuera de los mapas)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "inicio or algoritmos"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T14 · `/ruta` (caso 3; bordes: id desconocido e incompleto)
+  - Archivos: `rutas/r5/app.py` (vista `/ruta`); `rutas/r5/templates/ruta.html` (formulario con dos `<select>` de los lugares «id · nombre», conservando lo elegido; resultado: tiempo en min y s, distancia, origen y destino, nodos explorados, cómputo en ms («informativo»), aviso y `<iframe srcdoc="{{ mapa }}">`)
+  - Test primero: `tests/test_app_r5.py::test_ruta_formulario` (`GET /ruta` → 200 con `<select` y las 8 opciones), `::test_ruta_sintetica_app` (`GET /ruta?origen=C01&destino=A02` → 200; contiene el tiempo formateado con `numero(M["C01"]["A02"] / 60, 1)`, `leaflet` y el nombre de A02), `::test_caso_3_ruta_mismo_lugar` (`?origen=C01&destino=C01` → 200, «0,0» y «origen y destino son el mismo lugar»), `::test_ruta_lugar_desconocido` (`?origen=X99&destino=C01` → 400 y «lugar desconocido: X99»), `::test_ruta_incompleta` (`?origen=C01` → 200, sin «Tiempo de viaje» y sin mensaje de error)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k ruta`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T15 · `/envolvente` (caso 10 con datos sintéticos)
+  - Archivos: `rutas/r5/app.py` (vista `/envolvente`); `rutas/r5/templates/envolvente.html` («N vértices», «Área: X km²», tabla de vértices (lat, lon) con 6 decimales, mapa)
+  - Test primero: `tests/test_app_r5.py::test_caso_10_envolvente` (`GET /envolvente` → 200; contiene «4 vértices», «29,6 km²», las 4 coordenadas de la tabla (`numero(4.49, 6)`, `numero(-75.71, 6)`, `numero(4.53, 6)`, `numero(-75.65, 6)`) y `leaflet`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k envolvente`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T16 · `/itinerario` (casos 8 y 14; bordes del itinerario)
+  - Archivos: `rutas/r5/app.py` (vista `/itinerario`); `rutas/r5/templates/itinerario.html` (formulario: `<select name="partida">` con los lugares, C01 por defecto; casillas `name="atractivos"` de `datos.atractivos` con nombre y visita; resultado: tabla con una columna por método y las filas del plan, diferencia y brecha, bloque «Regla de las 11 h (R4, informativo)» si `jornada`, y el mapa)
+  - Test primero: `tests/test_app_r5.py::test_itinerario_sin_parametros` (`GET /itinerario` → 200, formulario con 6 casillas y C01 `selected`), `::test_itinerario_sintetico_app` (C01 + A01..A06 → 200; contiene `numero(hk_min, 1)`, `numero(voraz_min, 1)`, `numero(diferencia, 1)`, los nombres en orden de HK, «Held-Karp», «Vecino más cercano» y `leaflet`), `::test_itinerario_bloque_regla` (parametrizada: visitas por defecto → sin «Regla de las 11 h»; carpeta con `visitas=[120] * 6` → con «Regla de las 11 h» y el nombre del primer quitado), `::test_caso_8_itinerario_400` (parametrizada con las mismas 7 entradas de T8 → 400, el mensaje en el HTML, las casillas que llegaron siguen marcadas, y un contador en `rutas.r5.servicios.resolver_por_ids` (monkeypatch) en 0), `::test_caso_14_carga_unica` (monkeypatch con contador de `rutas.r5.app.cargar_datos` y de `rutas.r5.datos.cargar_grafo_procesado` **después** de crear la app; 3 peticiones a `/ruta?origen=C01&destino=A02` y 3 a `/itinerario?partida=C01&atractivos=…` → 200 y los dos contadores en 0)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "itinerario or caso_8 or caso_14"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T17 · `/resultados/<r>` y `/resultados/<r>/archivo/<nombre>` (casos 11 y 12)
+  - Archivos: `rutas/r5/app.py` (las dos vistas del plan; `abort(404)` fuera de la lista; `send_from_directory` solo para imágenes de la lista); `rutas/r5/templates/resultados.html` (un `<h2>` por archivo, `<img src="{{ url_for(...) }}">`, tablas con `|safe`, lista «Faltan» con `archivo: comando`)
+  - Test primero: `tests/test_app_r5.py::test_caso_11_resultados_r2` (cliente con `results` sintético: `GET /resultados/r2` → 200, contiene `r2_tiempo_vs_explorados.png` en un `src` y la tabla de `r2_cociente.csv`), `::test_caso_11_r4_sin_exactas` (`GET /resultados/r4` → 200, contiene `r4_exactas.csv` y `python -m rutas.r4.medir_exactas`), `::test_caso_11_cuatro_paginas_reales` (cliente con `results=RESULTS` real, sin `red`: `/resultados/r1` … `/resultados/r4` → 200; r2 y r3 sin «Faltan»), `::test_caso_12_imagen_permitida` (`/resultados/r2/archivo/r2_tiempo_vs_explorados.png` → 200 y `mimetype == "image/png"`), `::test_caso_12_rechazos` (parametrizada: `/resultados/r2/archivo/..%2F..%2FCLAUDE.md`, `/resultados/r2/archivo/otro.png`, `/resultados/r2/archivo/r2_cociente.csv`, `/resultados/r9`, `/resultados/r9/archivo/x.png` → 404)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "caso_11 or caso_12"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T18 · `main`: carga única, datos faltantes y puerto ocupado (caso 13; Comportamiento 1; borde del puerto)
+  - Archivos: `rutas/r5/app.py` (`puerto_libre`, `main` según el plan, con `--puerto` y `--host`; bloque `if __name__ == "__main__": sys.exit(main())`)
+  - Test primero: `tests/test_app_r5.py::test_caso_13_main_sin_datos` (`main([], processed=tmp_path_vacio)` → `1`; `capsys` contiene `grafo_componente.graphml` y `python -m rutas.r1.construir_red`, y **no** contiene `Traceback`), `::test_puerto_ocupado` (socket abierto en `127.0.0.1:0`; `main(["--puerto", str(p)], processed=…, catalogo=…)` con la carpeta sintética → `1` y la salida contiene `--puerto`; `Flask.run` reemplazado por un falso que falla si se llama), `::test_main_arranca` (monkeypatch de `flask.Flask.run` que guarda sus argumentos; `main(["--puerto", "5099"], …)` → `0`; se llamó una vez con `host="127.0.0.1"`, `port=5099`, `debug=False`; la salida contiene «Datos cargados en» y `http://127.0.0.1:5099`), `::test_puerto_por_defecto` (sin `--puerto` → `port=5050`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "main or puerto"`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T19 · La app con la red real (casos 2, 3, 9 y 10; `red`)
+  - Archivos: `tests/test_red_real_r5.py` (agregar un fixture `cliente_real` de módulo con `crear_app(datos_reales).test_client()`)
+  - Test primero (código ya hecho: validar con mutación temporal): `::test_caso_2_ruta_en_la_app` (`GET /ruta?origen=C01&destino=C12` → 200, contiene «29,7» y `leaflet`), `::test_caso_3_ruta_mismo_lugar_real` (`?origen=C01&destino=C01` → 200, «origen y destino son el mismo lugar»), `::test_caso_9_itinerario_en_la_app` (`/itinerario?partida=C01&atractivos=A05&atractivos=A14&atractivos=A06&atractivos=A07&atractivos=A13&atractivos=A15` → 200; contiene «178,7», «190,4» y «11,8»; no contiene «Regla de las 11 h»), `::test_itinerario_no_cabe_en_la_app` (los 8 del caso 6 → 200 y contiene «Regla de las 11 h», «Parque Nacional del Café» y «613,1»), `::test_caso_10_envolvente_real` (`/envolvente` → 200, «14 vértices» y «1 631,5»), `::test_formulario_42_lugares_15_atractivos` (`/itinerario` → 42 `<option` en la partida y 15 casillas)
+  - Verificar: `.venv/bin/python -m pytest tests/test_red_real_r5.py`; mutación temporal: mostrar el desplazamiento con `numero(x, 2)` hace fallar el caso 9; restaurar
+  - Cierre de B3: `.venv/bin/python -m pytest -m "not red" -q` y `.venv/bin/python -m pytest tests/test_red_real_r5.py` en verde. **DETENERSE** hasta el commit del usuario
+  - anotar en `docs/anexo-ia.md`
+
+## B4 · Docker, README, anexo de IA, comprobación manual y cierre
+
+- [ ] T20 · `Dockerfile` opcional (Comportamiento 7; apoya el caso 17)
+  - Archivos: `Dockerfile` (en la raíz):
+    ```dockerfile
+    FROM python:3.13-slim
+    WORKDIR /app
+    COPY requirements.txt .
+    RUN pip install --no-cache-dir -r requirements.txt
+    COPY rutas/ rutas/
+    COPY data/catalogo.csv data/catalogo.csv
+    COPY data/processed/ data/processed/
+    COPY results/ results/
+    EXPOSE 5050
+    CMD ["python", "-m", "rutas.r5.app", "--host", "0.0.0.0", "--puerto", "5050"]
+    ```
+  - Test primero: `tests/test_dockerfile_r5.py::test_dockerfile` (lee el texto: empieza con `FROM python:3.13-slim`; contiene `pip install` con `requirements.txt`, `COPY data/processed`, `COPY results`, `COPY rutas`, `0.0.0.0`, `5050` y `rutas.r5.app`; no copia `data/raw`, `.venv` ni `estudio`). Falla porque el archivo no existe
+  - Verificar: `.venv/bin/python -m pytest tests/test_dockerfile_r5.py`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T21 · README: «Ejecutar la aplicación (R5)» (enunciado: ejecutable localmente siguiendo el README; caso 16)
+  - Archivos: `README.md` (sección nueva al final, después de «Reproducir R3» —o de «Reproducir R4» si ya existe—, sin tocar las demás): requisito (`data/processed/` y `data/catalogo.csv` versionados; no hace falta correr R1–R4 para abrir la app); entorno (`python3.13 -m venv .venv` y `.venv/bin/pip install -r requirements.txt`, igual que R1); arranque `.venv/bin/python -m rutas.r5.app` y abrir `http://127.0.0.1:5050`; opción `--puerto` (por qué no 5000 en macOS); qué muestra cada sección; nota: el mapa necesita internet (Leaflet y teselas de OpenStreetMap); los avisos de archivos faltantes y sus comandos; alternativa Docker (`docker build -t rutas-quindio .` y `docker run -p 5050:5050 rutas-quindio`), opcional; pruebas `pytest -m "not red"` y `pytest tests/test_red_real_r5.py`
+  - Test primero: no aplica (documentación)
+  - Verificar: `grep -n "rutas.r5.app" README.md && grep -n "127.0.0.1:5050" README.md && grep -n "docker run -p 5050:5050" README.md`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T22 · Anexo de IA de R5
+  - Archivos: `docs/anexo-ia.md` (local; entradas de R5: plan y tareas con el agente planner; código, plantillas y pruebas con el implementer; cómo se verificó: casos 1, 5, 6 y 7 contra la matriz de R2 y `r4_itinerario.json`; datos sintéticos con valores a mano (casos 3, 8, 10–15); guardias sin algoritmos ni JS propio; mutaciones temporales; comprobación manual de los casos 16 y 17)
+  - Test primero: no aplica (documentación)
+  - Verificar: `grep -n "R5" docs/anexo-ia.md`
+
+- [ ] T23 · Comprobación manual: arranque con el README y Docker (casos 16 y 17)
+  - Archivos: ninguno de código; el resultado lo escribe el reviewer o el usuario en `specs/r5-aplicacion/review.md`
+  - Test primero: no aplica (manual)
+  - Lista de pasos (caso 16, obligatorio):
+    1. Abrir una terminal **nueva** en la raíz del repositorio y seguir **solo** el README, sección «Ejecutar la aplicación (R5)» (si `.venv` ya existe, basta `.venv/bin/pip install -r requirements.txt`, que no debe cambiar nada).
+    2. `.venv/bin/python -m rutas.r5.app` → imprime «Datos cargados en …» (≈ 1–2 s) y la dirección; no hay traza.
+    3. Abrir `http://127.0.0.1:5050`: el inicio muestra los 4 enlaces.
+    4. Caso 2: Ruta, origen C01 y destino C12 → mapa con la línea por las vías y «29,7» min; probar también C12 → C01 (28,5 min) y C01 → C01 (aviso).
+    5. Caso 9: Itinerario, partida C01 y las casillas A05, A14, A06, A07, A13, A15 → tabla con «178,7», «190,4» y «11,8»; el control de capas alterna Held-Karp y voraz. Probar los 8 del caso 6 → bloque de la regla (quita A01 y A12; 613,1 min). Probar 5 casillas → mensaje de error.
+    6. Caso 10: Envolvente → polígono, 42 lugares, «14 vértices» y «1 631,5 km²».
+    7. Caso 11: Resultados r1..r4 → imágenes y tablas; r1 y r4 muestran el aviso de lo que falta con su comando.
+    8. Con la app abierta, en otra terminal `.venv/bin/python -m rutas.r5.app` → mensaje de puerto ocupado que sugiere `--puerto`; luego `--puerto 5051` arranca.
+    9. Ctrl+C detiene la app.
+  - Lista de pasos (caso 17, opcional; si Docker no está, se anota «no comprobado» y no bloquea):
+    1. `docker build -t rutas-quindio .`
+    2. `docker run --rm -p 5050:5050 rutas-quindio`
+    3. Abrir `http://127.0.0.1:5050` y repetir los pasos 4 y 6.
+  - Verificar: `review.md` registra fecha, quién lo hizo, navegador y el resultado de cada paso
+
+- [ ] T24 · Suite completa y cierre de R5
+  - Archivos: ninguno nuevo (R5 no genera resultados: no hay archivos que regenerar)
+  - Test primero: no aplica
+  - Comando:
+    ```bash
+    cd /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio && .venv/bin/python -m pytest && git diff --stat -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 requirements.txt .gitignore
+    ```
+  - Verificar: todas las pruebas pasan (las `red` de R5 sin saltar, porque `data/processed/` existe); el `git diff --stat` de R1–R4, `requirements.txt` y `.gitignore` está vacío; actualizar el «Estado» de la spec (☑ pruebas · ☑ código; «verificado» lo marca el reviewer tras T23); anotar como pendientes del documento técnico: diagrama de arquitectura (sección 7.1), capturas de las cuatro secciones y el comando de arranque
+  - anotar en `docs/anexo-ia.md`
+
+## Cobertura
+
+| Caso / punto | Tarea |
+|---|---|
+| 1 Ruta real C01→C12 y asimetría | T11 |
+| 2 `/ruta` real con «29,7» y Leaflet | T12, T19 |
+| 3 Origen = destino (sintético y real) | T7, T14, T11, T19 |
+| 4 Mismo nodo (T03/T05; A02/A06 sintético) | T7, T11 |
+| 5 Itinerario que cabe | T9, T11 |
+| 6 Itinerario que no cabe y regla de R4 | T9, T11, T19 |
+| 7 Tramos = matriz | T9, T11 |
+| 8 Validación → 400 sin Held-Karp | T8, T16 |
+| 9 `/itinerario` real con «178,7», «190,4», «11,8» | T19 |
+| 10 Envolvente (4 vértices sintética; 14 vértices y 1 631,5 km² real) | T12, T15, T19 |
+| 11 Resultados (r2, r4 sin exactas, r1..r4 reales) | T10, T17 |
+| 12 Archivos protegidos y `/resultados/r9` | T17 |
+| 13 Datos faltantes y `main` → 1 sin traza | T5, T18 |
+| 14 Carga única | T16 |
+| 15 Coordenadas siguen la geometría | T6 |
+| 16 Arranque con el README (manual) | T21, T23 |
+| 17 Docker (opcional, manual) | T20, T23 |
+| Bordes: id desconocido, incompleto, puerto ocupado, 6 caben / 8 no | T7, T14, T16, T18, T19 |
+| Comportamiento 6 (base, menú, sin JS) y «no implementa algoritmos nuevos» | T2, T13 |
+| R5.1 viñetas 1–4 | T6–T10, T12, T14–T17, T19 |
+| R5 ejecución local con el README / Docker opcional | T18, T20, T21, T23 |
+| Secciones 7 y 8 (aplicación que muestra resultados y funciona con el README) | T17, T19, T21, T23, T24 |
+| Anexo de IA | T22 (y cada tarea con IA) |

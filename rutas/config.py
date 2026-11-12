@@ -27,3 +27,8 @@ ARCHIVOS_CRUDOS = {
     "Radio de 20 km": "radio_20km.graphml",
     "Departamento completo": "departamento.graphml",
 }
+
+# R5: aplicación web local
+RESULTS = RAIZ / "results"          # RESULTS_R1..R4 son las subcarpetas r1..r4
+HOST_R5 = "127.0.0.1"
+PUERTO_R5 = 5050                    # el 5000 lo ocupa AirPlay en macOS

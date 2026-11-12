@@ -47,3 +47,11 @@ def test_rutas_r3():
 
 def test_rutas_r4():
     assert config.RESULTS_R4 == config.RAIZ / "results" / "r4"
+
+
+def test_rutas_r5():
+    assert config.RESULTS == config.RAIZ / "results"
+    for carpeta in (config.RESULTS_R1, config.RESULTS_R2, config.RESULTS_R3, config.RESULTS_R4):
+        assert carpeta.parent == config.RESULTS
+    assert config.PUERTO_R5 == 5050
+    assert config.HOST_R5 == "127.0.0.1"
