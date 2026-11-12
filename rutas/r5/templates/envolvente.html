@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>Envolvente convexa</h1>
+<p>{{ n_vertices }} vértices · Área: {{ area_km2|num(1) }} km²</p>
+<iframe srcdoc="{{ mapa }}"></iframe>
+<table>
+  <tr><th>Vértice</th><th>Latitud</th><th>Longitud</th></tr>
+  {% for lat, lon in vertices %}
+  <tr><td>{{ loop.index }}</td><td>{{ lat|num(6) }}</td><td>{{ lon|num(6) }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

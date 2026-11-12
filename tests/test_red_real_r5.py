@@ -5,6 +5,7 @@ import pytest
 
 from rutas.config import DATA_PROCESSED, RESULTS_R4
 from rutas.r2.ruta import detalle_ruta
+from rutas.r5.app import crear_app
 from rutas.r5.datos import cargar_datos
 from rutas.r5.servicios import itinerario, ruta_entre
 
@@ -94,3 +95,52 @@ def test_caso_7_tramos(datos_reales, clave):
         assert tramo["tiempo_min"] * 60 == pytest.approx(esperado, abs=1e-6)
     assert sum(t["tiempo_min"] for t in r["tramos"]) * 60 == pytest.approx(
         r["desplazamiento_min"] * 60, abs=1e-6)
+
+
+# ---- La app con la red real (casos 2, 3, 9 y 10) ----
+@pytest.fixture(scope="module")
+def cliente_real(datos_reales):
+    return crear_app(datos_reales).test_client()
+
+
+def _consulta(partida, atractivos):
+    return f"/itinerario?partida={partida}&" + "&".join(f"atractivos={a}" for a in atractivos)
+
+
+def test_caso_2_ruta_en_la_app(cliente_real):
+    r = cliente_real.get("/ruta?origen=C01&destino=C12")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200 and "29,7" in html and "leaflet" in html
+
+
+def test_caso_3_ruta_mismo_lugar_real(cliente_real):
+    r = cliente_real.get("/ruta?origen=C01&destino=C01")
+    assert r.status_code == 200
+    assert "origen y destino son el mismo lugar" in r.get_data(as_text=True)
+
+
+def test_caso_9_itinerario_en_la_app(cliente_real):
+    r = cliente_real.get(_consulta("C01", CASO_5))
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200
+    assert "178,7" in html and "190,4" in html and "11,8" in html
+    assert "Regla de las 11 h" not in html
+
+
+def test_itinerario_no_cabe_en_la_app(cliente_real):
+    r = cliente_real.get(_consulta("C01", CASO_6))
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200
+    assert "Regla de las 11 h" in html and "Parque Nacional del Café" in html and "613,1" in html
+
+
+def test_caso_10_envolvente_real(cliente_real):
+    r = cliente_real.get("/envolvente")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200 and "14 vértices" in html and "1 631,5" in html
+
+
+def test_formulario_42_lugares_15_atractivos(cliente_real):
+    html = cliente_real.get("/itinerario").get_data(as_text=True)
+    assert html.count("<option") == 42
+    assert html.count('name="atractivos"') == 15

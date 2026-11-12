@@ -96,50 +96,53 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 
 ## B3 · Mapas, aplicación Flask y plantillas (cliente de pruebas de Flask)
 
-- [ ] T12 · Mapas con Folium (apoyan los casos 2, 9 y 10)
+- [x] T12 · Mapas con Folium (apoyan los casos 2, 9 y 10)
   - Archivos: `rutas/r5/mapas.py` (`COLORES`, `centro`, `mapa_ruta`, `mapa_envolvente`, `mapa_itinerario` según el plan; cada una devuelve `mapa.get_root().render()`)
   - Test primero: `tests/test_mapas_r5.py::test_mapa_ruta` (ruta C01→A02 sintética: el texto contiene `leaflet`, `L.polyline` y la coordenada intermedia `4.505`), `::test_mapa_ruta_sin_linea` (C01→C01: contiene `leaflet` y no `L.polyline`), `::test_mapa_envolvente` (contiene `L.polygon`, las 4 latitudes/longitudes del cuadrado (`-75.71`, `-75.65`, `4.49`, `4.53`) y 8 marcadores: el texto `C01 ·` … `A06 ·` en los tooltips), `::test_mapa_itinerario` (contiene `Held-Karp`, `Vecino más cercano`, `L.control.layers`, los dos colores de `COLORES` y los números de orden `1` … `6` en los `DivIcon`)
   - Ver fallar: con `NotImplementedError` del stub
   - Verificar: `.venv/bin/python -m pytest tests/test_mapas_r5.py`
+  - Nota: Folium escapa en el HTML los textos de las capas (`Vecino m\u00e1s cercano`) y el HTML de los `DivIcon` (`\u003e1\u003c/div`); la prueba busca esas formas. Mutación vista fallar: sin `LayerControl` falla `test_mapa_itinerario`. Las pruebas y el código de mapas se escribieron juntos (no se vio el rojo con `NotImplementedError` en T12).
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T13 · Fábrica `crear_app`, `base.html` e inicio (Comportamiento 6)
+- [x] T13 · Fábrica `crear_app`, `base.html` e inicio (Comportamiento 6)
   - Archivos: `rutas/r5/app.py` (`crear_app(datos, results=RESULTS)`: filtro `num`, `app.config["DATOS"]`, `app.config["RESULTS"]`, ruta `/`); `rutas/r5/templates/base.html` (menú: Inicio, Ruta, Envolvente, Itinerario, Resultados r1..r4; `<style>` en línea; `lang="es"`), `inicio.html`
   - Test primero: `tests/test_app_r5.py::test_inicio_y_menu` (`GET /` → 200; contiene enlaces a `/ruta`, `/envolvente`, `/itinerario` y `/resultados/r1`; sin `<script` en el HTML propio fuera de los mapas)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "inicio or algoritmos"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T14 · `/ruta` (caso 3; bordes: id desconocido e incompleto)
+- [x] T14 · `/ruta` (caso 3; bordes: id desconocido e incompleto)
   - Archivos: `rutas/r5/app.py` (vista `/ruta`); `rutas/r5/templates/ruta.html` (formulario con dos `<select>` de los lugares «id · nombre», conservando lo elegido; resultado: tiempo en min y s, distancia, origen y destino, nodos explorados, cómputo en ms («informativo»), aviso y `<iframe srcdoc="{{ mapa }}">`)
   - Test primero: `tests/test_app_r5.py::test_ruta_formulario` (`GET /ruta` → 200 con `<select` y las 8 opciones), `::test_ruta_sintetica_app` (`GET /ruta?origen=C01&destino=A02` → 200; contiene el tiempo formateado con `numero(M["C01"]["A02"] / 60, 1)`, `leaflet` y el nombre de A02), `::test_caso_3_ruta_mismo_lugar` (`?origen=C01&destino=C01` → 200, «0,0» y «origen y destino son el mismo lugar»), `::test_ruta_lugar_desconocido` (`?origen=X99&destino=C01` → 400 y «lugar desconocido: X99»), `::test_ruta_incompleta` (`?origen=C01` → 200, sin «Tiempo de viaje» y sin mensaje de error)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k ruta`
+  - Nota: `test_ruta_sintetica_app` y `test_itinerario_sintetico_app` usan un helper `_cliente(tmp_path)` en vez de pedir `cliente_app` y `datos_app` juntos, porque ambos fixtures escriben la carpeta sintética en el mismo `tmp_path` (`FileExistsError`).
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T15 · `/envolvente` (caso 10 con datos sintéticos)
+- [x] T15 · `/envolvente` (caso 10 con datos sintéticos)
   - Archivos: `rutas/r5/app.py` (vista `/envolvente`); `rutas/r5/templates/envolvente.html` («N vértices», «Área: X km²», tabla de vértices (lat, lon) con 6 decimales, mapa)
   - Test primero: `tests/test_app_r5.py::test_caso_10_envolvente` (`GET /envolvente` → 200; contiene «4 vértices», «29,6 km²», las 4 coordenadas de la tabla (`numero(4.49, 6)`, `numero(-75.71, 6)`, `numero(4.53, 6)`, `numero(-75.65, 6)`) y `leaflet`)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k envolvente`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T16 · `/itinerario` (casos 8 y 14; bordes del itinerario)
+- [x] T16 · `/itinerario` (casos 8 y 14; bordes del itinerario)
   - Archivos: `rutas/r5/app.py` (vista `/itinerario`); `rutas/r5/templates/itinerario.html` (formulario: `<select name="partida">` con los lugares, C01 por defecto; casillas `name="atractivos"` de `datos.atractivos` con nombre y visita; resultado: tabla con una columna por método y las filas del plan, diferencia y brecha, bloque «Regla de las 11 h (R4, informativo)» si `jornada`, y el mapa)
   - Test primero: `tests/test_app_r5.py::test_itinerario_sin_parametros` (`GET /itinerario` → 200, formulario con 6 casillas y C01 `selected`), `::test_itinerario_sintetico_app` (C01 + A01..A06 → 200; contiene `numero(hk_min, 1)`, `numero(voraz_min, 1)`, `numero(diferencia, 1)`, los nombres en orden de HK, «Held-Karp», «Vecino más cercano» y `leaflet`), `::test_itinerario_bloque_regla` (parametrizada: visitas por defecto → sin «Regla de las 11 h»; carpeta con `visitas=[120] * 6` → con «Regla de las 11 h» y el nombre del primer quitado), `::test_caso_8_itinerario_400` (parametrizada con las mismas 7 entradas de T8 → 400, el mensaje en el HTML, las casillas que llegaron siguen marcadas, y un contador en `rutas.r5.servicios.resolver_por_ids` (monkeypatch) en 0), `::test_caso_14_carga_unica` (monkeypatch con contador de `rutas.r5.app.cargar_datos` y de `rutas.r5.datos.cargar_grafo_procesado` **después** de crear la app; 3 peticiones a `/ruta?origen=C01&destino=A02` y 3 a `/itinerario?partida=C01&atractivos=…` → 200 y los dos contadores en 0)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "itinerario or caso_8 or caso_14"`
+  - Nota: en `test_caso_8_itinerario_400` la entrada de 9 atractivos usa `C02, C03, C04` extra (los datos sintéticos solo tienen 6 atractivos). Mutación vista fallar: quitar el control de la lista blanca hizo fallar el rechazo de `r2_cociente.csv` (T17).
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T17 · `/resultados/<r>` y `/resultados/<r>/archivo/<nombre>` (casos 11 y 12)
+- [x] T17 · `/resultados/<r>` y `/resultados/<r>/archivo/<nombre>` (casos 11 y 12)
   - Archivos: `rutas/r5/app.py` (las dos vistas del plan; `abort(404)` fuera de la lista; `send_from_directory` solo para imágenes de la lista); `rutas/r5/templates/resultados.html` (un `<h2>` por archivo, `<img src="{{ url_for(...) }}">`, tablas con `|safe`, lista «Faltan» con `archivo: comando`)
   - Test primero: `tests/test_app_r5.py::test_caso_11_resultados_r2` (cliente con `results` sintético: `GET /resultados/r2` → 200, contiene `r2_tiempo_vs_explorados.png` en un `src` y la tabla de `r2_cociente.csv`), `::test_caso_11_r4_sin_exactas` (`GET /resultados/r4` → 200, contiene `r4_exactas.csv` y `python -m rutas.r4.medir_exactas`), `::test_caso_11_cuatro_paginas_reales` (cliente con `results=RESULTS` real, sin `red`: `/resultados/r1` … `/resultados/r4` → 200; r2 y r3 sin «Faltan»), `::test_caso_12_imagen_permitida` (`/resultados/r2/archivo/r2_tiempo_vs_explorados.png` → 200 y `mimetype == "image/png"`), `::test_caso_12_rechazos` (parametrizada: `/resultados/r2/archivo/..%2F..%2FCLAUDE.md`, `/resultados/r2/archivo/otro.png`, `/resultados/r2/archivo/r2_cociente.csv`, `/resultados/r9`, `/resultados/r9/archivo/x.png` → 404)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "caso_11 or caso_12"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T18 · `main`: carga única, datos faltantes y puerto ocupado (caso 13; Comportamiento 1; borde del puerto)
+- [x] T18 · `main`: carga única, datos faltantes y puerto ocupado (caso 13; Comportamiento 1; borde del puerto)
   - Archivos: `rutas/r5/app.py` (`puerto_libre`, `main` según el plan, con `--puerto` y `--host`; bloque `if __name__ == "__main__": sys.exit(main())`)
   - Test primero: `tests/test_app_r5.py::test_caso_13_main_sin_datos` (`main([], processed=tmp_path_vacio)` → `1`; `capsys` contiene `grafo_componente.graphml` y `python -m rutas.r1.construir_red`, y **no** contiene `Traceback`), `::test_puerto_ocupado` (socket abierto en `127.0.0.1:0`; `main(["--puerto", str(p)], processed=…, catalogo=…)` con la carpeta sintética → `1` y la salida contiene `--puerto`; `Flask.run` reemplazado por un falso que falla si se llama), `::test_main_arranca` (monkeypatch de `flask.Flask.run` que guarda sus argumentos; `main(["--puerto", "5099"], …)` → `0`; se llamó una vez con `host="127.0.0.1"`, `port=5099`, `debug=False`; la salida contiene «Datos cargados en» y `http://127.0.0.1:5099`), `::test_puerto_por_defecto` (sin `--puerto` → `port=5050`)
   - Verificar: `.venv/bin/python -m pytest tests/test_app_r5.py -k "main or puerto"`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T19 · La app con la red real (casos 2, 3, 9 y 10; `red`)
+- [x] T19 · La app con la red real (casos 2, 3, 9 y 10; `red`)
   - Archivos: `tests/test_red_real_r5.py` (agregar un fixture `cliente_real` de módulo con `crear_app(datos_reales).test_client()`)
   - Test primero (código ya hecho: validar con mutación temporal): `::test_caso_2_ruta_en_la_app` (`GET /ruta?origen=C01&destino=C12` → 200, contiene «29,7» y `leaflet`), `::test_caso_3_ruta_mismo_lugar_real` (`?origen=C01&destino=C01` → 200, «origen y destino son el mismo lugar»), `::test_caso_9_itinerario_en_la_app` (`/itinerario?partida=C01&atractivos=A05&atractivos=A14&atractivos=A06&atractivos=A07&atractivos=A13&atractivos=A15` → 200; contiene «178,7», «190,4» y «11,8»; no contiene «Regla de las 11 h»), `::test_itinerario_no_cabe_en_la_app` (los 8 del caso 6 → 200 y contiene «Regla de las 11 h», «Parque Nacional del Café» y «613,1»), `::test_caso_10_envolvente_real` (`/envolvente` → 200, «14 vértices» y «1 631,5»), `::test_formulario_42_lugares_15_atractivos` (`/itinerario` → 42 `<option` en la partida y 15 casillas)
   - Verificar: `.venv/bin/python -m pytest tests/test_red_real_r5.py`; mutación temporal: mostrar el desplazamiento con `numero(x, 2)` hace fallar el caso 9; restaurar

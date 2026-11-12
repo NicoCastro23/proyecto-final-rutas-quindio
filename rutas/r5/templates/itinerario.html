@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>Itinerario del día</h1>
+<form method="get" action="/itinerario">
+  Partida
+  <select name="partida">
+    {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == partida %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
+  </select>
+  <p>Atractivos (de 6 a 8):</p>
+  {% for id in atractivos %}
+  <label><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> {{ id }} · {{ nombre_de[id] }} ({{ visita_min[id]|num(0) }} min)</label><br>
+  {% endfor %}
+  <button type="submit">Calcular</button>
+</form>
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% if it %}
+{% set hk = it.held_karp %}{% set vo = it.voraz %}
+<h2>Comparación</h2>
+<table>
+  <tr><th></th><th>Held-Karp (óptimo)</th><th>Vecino más cercano (voraz)</th></tr>
+  <tr><td>Orden de visita</td>
+      <td>{% for id in hk.recorrido %}{{ nombre_de[id] }}{% if not loop.last %} → {% endif %}{% endfor %}</td>
+      <td>{% for id in vo.recorrido %}{{ nombre_de[id] }}{% if not loop.last %} → {% endif %}{% endfor %}</td></tr>
+  <tr><td>Desplazamiento (min)</td><td>{{ hk.desplazamiento_min|num(1) }}</td><td>{{ vo.desplazamiento_min|num(1) }}</td></tr>
+  <tr><td>Visitas (min)</td><td>{{ hk.visitas_min|num(1) }}</td><td>{{ vo.visitas_min|num(1) }}</td></tr>
+  <tr><td>Jornada (h)</td><td>{{ (hk.jornada_min / 60)|num(2) }}</td><td>{{ (vo.jornada_min / 60)|num(2) }}</td></tr>
+  <tr><td>Cabe en 11 h</td><td>{{ "Sí" if hk.cabe else "No" }}</td><td>{{ "Sí" if vo.cabe else "No" }}</td></tr>
+  <tr><td>Cómputo (ms, informativo)</td><td>{{ hk.computo_ms|num(3) }}</td><td>{{ vo.computo_ms|num(3) }}</td></tr>
+</table>
+<p>Diferencia voraz − Held-Karp: {{ it.diferencia_min|num(1) }} min (brecha {{ it.brecha_pct|num(2) }} %)</p>
+
+{% if it.jornada %}
+<h2>Regla de las 11 h (R4, informativo)</h2>
+<p>Held-Karp no cabe en 11 h; la regla quitaría estos atractivos (el mapa muestra los que elegiste):</p>
+<table>
+  <tr><th>Lugar</th><th>Visita (min)</th><th>Desvío (min)</th><th>Ahorro (min)</th></tr>
+  {% for q in it.jornada.quitados %}
+  <tr><td>{{ q.id }} · {{ q.lugar }}</td><td>{{ q.visita_min|num(1) }}</td><td>{{ q.desvio_min|num(1) }}</td><td>{{ q.ahorro_min|num(1) }}</td></tr>
+  {% endfor %}
+</table>
+<p>Jornada final: {{ it.jornada.jornada_final_min|num(1) }} min
+   ({{ "cabe" if it.jornada.cabe_final else "todavía no cabe" }} en 11 h)</p>
+{% endif %}
+
+<iframe srcdoc="{{ mapa }}"></iframe>
+{% endif %}
+{% endblock %}

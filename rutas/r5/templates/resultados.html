@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>Resultados de {{ r|upper }}</h1>
+{% for imagen in imagenes %}
+<h2>{{ imagen }}</h2>
+<img src="{{ url_for('imagen', r=r, nombre=imagen) }}" alt="{{ imagen }}">
+{% endfor %}
+{% for nombre, tabla in tablas %}
+<h2>{{ nombre }}</h2>
+{{ tabla|safe }}
+{% endfor %}
+{% if faltantes %}
+<h2>Faltan</h2>
+<ul>
+  {% for archivo, comando in faltantes %}<li>{{ archivo }}: <code>{{ comando }}</code></li>{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
