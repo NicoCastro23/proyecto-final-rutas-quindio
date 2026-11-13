@@ -261,6 +261,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "a1 or a2 or a3 or v0" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py -q` (en especial `test_inicio_y_menu`)
   - anotar en `docs/anexo-ia.md`
   - Nota: `seccion` se pasa en las 5 vistas (en `/ruta` y `/itinerario` dentro de `contexto`, así las respuestas 400 también lo llevan).
+  - Nota (ronda 2, sugerencia 8): en la sección 14 Movimiento, `.menu a:hover` usa Bahareque y `button:hover` Cocora (`estilos.css:133-134`), no Niebla y Guadua como decía el plan: Niebla casi no se distingue del blanco del menú y el botón ya es Guadua. `plan.md` quedó actualizado con los colores reales y el motivo.
 
 - [x] T28 · Formularios y mensajes de Ruta e Itinerario (V3, V6, A4, A6)
   - Archivos: `rutas/r5/templates/ruta.html` y `itinerario.html` (solo el formulario y los mensajes: `<label for>` + `id` en cada `<select>`; `<fieldset>`/`<legend>` «Atractivos (elige de 6 a 8)» con `<div class="casillas">`; casilla `<label class="casilla"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">…</span> nombre <span class="visita">… min</span></label>`; botones «Calcular ruta» y «Calcular itinerario»; `<p class="error" role="alert">`; en `ruta.html` `<p class="aviso" role="status">`); `rutas/r5/static/estilos.css` (secciones 7 Formularios y 8 Mensajes)
@@ -306,6 +307,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Nota: sin desviaciones.
 
 - [x] T34 · Suite completa y restricciones del ajuste (cierre automático de B5)
+  - Nota (ronda 2, sugerencia 8): la desviación de los colores al pasar el mouse (Bahareque y Cocora en lugar de Niebla y Guadua) queda anotada en T27 y corregida en `plan.md`; spec, plan y código dicen lo mismo.
   - Nota: `_main_con_run_falso` en `tests/test_app_r5.py` simula ahora `rutas.r5.app.puerto_libre` (devuelve `True`); antes `test_puerto_por_defecto` y `test_main_arranca` fallaban si la app ya escuchaba en 5050. `test_puerto_ocupado` sigue con un socket real ocupado en puerto efímero (determinista). Código de la app sin tocar.
   - Archivos: ninguno nuevo (R5 no genera resultados: no hay archivos que regenerar)
   - Test primero: no aplica
@@ -347,6 +349,10 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Nota: prueba `test_v5_colores_encabezado_metodos`, con regex que exigen `background` y no solo el color.
 - [x] Sugerencia 3: contorno del `<select>` con `var(--hoja)` (WCAG 1.4.11, ≥ 3:1)
   - Nota: prueba nueva `test_v0_contorno_select`, falló antes (Bahareque sobre blanco da 1,39:1) y pasa después (Hoja da 3,89:1); cambio en `rutas/r5/static/estilos.css:66`; `spec.md` ya actualizada. Fieldset, tarjetas y tablas siguen en Bahareque (bordes decorativos).
+- [x] Sugerencia 4: las pruebas de movimiento no se dejan engañar por comentarios
+  - Nota: `_css_sin_comentarios()` (sin cambiar `_css()`) y `_bloque_media()`, que cuenta llaves anidadas. `test_v0_tipos_firma_y_movimiento` busca los fragmentos sin comentarios, y la prueba nueva `test_v0_movimiento_reducido_quita_la_escala` exige `button:active { transform: none; }` dentro de `@media (prefers-reduced-motion: reduce)`. Mutaciones que fallan: el bloque cambiado por un comentario (con la prueba anterior pasaba) y quitar solo `button:active { transform: none; }`.
+- [x] Sugerencia 8: colores al pasar el mouse en el plan
+  - Nota: `plan.md` (sección 14 Movimiento) decía Niebla para `.menu a:hover` y Guadua para `button:hover`; el código usa Bahareque y Cocora (`estilos.css:133-134`). Se actualizó el plan con el motivo (Niebla casi no se distingue del blanco del menú y el botón ya es Guadua) y se anotó en T27 y T34. Sin cambios de código ni de pruebas.
 
 ## Cobertura
 

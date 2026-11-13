@@ -530,14 +530,15 @@ button { transition: transform 160ms ease-out; }
 button:active { transform: scale(0.97); }
 @media (hover: hover) and (pointer: fine) {
   a, button { transition: color 150ms ease-out, background-color 150ms ease-out, transform 160ms ease-out; }
-  .menu a:hover { color: var(--niebla); }
-  button:hover { background-color: var(--guadua); }
+  .menu a:hover { color: var(--bahareque); }
+  button:hover { background-color: var(--cocora); }
 }
 @media (prefers-reduced-motion: reduce) {
   button, a { transition: color 150ms ease-out, background-color 150ms ease-out; }
   button:active { transform: none; }
 }
 ```
+Colores al pasar el mouse (corregidos tras la ronda 2 de revisión, sugerencia 8; así quedaron en `estilos.css:133-134`). La primera versión de este plan decía Niebla para `.menu a:hover` y Guadua para `button:hover`. Ninguno de los dos se habría notado: el texto del menú ya es blanco y Niebla (`#F3F6F4`) es casi blanco; el botón ya tiene fondo Guadua. Por eso se usan Bahareque para el menú (7,01:1 sobre Guadua) y Cocora para el botón (texto blanco sobre Cocora, 6,84:1). Los dos cambios se ven y superan 4,5:1.
 `font-variant-numeric: tabular-nums` va en `dl.resumen dd`, en los `td` de las tablas y en los números de la leyenda.
 
 ### Sección activa (`aria-current`) en `base.html`

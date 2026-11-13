@@ -95,12 +95,48 @@ def test_a3_aria_current(cliente_app, url, texto):
     assert re.search(rf'aria-current="page"[^>]*>{texto}<', html)
 
 
+def _css_sin_comentarios():
+    """El CSS sin comentarios, para que un fragmento escrito solo en un comentario no cuente."""
+    return re.sub(r"/\*.*?\*/", "", _css(), flags=re.S)
+
+
+def _bloque_media(css, consulta):
+    """Contenido del bloque «@media consulta { ... }» o None si no existe.
+
+    Las llaves se anidan (el @media contiene reglas con sus propias llaves), así que se
+    cuenta la profundidad desde la «{» que abre el @media hasta la «}» que la cierra.
+    """
+    inicio = css.find("@media " + consulta)
+    if inicio == -1:
+        return None
+    apertura = css.find("{", inicio)
+    if apertura == -1:
+        return None
+    profundidad = 0
+    for posicion in range(apertura, len(css)):
+        if css[posicion] == "{":
+            profundidad += 1
+        elif css[posicion] == "}":
+            profundidad -= 1
+            if profundidad == 0:
+                return css[apertura + 1:posicion]
+    return None
+
+
 def test_v0_tipos_firma_y_movimiento():
-    css = _css()
+    css = _css_sin_comentarios()
     for fragmento in ('"Iowan Old Style"', "system-ui", "ui-monospace", "repeating-radial-gradient",
                       ":focus-visible", "scale(0.97)", "160ms ease-out",
                       "(hover: hover) and (pointer: fine)", "prefers-reduced-motion: reduce", "flex-wrap"):
         assert fragmento in css, fragmento
+
+
+def test_v0_movimiento_reducido_quita_la_escala():
+    """Con prefers-reduced-motion: reduce, «button:active» anula la escala con «transform: none»."""
+    bloque = _bloque_media(_css_sin_comentarios(), "(prefers-reduced-motion: reduce)")
+    assert bloque is not None, "falta el bloque «@media (prefers-reduced-motion: reduce)» (fuera de comentarios)"
+    assert re.search(r"button:active\s*\{[^}]*transform:\s*none", bloque), \
+        "dentro de prefers-reduced-motion: reduce, «button:active» debe llevar «transform: none»"
 
 
 def test_v0_cifras_tabulares():
