@@ -1,10 +1,27 @@
 {% extends "base.html" %}
 {% block contenido %}
 <h1>Rutas del Paisaje Cultural Cafetero</h1>
-<ul>
-  <li><a href="/ruta">Ruta</a>: la ruta más corta entre dos lugares (Dijkstra con cola de prioridad).</li>
-  <li><a href="/envolvente">Envolvente</a>: envolvente convexa de los 42 lugares.</li>
-  <li><a href="/itinerario">Itinerario</a>: recorrido del día con Held-Karp y con el vecino más cercano.</li>
-  <li><a href="/resultados/r1">Resultados</a>: tablas y gráficas de R1 a R4.</li>
+<p>Calcula rutas y recorridos sobre la red vial del Quindío y revisa las mediciones de cada requerimiento.</p>
+<ul class="secciones">
+  <li class="tarjeta-seccion">
+    <h2><a href="/ruta">Ruta</a></h2>
+    <p>Elige dos de los 42 lugares y mira el camino más rápido por las vías.</p>
+    <p class="nota">Dijkstra con cola de prioridad (R2), calculado en el momento.</p>
+  </li>
+  <li class="tarjeta-seccion">
+    <h2><a href="/envolvente">Envolvente</a></h2>
+    <p>Mira el polígono convexo que encierra todos los nodos de la red vial del Quindío.</p>
+    <p class="nota">QuickHull, divide y vencerás (R3), ya calculado.</p>
+  </li>
+  <li class="tarjeta-seccion">
+    <h2><a href="/itinerario">Itinerario</a></h2>
+    <p>Elige la partida y de 6 a 8 atractivos y compara los dos recorridos del día.</p>
+    <p class="nota">Held-Karp (óptimo) y vecino más cercano (voraz) (R4), calculados en el momento.</p>
+  </li>
+  <li class="tarjeta-seccion">
+    <h2><a href="/resultados/r1">Resultados</a></h2>
+    <p>Revisa las tablas y gráficas de cada requerimiento, de R1 a R4.</p>
+    <p class="nota">Mediciones del protocolo de la sección 6.</p>
+  </li>
 </ul>
 {% endblock %}

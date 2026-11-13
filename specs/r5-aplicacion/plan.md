@@ -422,3 +422,349 @@ Ninguno. La spec no contradice el enunciado y todo encaja con las firmas reales 
 
 ## Puerta 2 (2026-11-11), resuelta por el usuario
 Se aprueban todas las decisiones de «Decisiones para el usuario (Puerta 2)» tal como están propuestas. La spec se corrigió: datos sintéticos con 8 lugares y un comando por archivo en la lista de resultados.
+
+## Ajuste visual (bloque B5, plan del 2026-11-12)
+
+Spec: `spec.md`, sección «Ajuste visual» (V0–V10 y casos A1–A11), aprobada por el usuario el 2026-11-12. Hallazgos por archivo:línea: `auditoria-visual.md`. Dirección visual: skills `.claude/skills/frontend-design/SKILL.md` y `.claude/skills/emil-design-eng/SKILL.md`. Enunciado: sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»): el diseño no se evalúa; el ajuste sirve para la sustentación y para las capturas del documento técnico (sección 7.1).
+
+R5 ya está implementado y aprobado (T1–T24 y la ronda 1). El ajuste **cambia cómo se ve, no qué se calcula ni qué datos se muestran**. Restricciones (spec):
+- sin JavaScript propio: la guardia `test_sin_algoritmos_ni_js_propio` sigue y se amplía con A9 a `estilos.css` y a `javascript:`;
+- sin dependencias nuevas: `requirements.txt` no cambia. `markupsafe` (para escapar el `<caption>` de las tablas de pandas) ya viene con Flask; no se agregan fuentes externas ni `@import`;
+- no se tocan `rutas/r1..r4/`, `rutas/r5/servicios.py`, `rutas/r5/datos.py`, `rutas/r5/formato.py`, `requirements.txt`, `.gitignore` ni el `Dockerfile` (ya copia `rutas/` completo, así que `rutas/r5/static/` entra en la imagen sin cambios);
+- todas las pruebas actuales siguen en verde **sin modificarlas**, incluidos «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5» (ver «Pruebas actuales que dependen del HTML»).
+
+### Archivos a crear o modificar
+
+| Ruta | Acción | Qué cambia | Puntos |
+|---|---|---|---|
+| `rutas/r5/static/estilos.css` | crear | Hoja de estilos propia, por secciones comentadas (ver abajo). Flask la sirve en `/static/estilos.css` sin configurar nada: `Flask(__name__)` en `rutas.r5.app` toma `rutas/r5/` como raíz, igual que con `templates/` | V0, V1, A1, A11 |
+| `rutas/r5/templates/base.html` | modificar | Quita el `<style>`; agrega `<meta name="viewport">`, `<link>` a la hoja, el enlace «Saltar al contenido», la cabecera con curvas de nivel y el menú (marca + 4 enlaces) con `aria-current="page"` según `seccion`; `<main id="contenido">` | V1, V2, A1–A3 |
+| `rutas/r5/templates/inicio.html` | modificar | Cuatro tarjetas (Ruta, Envolvente, Itinerario, Resultados): qué hace y qué algoritmo usa | V10 |
+| `rutas/r5/templates/ruta.html` | modificar | `<label for>` + `id` en los dos `<select>`; botón «Calcular ruta»; error con `role="alert"`; tarjetas de resumen; aviso con `role="status"`; `<iframe title="Mapa de la ruta">` | V3, V4, V6, V7 |
+| `rutas/r5/templates/envolvente.html` | modificar | Tarjetas (vértices y área); tabla con `<caption>`, `<thead>`, `th scope`; `<iframe title="Mapa de la envolvente">` | V4, V7, V8 |
+| `rutas/r5/templates/itinerario.html` | modificar | `<label for="partida">`; casillas en `<fieldset>` + `<legend>` en cuadrícula; botón «Calcular itinerario»; error con `role="alert"`; orden resumen → mapa (con leyenda) → tabla → regla; tabla con `<caption>`, «Medida», `th scope`; `<iframe title="Mapa del itinerario">` | V3–V7 |
+| `rutas/r5/templates/resultados.html` | modificar | Navegación R1–R4; título legible y descripción por archivo; `<img>` con `alt`, `width`, `height`, `loading="lazy"`; cada tabla en un contenedor con desplazamiento; faltantes con su título | V8, V9 |
+| `rutas/r5/mapas.py` | modificar **solo** `COLORES` | `{"ruta": "#1F5F8B", "held_karp": "#1F5F8B", "voraz": "#B8322A", "envolvente": "#5E8C61"}` (Cocora, Cocora, Cereza, Hoja). El resto del archivo no cambia | V0, V5, A7, A11 |
+| `rutas/r5/app.py` | modificar | Cada `render_template` pasa `seccion`; la vista de itinerario pasa `colores=COLORES`; nuevos `TITULOS_RESULTADOS`, `TAMANOS_IMAGENES`, `tabla_con_titulo(html, descripcion, archivo)` y `presentar_resultados(crudo)`; la vista de resultados pasa también `requerimientos` | V2, V5, V8, V9 |
+| `tests/test_visual_r5.py` | crear | Pruebas A1–A9, A11 y las de V3, V4, V5, V8, V9, V10 (cliente de Flask con datos sintéticos; sin marca `red`) | — |
+| `docs/anexo-ia.md` | modificar (local, ignorado) | Entradas del ajuste visual | — |
+
+No se crean módulos nuevos de Python: el diccionario de títulos va en `app.py` (la spec admite `app.py` o un módulo de presentación; ver «Decisiones», V-4).
+
+### Dirección visual (V0) traducida a tokens
+
+Sale de las dos skills: un tema concreto (herramienta académica sobre la red vial del Quindío, para docente y jurado; su único trabajo es mostrar qué calculó cada algoritmo), una paleta con nombre que evita los dos clichés que señala `frontend-design` (crema + terracota, negro + acento ácido), **un solo** elemento distintivo y el resto sobrio; movimiento mínimo según `emil-design-eng` (escala 0,97 al presionar, 160 ms `ease-out`, nunca `transition: all`, respeto de `prefers-reduced-motion`).
+
+| Variable CSS | Nombre | Valor | Uso |
+|---|---|---|---|
+| `--guadua` | Guadua | `#2F4A3A` | Cabecera, menú, títulos, enlaces |
+| `--hoja` | Hoja | `#5E8C61` | Acento (bordes de tarjetas, líneas de la cabecera), envolvente |
+| `--niebla` | Niebla | `#F3F6F4` | Fondo de la página |
+| `--bahareque` | Bahareque | `#D5DDD7` | Líneas, bordes, filas alternadas |
+| `--tinta` | Tinta | `#1D2521` | Texto |
+| `--cocora` | Cocora | `#1F5F8B` | Ruta y Held-Karp; anillo de foco |
+| `--cereza` | Cereza | `#B8322A` | Voraz; borde del mensaje de error |
+
+Contraste (comprobación a mano en A10): blanco sobre Guadua ≈ 9,6:1; Tinta sobre Niebla > 14:1; Cocora y Cereza sobre blanco > 4,5:1. **Hoja sobre Niebla no llega a 4,5:1**: Hoja no se usa para texto, solo para bordes y líneas; los enlaces del contenido van en Guadua y subrayados.
+
+Tipografía (sin fuentes externas: la app solo usa internet para los mosaicos del mapa):
+- `--fuente-titulos: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;`
+- `--fuente-texto: system-ui, sans-serif;`
+- `--fuente-ids: ui-monospace, "SF Mono", Menlo, Consolas, monospace;` (ids de lugar con `class="id"`).
+- Escala de 4 tamaños: `--t-pequeno: 0.875rem` (notas, captions), `--t-base: 1rem` (texto), `--t-medio: 1.25rem` (h2, valores de tarjetas), `--t-grande: 1.75rem` (h1, marca).
+
+Elemento distintivo: la franja de cabecera con **curvas de nivel** hechas solo con CSS, que evoca la cordillera:
+```css
+.cabecera {
+  background-color: var(--guadua);
+  background-image: repeating-radial-gradient(ellipse at 85% 140%,
+      transparent 0 22px, rgb(94 140 97 / 0.35) 22px 24px);   /* Hoja con transparencia */
+}
+```
+Líneas finas y semitransparentes para que el texto blanco del menú mantenga el contraste; el resto de la página no lleva decoración.
+
+Esquema de las páginas con resultado (ancho de escritorio; a 375 px todo queda en una columna):
+```
+┌ cabecera (curvas de nivel) ─────────────────────────────────────────┐
+│ Rutas del Paisaje Cultural Cafetero   Ruta  Envolvente  Itinerario  Resultados │
+└─────────────────────────────────────────────────────────────────────┘
+ h1 · formulario (labels, cuadrícula de casillas, botón «Calcular …»)
+ [mensaje role=alert / role=status]
+ ┌tarjeta┐ ┌tarjeta┐ ┌tarjeta┐ ┌tarjeta┐     ← <dl class="resumen">
+ leyenda (solo itinerario) + iframe del mapa
+ tabla con caption (comparación / vértices)
+ regla de las 11 h (solo si Held-Karp no cabe)
+```
+
+### Estructura de `estilos.css` (secciones comentadas)
+
+Objetivo: unas 200 líneas, una sección por bloque de la página, cada una con un comentario de una línea que diga para qué sirve. Selectores de clase de un solo nivel (más el elemento cuando hace falta) para no pelear especificidades (advertencia de `frontend-design`).
+
+```
+/* 1. Paleta y escala ........ :root con las 7 variables de color, las 3 familias y los 4 tamaños */
+/* 2. Base ................... box-sizing, body (Niebla, Tinta, fuente de texto), h1–h2 con la serifa,
+                               enlaces en Guadua subrayados, .id en monoespaciada, img { max-width:100%; height:auto } */
+/* 3. Foco visible ........... :focus-visible con outline de 3 px en Cocora (Niebla dentro de la cabecera) */
+/* 4. Saltar al contenido .... .saltar fuera de pantalla hasta que recibe foco */
+/* 5. Cabecera y menú ........ .cabecera con las curvas de nivel; .marca; .menu con flex-wrap (en 375 px se
+                               parte en dos líneas); [aria-current="page"] con subrayado grueso */
+/* 6. Contenido .............. main con ancho máximo (~70rem) y márgenes */
+/* 7. Formularios ............ label encima del select; fieldset sin borde pesado; .casillas en cuadrícula
+                               repeat(auto-fill, minmax(17rem, 1fr)); .visita alineada a la derecha; button */
+/* 8. Mensajes ............... .error (borde Cereza) y .aviso (borde Hoja), con fondo claro */
+/* 9. Tarjetas de resumen .... dl.resumen en cuadrícula; .tarjeta con borde superior; dd con --t-medio y
+                               tabular-nums; .metodo-hk / .metodo-voraz cambian el color del borde */
+/* 10. Mapas y leyenda ....... iframe.mapa: width 100 %, height clamp(320px, 60vh, 560px); .leyenda y .muestra */
+/* 11. Tablas ................ caption, th, td, thead; filas alternadas (Bahareque claro); td numéricos con
+                               tabular-nums; .tabla-ancha { overflow-x: auto } */
+/* 12. Resultados ............ nav.requerimientos; figure.grafica; .descripcion; .faltantes */
+/* 13. Inicio ................ .secciones en cuadrícula de tarjetas */
+/* 14. Movimiento ............ button: transition transform 160ms ease-out; :active scale(0.97);
+                               @media (hover: hover) and (pointer: fine) { color/background 150ms en a y button };
+                               @media (prefers-reduced-motion: reduce) { sin scale, solo los cambios de color } */
+/* 15. Pantallas angostas .... @media (max-width: 40rem): márgenes y tamaños menores */
+```
+Movimiento (secciones 14), escrito para que nunca aparezca `transition: all`:
+```css
+button { transition: transform 160ms ease-out; }
+button:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  a, button { transition: color 150ms ease-out, background-color 150ms ease-out, transform 160ms ease-out; }
+  .menu a:hover { color: var(--niebla); }
+  button:hover { background-color: var(--guadua); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button, a { transition: color 150ms ease-out, background-color 150ms ease-out; }
+  button:active { transform: none; }
+}
+```
+`font-variant-numeric: tabular-nums` va en `dl.resumen dd`, en los `td` de las tablas y en los números de la leyenda.
+
+### Sección activa (`aria-current`) en `base.html`
+
+Cada vista pasa la sección en el contexto: `seccion="inicio" | "ruta" | "envolvente" | "itinerario" | "resultados"`. En `/ruta` y `/itinerario` se agrega la clave `"seccion"` al diccionario `contexto` que ya existe (así también la llevan las respuestas 400); en `/`, `/envolvente` y `/resultados/<r>` se pasa como argumento de `render_template`. No se usa `request.endpoint`: la spec pide que la vista pase el nombre, y así cada integrante ve en la vista qué sección marca.
+
+`base.html` (menú de la marca + 4 enlaces, como pide el Comportamiento 6 de la spec):
+```jinja
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<header class="cabecera">
+  <a class="marca" href="/"{% if seccion == "inicio" %} aria-current="page"{% endif %}>Rutas del Paisaje Cultural Cafetero</a>
+  <nav class="menu" aria-label="Secciones">
+    {% for clave, enlace, texto in [("ruta", "/ruta", "Ruta"), ("envolvente", "/envolvente", "Envolvente"),
+                                    ("itinerario", "/itinerario", "Itinerario"), ("resultados", "/resultados/r1", "Resultados")] %}
+    <a href="{{ enlace }}"{% if seccion == clave %} aria-current="page"{% endif %}>{{ texto }}</a>
+    {% endfor %}
+  </nav>
+</header>
+<main id="contenido">{% block contenido %}{% endblock %}</main>
+```
+Los enlaces «R2», «R3», «R4» salen del menú y pasan a la navegación dentro de `/resultados/<r>` (V9). Esa navegación marca el requerimiento actual con `aria-current="true"` (no `"page"`), para que en `/resultados/r2` haya **un solo** `aria-current="page"`, en «Resultados» (A3). Si `seccion` no llega (no debería pasar), ningún enlace queda marcado y la página no falla.
+
+### Títulos y descripciones de los archivos de resultados (V9)
+
+En `app.py`, junto a la importación de `ARCHIVOS_RESULTADOS` (que no cambia). Una entrada por cada uno de los **15 archivos** de la lista fija: `archivo: (título, descripción)`. La descripción es una línea, termina en punto y sirve también como `alt` de las imágenes y como `<caption>` de las tablas. Ningún texto contiene «Faltan» ni «Regla de las 11 h» (ver invariantes).
+
+```python
+TITULOS_RESULTADOS = {
+    # R1 · red vial
+    "r1_tiempos_componente.png": (
+        "Tiempo de la componente fuertemente conexa frente a V + E",
+        "Gráfica de la mediana de 5 repeticiones, en ms, del cálculo de la componente fuertemente conexa en redes de 2, 5, 10 y 20 km de radio y en el departamento completo."),
+    "r1_tamanos.csv": (
+        "Tamaño de la red vial",
+        "Nodos y aristas de la red descargada y de su componente fuertemente conexa, que es la red que usan R2 a R5."),
+    "r1_tiempos_componente.csv": (
+        "Tiempo de la componente fuertemente conexa por red",
+        "Cinco redes de tamaño creciente: V, E, V + E, mediana en ms, microsegundos por elemento y repeticiones."),
+    "r1_memoria.csv": (
+        "Memoria: matriz frente a listas de adyacencia",
+        "Bytes estimados de cada representación para la red descargada y para la componente, con el supuesto de cada cálculo."),
+    "r1_velocidades.csv": (
+        "Velocidades por tipo de vía",
+        "Velocidad asignada a cada tipo de vía (highway) y porcentaje de tramos con velocidad de OpenStreetMap o imputada."),
+    # R2 · Dijkstra
+    "r2_tiempo_vs_explorados.png": (
+        "Tiempo de Dijkstra frente a nodos explorados",
+        "Gráfica de la versión lineal y la versión con cola de prioridad: cada punto es un par origen–destino, con la mediana de sus repeticiones en ms."),
+    "r2_dijkstra.csv": (
+        "Mediciones de Dijkstra por par",
+        "10 pares cercanos y 10 lejanos: tiempo de viaje, nodos explorados y mediana en ms; la versión lineal se mide solo en los cercanos."),
+    "r2_cociente.csv": (
+        "Cociente lineal / cola de prioridad (10 pares cercanos)",
+        "Mediana, mínimo y máximo de cuántas veces más tarda la versión lineal que la de cola de prioridad."),
+    "r2_pares.csv": (
+        "Pares origen–destino medidos",
+        "Los 20 pares de lugares (10 cercanos y 10 lejanos), con su municipio y su nodo en la red."),
+    # R3 · envolvente convexa
+    "r3_envolvente.png": (
+        "Envolvente convexa de los nodos de la red",
+        "Gráfica de los nodos de la componente en coordenadas UTM (m) y del polígono que calcula QuickHull."),
+    "r3_envolvente.csv": (
+        "QuickHull propio frente a SciPy",
+        "Nodos de la red y cuadrados de 1 000, 10 000 y 50 000 puntos: vértices, mediana en ms de cada implementación y cociente propio / SciPy."),
+    # R4 · ruta óptima
+    "r4_tiempo_vs_k.png": (
+        "Tiempo de fuerza bruta y Held-Karp frente a k",
+        "Gráfica de la mediana en ms para k = 5 a 12 lugares, con el eje y en escala logarítmica."),
+    "r4_exactas.csv": (
+        "Fuerza bruta y Held-Karp por número de lugares",
+        "Para k = 5 a 12: mediana en ms de cada método, estado (completada o no en 5 min), tiempo del recorrido óptimo y el recorrido."),
+    "r4_calidad.csv": (
+        "Brecha del vecino más cercano frente al óptimo",
+        "10 instancias por cada k (5, 8, 10 y 12): brecha promedio y máxima, en %, frente a Held-Karp."),
+    "r4_memoria.csv": (
+        "Memoria de la tabla de Held-Karp",
+        "Para k = 5 a 12: celdas y bytes estimados de la tabla frente al pico medido con tracemalloc."),
+    "r4_itinerario.csv": (
+        "Itinerario del día desde Armenia",
+        "Recorrido que queda después de quitar atractivos hasta caber en 11 h: desplazamiento y visita de cada parada y horas acumuladas."),
+}
+
+TAMANOS_IMAGENES = {   # (ancho, alto) en px para width/height de <img>; el CSS escala con height: auto
+    "r1_tiempos_componente.png": (1050, 675),   # figsize 7 × 4,5 in a 150 ppp, sin recorte (rutas/r1/tablas.py)
+    "r2_tiempo_vs_explorados.png": (1050, 675), # leído del archivo actual (igual a 7 × 4,5 in a 150 ppp)
+    "r3_envolvente.png": (914, 1126),           # leído del archivo actual (bbox_inches="tight")
+    "r4_tiempo_vs_k.png": (1200, 750),          # aproximado: 8 × 5 in a 150 ppp con bbox_inches="tight"
+}
+```
+Fuentes de cada texto: columnas reales de los CSV de `results/`, los títulos y ejes de las gráficas en `rutas/rX/tablas.py`, la tabla de órdenes del README y las specs de R1–R4 (R1: componente con `largest_component` en 5 redes; R2: 10 pares cercanos con las dos versiones y 10 lejanos solo con cola; R3: QuickHull frente a `scipy.spatial.ConvexHull`; R4: k = 5..12, calidad con k = 5, 8, 10, 12 y 10 instancias, itinerario final del caso 6 tras la regla).
+
+Funciones nuevas de `app.py` (puras, sin E/S, probadas directamente):
+```python
+def tabla_con_titulo(html, descripcion, archivo):
+    """Inserta <caption>descripción <code>archivo</code></caption> justo después de la etiqueta
+    <table …> que genera pandas y agrega scope="col" a cada <th> (con index=False todos los <th>
+    son encabezados de columna). Escapa la descripción y el archivo con markupsafe.escape.
+    Devuelve Markup. No cambia ninguna celda."""
+
+def presentar_resultados(crudo):
+    """Recibe lo que devuelve servicios.resultados(r, results) y lo devuelve con los textos:
+    {"imagenes": [{"archivo", "titulo", "descripcion", "ancho", "alto"}],
+     "tablas": [{"archivo", "titulo", "descripcion", "html"}],        # html = tabla_con_titulo(...)
+     "faltantes": [{"archivo", "titulo", "comando"}]}
+    KeyError si un archivo no tiene título (lo evita la prueba de cobertura del diccionario)."""
+```
+La vista queda: `render_template("resultados.html", r=r, seccion="resultados", requerimientos=list(ARCHIVOS_RESULTADOS), **presentar_resultados(resultados(r, results)))`. `servicios.resultados` sigue igual (spec: no se toca `servicios.py`).
+
+`resultados.html`: `<h1>Resultados de R2</h1>`, `<nav class="requerimientos" aria-label="Resultados por requerimiento">` con R1–R4; por imagen un `<figure class="grafica">` con `<h2>` (título), `<p class="descripcion">` con la descripción y `<code>archivo</code>`, y `<img src="…" alt="{{ descripcion }}" width="…" height="…" loading="lazy">`; por tabla un `<section>` con `<h2>` (título) y `<div class="tabla-ancha">{{ tabla.html }}</div>` (el `<caption>` lleva la descripción y el nombre del archivo); al final, solo si hay faltantes, `<section class="faltantes"><h2>Faltan</h2>` con «título (`archivo`): `comando`».
+
+### Cambios por plantilla, con lo que no debe cambiar
+
+- **`ruta.html`**: `<label for="origen">Origen</label> <select id="origen" name="origen">` (ídem destino); `<button type="submit">Calcular ruta</button>`; `<p class="error" role="alert">`. El resultado sigue dentro de `<div id="resultado-ruta">` y su `<h2>` sigue siendo **texto plano en una línea**: `{{ ruta.origen }} {{ nombre_de[ruta.origen] }} → {{ ruta.destino }} {{ nombre_de[ruta.destino] }}` (sin `<span class="id">`, ver «Decisiones», V-3). Debajo, `<dl class="resumen">` con tres tarjetas: «Tiempo de viaje» → `29,7 min` y en `<small>` `(1 783,4 s)`; «Distancia» → `24,00 km`; «Nodos explorados» → `7 360`. El cómputo en ms queda como nota (`<p class="nota">`). Aviso: `<p class="aviso" role="status">`. Mapa: `<iframe class="mapa" title="Mapa de la ruta" srcdoc="{{ mapa }}">`.
+- **`envolvente.html`**: `<dl class="resumen">` con «Polígono» → `{{ n_vertices }} vértices` y «Área» → `{{ area_km2|num(1) }} km²` (el número y la unidad en el mismo texto, en una línea); iframe con `title="Mapa de la envolvente"`; tabla con `<caption>Vértices de la envolvente (grados)</caption>`, `<thead>` con `th scope="col"` (Vértice, Latitud, Longitud) y en cada fila el número como `<th scope="row">`.
+- **`itinerario.html`**: `<label for="partida">Partida</label> <select id="partida" name="partida">`; `<fieldset><legend>Atractivos (elige de 6 a 8)</legend><div class="casillas">` y por atractivo `<label class="casilla"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">{{ id }}</span> {{ nombre }} <span class="visita">{{ min }} min</span></label>`; `<button type="submit">Calcular itinerario</button>`; error con `role="alert"`. Con resultado, en este orden:
+  1. `<dl class="resumen">`: «Held-Karp (óptimo)» → `178,7 min` (tarjeta `metodo-hk`), «Vecino más cercano (voraz)» → `190,4 min` (`metodo-voraz`), «Diferencia» → `11,8 min`, «Brecha» → `6,60 %`;
+  2. `<ul class="leyenda">` con una `<span class="muestra" style="background: {{ colores.held_karp }}">` y otra con `colores.voraz` (los valores salen de `COLORES`, una sola fuente para el mapa y la leyenda), y el iframe con `title="Mapa del itinerario"`;
+  3. `<table class="comparacion">` con `<caption>Held-Karp frente al vecino más cercano</caption>`, `<thead><tr><th scope="col">Medida</th><th scope="col" class="metodo-hk">Held-Karp (óptimo)</th><th scope="col" class="metodo-voraz">Vecino más cercano (voraz)</th></tr></thead>` y cada fila con `<th scope="row">` (orden de visita, desplazamiento, visitas, jornada, cabe en 11 h, cómputo);
+  4. si `it.jornada`: `<section class="regla">` con el `<h2>Regla de las 11 h (R4, informativo)</h2>`, su texto, la tabla con `<caption>` y la jornada final.
+- **`inicio.html`**: `<ul class="secciones">` con cuatro `<li class="tarjeta-seccion">`, cada una con `<h2><a href="…">Sección</a></h2>`, una línea de qué hace y una de qué algoritmo usa:
+  - Ruta (`/ruta`): «Elige dos de los 42 lugares y mira el camino más rápido por las vías.» · «Dijkstra con cola de prioridad (R2), calculado en el momento.»
+  - Envolvente (`/envolvente`): «Mira el polígono convexo que encierra todos los nodos de la red vial del Quindío.» · «QuickHull, divide y vencerás (R3), ya calculado.»
+  - Itinerario (`/itinerario`): «Elige la partida y de 6 a 8 atractivos y compara los dos recorridos del día.» · «Held-Karp (óptimo) y vecino más cercano (voraz) (R4), calculados en el momento.»
+  - Resultados (`/resultados/r1`): «Revisa las tablas y gráficas de cada requerimiento, de R1 a R4.» · «Mediciones del protocolo de la sección 6.»
+
+  Corrige un error del texto actual: hoy dice «envolvente convexa de los 42 lugares», pero la envolvente de R3 es la de los **8 791 nodos** de la red (spec de R3, «Propósito»).
+- **`resultados.html`**: ver la sección anterior.
+
+### Pruebas actuales que dependen del HTML
+
+Revisadas una por una (`tests/test_app_r5.py`, `tests/test_red_real_r5.py`, `tests/test_mapas_r5.py`). **Ninguna depende del texto «Calcular» ni del orden de la página**, así que no hay que cambiar ninguna. Sí dependen de fragmentos exactos que el HTML nuevo debe conservar (invariantes; cada tarea de B5 corre estas pruebas en su verificación):
+
+| Prueba actual | Fragmento del que depende | Cómo se conserva |
+|---|---|---|
+| `test_app_r5.py::test_ruta_sintetica_app`, `test_red_real_r5.py::test_caso_2_ruta_en_la_app` | Corta en `id="resultado-ruta"` y busca «C01 Cabecera Uno → A02 Atractivo Dos» / «C01 Plaza de Bolívar de Armenia → C12 Plaza de Bolívar de Salento» como texto seguido | El `<div id="resultado-ruta">` sigue envolviendo el resultado y el `<h2>` queda en texto plano y en una línea (sin `<span>` en los ids) |
+| `test_app_r5.py::test_ruta_incompleta` | Sin resultado no aparecen «Tiempo de viaje» ni «desconocido» | La etiqueta «Tiempo de viaje» de la tarjeta está dentro de `{% if ruta %}`; ningún texto de ayuda dice «desconocido» |
+| `test_app_r5.py::test_ruta_formulario`, `test_red_real_r5.py::test_formulario_42_lugares_15_atractivos` | `html.count("<option") == 16` / `== 42`; `count('name="atractivos"') == 15` | No se agregan `<option>` ni otros elementos con `name="atractivos"` (la navegación y la leyenda no usan formularios) |
+| `test_app_r5.py::test_itinerario_sin_parametros` | 6 `name="atractivos"` y `<option value="C01"[^>]*selected` | Igual que arriba; el `<option>` no cambia |
+| `test_app_r5.py::test_caso_8_itinerario_400` | `value="A01" checked` seguidos | En la casilla, `checked` va inmediatamente después de `value="…"`; si se agrega un `id`, va antes de `value` |
+| `test_app_r5.py::test_caso_10_envolvente`, `test_red_real_r5.py::test_caso_10_envolvente_real` | «4 vértices», «29,6 km²» / «14 vértices», «1 631,5» y las coordenadas con 6 decimales | La tarjeta muestra `{{ n }} vértices` y `{{ área }} km²` en un mismo texto; la tabla sigue con `num(6)` |
+| `test_red_real_r5.py::test_caso_9_itinerario_en_la_app`, `test_app_r5.py::test_itinerario_sintetico_app` | «178,7», «190,4», «11,8»; los nombres del recorrido; «Held-Karp», «Vecino más cercano» | Aparecen en las tarjetas y en la tabla con el mismo `num(1)` |
+| `test_app_r5.py::test_itinerario_bloque_regla_no_aparece_si_cabe`, `test_caso_9` (`not in`) | «Regla de las 11 h» **no** aparece si Held-Karp cabe | Ese texto solo está en el `<h2>` del bloque condicional; la leyenda, el formulario y las tarjetas no lo usan |
+| `test_app_r5.py::test_caso_11_resultados_r2` | `src="…r2_tiempo_vs_explorados.png"`, «r2_cociente.csv», `<table`, «mediana» | El nombre del archivo sigue visible en `<code>` (en la descripción y en el `<caption>`) |
+| `test_app_r5.py::test_caso_11_cuatro_paginas_reales` | «Faltan» **no** aparece en r2 y r3 | «Faltan» solo es el `<h2>` del bloque condicional; ninguna descripción ni la navegación lo contiene |
+| `test_app_r5.py::test_caso_11_r4_sin_exactas` | «r4_exactas.csv» y «python -m rutas.r4.medir_exactas» | Los faltantes muestran título, archivo y comando |
+| `test_app_r5.py::test_inicio_y_menu` | `href="/ruta"`, `href="/envolvente"`, `href="/itinerario"`, `href="/resultados/r1"` en `/` | Están en el menú y en las tarjetas del inicio |
+| `test_mapas_r5.py::test_mapa_itinerario` | `COLORES["held_karp"]` y `COLORES["voraz"]` dentro del HTML de Folium | Folium copia el texto del color tal cual; la prueba lee `COLORES`, así que sigue valiendo con los valores nuevos |
+| `test_app_r5.py::test_sin_algoritmos_ni_js_propio` | Ninguna plantilla contiene `<script` | No cambia; A9 agrega una prueba nueva para `estilos.css` y `javascript:` (refuerza, no reemplaza) |
+
+Si durante la implementación alguna de estas pruebas falla, **se corrige la plantilla, no la prueba**. Si el grupo decide de todos modos poner los ids del `<h2>` de la ruta en monoespaciada (decisión V-3), la única prueba que habría que ajustar es la del texto de `#resultado-ruta`, y el ajuste propuesto no la debilita: comparar el texto del bloque sin etiquetas (`re.sub(r"<[^>]+>", "", resultado)`) contra la misma cadena exacta.
+
+### Verificación del ajuste
+
+| Qué | Contra qué | Datos |
+|---|---|---|
+| Hoja servida y enlazada (A1) | `GET /static/estilos.css` → 200 `text/css`; `base.html` contiene el `<link>` y no `<style` | cliente sintético, texto de la plantilla |
+| Paleta y movimiento (A11, V0) | texto de `estilos.css`: las 7 variables con su hex (sin distinguir mayúsculas); no `transition: all` (regex `transition\s*:\s*all`), `@import` ni `url(http`; sí `scale(0.97)`, `160ms ease-out`, `(hover: hover) and (pointer: fine)`, `prefers-reduced-motion`, `repeating-radial-gradient`, `:focus-visible`, `tabular-nums` | archivo |
+| `COLORES` (A11, A7) | `COLORES` == Cocora / Cereza / Hoja de `estilos.css`; la leyenda del itinerario contiene los mismos hex | archivo y cliente sintético |
+| Base y menú (A2, A3) | `name="viewport"`, «Saltar al contenido», `id="contenido"` en todas las páginas (200 y 400); un solo `aria-current="page"` y en el enlace correcto | cliente sintético |
+| Formularios y mensajes (A4, A6, V3) | `<label for>` + `id` coincidentes, `<fieldset>`/`<legend>`, botones; `role="alert"` con el mensaje y `role="status"` con el aviso; sin `role="alert"` si no hay error | cliente sintético |
+| Mapas (A5, V7) | cada `<iframe` tiene `title="Mapa de …"` | cliente sintético |
+| Tarjetas, orden y tabla del itinerario (V4, V5) | `<dl class="resumen">` con los valores formateados con `numero`; posición de resumen < iframe < tabla < regla en el HTML; «Medida», `<caption>`, `scope`, sin `<th></th>` | cliente sintético (cabe y no cabe) |
+| Resultados (A8, V8, V9) | diccionario con los 15 archivos de `ARCHIVOS_RESULTADOS`; `alt` ≠ nombre; `width`/`height` = `TAMANOS_IMAGENES` (y = tamaño real de las PNG de r2 y r3); `loading="lazy"`; cada `<table` con `<caption>` dentro de `.tabla-ancha`; navegación R1–R4 | cliente sintético y `results/` real (sin `red`) |
+| Sin JS, sin dependencias, sin tocar lo prohibido (A9) | prueba de texto + `git diff --stat` vacío de `rutas/r1..r4`, `servicios.py`, `datos.py`, `formato.py`, `requirements.txt`, `.gitignore`, `Dockerfile` | repo |
+| Aspecto real (A10) | revisión manual en el navegador a ancho de escritorio y a ~375 px | `review.md` |
+
+Cada prueba nueva se escribe antes del cambio y se ve fallar contra el HTML actual (el rojo es «por la razón correcta»: falta el atributo, el texto o el archivo). No hay algoritmo ni medición nuevos.
+
+### Trazabilidad del ajuste: V0–V10 y A1–A11 → tarea → prueba
+
+Todas las pruebas son de `tests/test_visual_r5.py` salvo que se diga otra cosa.
+
+| Punto / caso | Tarea | Prueba |
+|---|---|---|
+| V0 dirección visual: paleta | T26 | `::test_a11_paleta_en_css`, `::test_a11_colores_de_mapas` |
+| V0 tipografía, firma (curvas de nivel) y movimiento | T27 | `::test_v0_tipos_firma_y_movimiento`; A10 (T35) para el aspecto |
+| V0 textos (voz activa, errores con el paso siguiente) | T28, T33 | `::test_a4_labels_y_botones` (botones «Calcular ruta» / «Calcular itinerario»), `::test_v10_inicio_tarjetas`; los mensajes de error no cambian (vienen de `servicios.py`) |
+| V1 hoja propia, sin CSS en línea | T26, T27 | `::test_a1_estilos_servidos`, `::test_a1_base_sin_style` |
+| V2 viewport, saltar al contenido, `aria-current`, foco, menú en 375 px | T27, T35 | `::test_a2_viewport_y_saltar`, `::test_a3_aria_current`, `::test_v0_tipos_firma_y_movimiento` (`:focus-visible`); 375 px en A10 |
+| V3 formularios | T28 | `::test_a4_labels_y_botones`, `::test_v3_fieldset_y_cuadricula` |
+| V4 tarjetas de resumen | T29, T30, T31 | `::test_v4_tarjetas_ruta`, `::test_v4_tarjetas_envolvente`, `::test_v4_tarjetas_itinerario` |
+| V5 colores, leyenda, tabla y orden del itinerario | T26, T31 | `::test_a7_leyenda_con_colores`, `::test_v5_tabla_comparacion`, `::test_v5_orden_de_la_pagina` |
+| V6 mensajes con `role` | T28 | `::test_a6_alert_y_status` |
+| V7 iframes con `title` y altura adaptable | T29, T30, T31, T35 | `::test_a5_iframes_con_title` (parametrizada por página); la altura, en A10 |
+| V8 tablas | T30, T32 | `::test_v8_tabla_envolvente`, `::test_tabla_con_titulo`, `::test_v8_tablas_de_resultados` |
+| V9 resultados: títulos, imágenes, navegación | T32 | `::test_titulos_cubren_la_lista_fija`, `::test_tamanos_de_imagenes`, `::test_a8_imagen_y_titulo`, `::test_v9_navegacion_requerimientos`, `::test_faltantes_con_titulo` |
+| V10 inicio con cuatro tarjetas | T33 | `::test_v10_inicio_tarjetas` |
+| A1 | T27 | `::test_a1_estilos_servidos`, `::test_a1_base_sin_style` |
+| A2 | T27 | `::test_a2_viewport_y_saltar` (parametrizada: `/`, `/ruta`, `/ruta` con resultado, `/ruta` 400, `/envolvente`, `/itinerario`, `/itinerario` con resultado, `/itinerario` 400, `/resultados/r1..r4`) |
+| A3 | T27, T32 | `::test_a3_aria_current` (parametrizada: `/ruta`, `/envolvente`, `/itinerario`, `/resultados/r2`) |
+| A4 | T28 | `::test_a4_labels_y_botones` |
+| A5 | T29, T30, T31 | `::test_a5_iframes_con_title` |
+| A6 | T28 | `::test_a6_alert_y_status` |
+| A7 | T31 | `::test_a7_leyenda_con_colores` |
+| A8 | T32 | `::test_a8_imagen_y_titulo` |
+| A9 | T25 (rojo), T26 (verde) | `::test_a9_sin_js_propio`; se mantiene `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio` |
+| A10 | T35 | revisión manual → `review.md` |
+| A11 | T26 | `::test_a11_paleta_en_css`, `::test_a11_sin_transition_all_ni_externos`, `::test_a11_colores_de_mapas` |
+| Restricciones: pruebas actuales («29,7», «178,7», «190,4», «11,8», «14 vértices», «1 631,5») | T25–T34 | `tests/test_app_r5.py`, `tests/test_red_real_r5.py`, `tests/test_mapas_r5.py` sin cambios, en la verificación de cada tarea y en T34 |
+| Restricciones: sin dependencias; `servicios.py` y R1–R4 sin tocar | T25, T34 | `git diff --stat` vacío (T34) |
+
+### Riesgos del ajuste
+
+- **Una plantilla nueva rompe un fragmento del que depende una prueba actual** (tabla de invariantes). Mitigación: cada tarea corre `tests/test_app_r5.py` y, cuando toca ruta, envolvente o itinerario, las pruebas `red` correspondientes.
+- **Contraste sobre la franja de curvas de nivel**: si las líneas son muy claras, el texto blanco del menú pierde contraste. Líneas de 2 px con Hoja al 35 % sobre Guadua; se comprueba a ojo y con las herramientas del navegador en A10.
+- **`width`/`height` de `r4_tiempo_vs_k.png` es aproximado** (la figura se guarda con `bbox_inches="tight"` y aún no existe). Con `height: auto` el navegador usa la proporción real al cargar, así que solo afecta la reserva de espacio antes de la carga. Cuando exista la PNG, se corrige el valor (anotado en T32).
+- **Leyenda con `style` en línea**: es un atributo de estilo, no JavaScript ni una etiqueta `<style>`; pasa A1 (busca `<style`) y A9. Se usa para que la leyenda lea el color de `COLORES` y no haya dos fuentes.
+- **El mapa sigue dependiendo de internet** (Leaflet y mosaicos); la hoja propia no, porque no usa fuentes ni recursos externos (A11).
+- **La spec dice en V1 «con la paleta café del menú actual»**, pero V0 (más reciente y detallado) define la paleta Guadua/Hoja/…, que reemplaza al café `#3b2a1a`. El plan sigue V0 (decisión V-7).
+
+### Decisiones del ajuste para el usuario
+
+- **V-1. Menú con la marca y 4 enlaces** (Ruta, Envolvente, Itinerario, Resultados → `/resultados/r1`), en lugar de los 8 actuales; R1–R4 pasan a la navegación de la página de resultados. Cumple «menú de 4 enlaces» (Comportamiento 6), cabe en 375 px y es lo que pide V10 («el enlace de Resultados lleva a la navegación de R1 a R4»). La marca lleva `aria-current="page"` en `/`.
+- **V-2. `aria-current="true"`** en la navegación R1–R4 de resultados, para que en `/resultados/r2` haya un único `aria-current="page"` (A3, «en ningún otro enlace»).
+- **V-3. Ids en monoespaciada en todas partes salvo en el `<h2>` de la ruta**, que queda en texto plano para no tocar la prueba actual de `#resultado-ruta`. Alternativa: ponerlo también en monoespaciada y ajustar esa prueba comparando el texto sin etiquetas (misma cadena; no la debilita).
+- **V-4. `TITULOS_RESULTADOS` y `TAMANOS_IMAGENES` en `app.py`**, no en un módulo nuevo (la spec admite los dos). Los textos de los 15 archivos están arriba; el grupo puede corregir la redacción sin cambiar las pruebas (las pruebas exigen cobertura, no un texto exacto, salvo el de `r2_cociente.csv`, que fija la spec).
+- **V-5. `<caption>` de las tablas de pandas insertado en `app.py`** (`tabla_con_titulo`, manipulación de texto sobre el HTML de `to_html`), para no tocar `servicios.py`. El `<caption>` lleva la descripción y el nombre del archivo; el `<h2>`, el título legible.
+- **V-6. Tamaño de las imágenes fijo en un diccionario** (no se lee la cabecera PNG en cada petición; la PNG sintética de las pruebas solo tiene 8 bytes). r4 queda aproximado hasta que exista.
+- **V-7. Paleta de V0** en lugar de «la paleta café del menú actual» que menciona V1.
+- **V-8. Solo cambian los 4 valores de `COLORES`**; los grises fijos de `mapas.py` (marcadores de la envolvente `#444` y borde de los números `#333`) y el marcador verde de la partida no cambian, porque la spec solo nombra `COLORES`. Si el grupo quiere, se pasan a Tinta en una tarea aparte.
+- **V-9. La cuadrícula de casillas usa `repeat(auto-fill, minmax(17rem, 1fr))`**: 2 o 3 columnas en escritorio (lo que pide V3) y 1 columna a 375 px.
+- **V-10. Corrección de texto en el inicio**: la envolvente es la de los nodos de la red, no «de los 42 lugares» como dice hoy `inicio.html`.
+- **V-11. B5 es un solo bloque** (T25–T35) que termina con la suite en verde y se detiene para el commit del usuario; la revisión manual (T35) va al final y, si obliga a cambiar CSS, se vuelve a correr el comando de T34.
+
+### Bloqueos del ajuste
+
+Ninguno. El ajuste no contradice el enunciado (el diseño no se evalúa en R5 y no se cambia ningún resultado) y cabe en los archivos permitidos por la spec sin tocar `servicios.py` ni R1–R4. La única inconsistencia interna de la spec (V1 «paleta café» frente a V0) se resuelve a favor de V0 y queda en V-7 para confirmar.
+
+### Puerta 2 del ajuste visual (2026-11-12), resuelta por el usuario
+Se aprueban las decisiones V-1 a V-11 tal como están propuestas: menú de 4 enlaces, ids en monoespaciada salvo el `<h2>` de la ruta, títulos y tamaños de imagen en `app.py`, tamaño provisional de `r4_tiempo_vs_k.png`, solo cambian los 4 valores de `COLORES`, cuadrícula de 2–3 columnas o 1 en móvil, corrección del texto de la envolvente en el inicio y leyenda con `style` en línea. La spec se corrigió en V1 («paleta de V0»).

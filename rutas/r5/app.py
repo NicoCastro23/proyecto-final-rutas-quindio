@@ -1,17 +1,112 @@
 """Aplicación web de R5: lee parámetros, llama a servicios y mapas, y elige plantilla y código HTTP."""
 import argparse
+import re
 import socket
 import sys
 import time
 
 from flask import Flask, abort, render_template, request, send_from_directory
+from markupsafe import Markup, escape
 
 from rutas.config import CATALOGO, DATA_PROCESSED, HOST_R5, PUERTO_R5, RESULTS
 from rutas.r5.datos import DatosFaltantes, cargar_datos
 from rutas.r5.formato import numero
-from rutas.r5.mapas import mapa_envolvente, mapa_itinerario, mapa_ruta
+from rutas.r5.mapas import COLORES, mapa_envolvente, mapa_itinerario, mapa_ruta
 from rutas.r5.servicios import (ARCHIVOS_RESULTADOS, ErrorEntrada, itinerario, resultados,
                                 ruta_entre)
+
+
+# Título legible y descripción de cada archivo de resultados (la descripción sirve de alt y de caption).
+TITULOS_RESULTADOS = {
+    # R1 · red vial
+    "r1_tiempos_componente.png": (
+        "Tiempo de la componente fuertemente conexa frente a V + E",
+        "Gráfica de la mediana de 5 repeticiones, en ms, del cálculo de la componente fuertemente conexa en redes de 2, 5, 10 y 20 km de radio y en el departamento completo."),
+    "r1_tamanos.csv": (
+        "Tamaño de la red vial",
+        "Nodos y aristas de la red descargada y de su componente fuertemente conexa, que es la red que usan R2 a R5."),
+    "r1_tiempos_componente.csv": (
+        "Tiempo de la componente fuertemente conexa por red",
+        "Cinco redes de tamaño creciente: V, E, V + E, mediana en ms, microsegundos por elemento y repeticiones."),
+    "r1_memoria.csv": (
+        "Memoria: matriz frente a listas de adyacencia",
+        "Bytes estimados de cada representación para la red descargada y para la componente, con el supuesto de cada cálculo."),
+    "r1_velocidades.csv": (
+        "Velocidades por tipo de vía",
+        "Velocidad asignada a cada tipo de vía (highway) y porcentaje de tramos con velocidad de OpenStreetMap o imputada."),
+    # R2 · Dijkstra
+    "r2_tiempo_vs_explorados.png": (
+        "Tiempo de Dijkstra frente a nodos explorados",
+        "Gráfica de la versión lineal y la versión con cola de prioridad: cada punto es un par origen-destino, con la mediana de sus repeticiones en ms."),
+    "r2_dijkstra.csv": (
+        "Mediciones de Dijkstra por par",
+        "10 pares cercanos y 10 lejanos: tiempo de viaje, nodos explorados y mediana en ms; la versión lineal se mide solo en los cercanos."),
+    "r2_cociente.csv": (
+        "Cociente lineal / cola de prioridad (10 pares cercanos)",
+        "Mediana, mínimo y máximo de cuántas veces más tarda la versión lineal que la de cola de prioridad."),
+    "r2_pares.csv": (
+        "Pares origen-destino medidos",
+        "Los 20 pares de lugares (10 cercanos y 10 lejanos), con su municipio y su nodo en la red."),
+    # R3 · envolvente convexa
+    "r3_envolvente.png": (
+        "Envolvente convexa de los nodos de la red",
+        "Gráfica de los nodos de la componente en coordenadas UTM (m) y del polígono que calcula QuickHull."),
+    "r3_envolvente.csv": (
+        "QuickHull propio frente a SciPy",
+        "Nodos de la red y cuadrados de 1 000, 10 000 y 50 000 puntos: vértices, mediana en ms de cada implementación y cociente propio / SciPy."),
+    # R4 · ruta óptima
+    "r4_tiempo_vs_k.png": (
+        "Tiempo de fuerza bruta y Held-Karp frente a k",
+        "Gráfica de la mediana en ms para k = 5 a 12 lugares, con el eje y en escala logarítmica."),
+    "r4_exactas.csv": (
+        "Fuerza bruta y Held-Karp por número de lugares",
+        "Para k = 5 a 12: mediana en ms de cada método, estado (completada o no en 5 min), tiempo del recorrido óptimo y el recorrido."),
+    "r4_calidad.csv": (
+        "Brecha del vecino más cercano frente al óptimo",
+        "10 instancias por cada k (5, 8, 10 y 12): brecha promedio y máxima, en %, frente a Held-Karp."),
+    "r4_memoria.csv": (
+        "Memoria de la tabla de Held-Karp",
+        "Para k = 5 a 12: celdas y bytes estimados de la tabla frente al pico medido con tracemalloc."),
+    "r4_itinerario.csv": (
+        "Itinerario del día desde Armenia",
+        "Recorrido que queda después de quitar atractivos hasta caber en 11 h: desplazamiento y visita de cada parada y horas acumuladas."),
+}
+
+# (ancho, alto) en px de cada imagen, para reservar espacio antes de que cargue (el CSS la escala).
+TAMANOS_IMAGENES = {
+    "r1_tiempos_componente.png": (1050, 675),
+    "r2_tiempo_vs_explorados.png": (1050, 675),
+    "r3_envolvente.png": (914, 1126),
+    "r4_tiempo_vs_k.png": (1200, 750),      # aproximado: la imagen aún no existe; corregir cuando exista
+}
+
+
+def tabla_con_titulo(html, descripcion, archivo):
+    """Agrega un <caption> justo después de <table ...> y scope="col" a cada <th> de la tabla de pandas.
+
+    Con index=False todos los <th> son encabezados de columna. No cambia ninguna celda.
+    """
+    caption = f"<caption>{escape(descripcion)} <code>{escape(archivo)}</code></caption>"
+    html = re.sub(r"(<table[^>]*>)", lambda m: m.group(1) + caption, html, count=1)
+    return Markup(html.replace("<th>", '<th scope="col">'))
+
+
+def presentar_resultados(crudo):
+    """Agrega título y descripción a lo que devuelve servicios.resultados (KeyError si falta un título)."""
+    imagenes = []
+    for archivo in crudo["imagenes"]:
+        titulo, descripcion = TITULOS_RESULTADOS[archivo]
+        ancho, alto = TAMANOS_IMAGENES[archivo]
+        imagenes.append({"archivo": archivo, "titulo": titulo, "descripcion": descripcion,
+                         "ancho": ancho, "alto": alto})
+    tablas = []
+    for archivo, html in crudo["tablas"]:
+        titulo, descripcion = TITULOS_RESULTADOS[archivo]
+        tablas.append({"archivo": archivo, "titulo": titulo, "descripcion": descripcion,
+                       "html": tabla_con_titulo(html, descripcion, archivo)})
+    faltantes = [{"archivo": archivo, "titulo": TITULOS_RESULTADOS[archivo][0], "comando": comando}
+                 for archivo, comando in crudo["faltantes"]]
+    return {"imagenes": imagenes, "tablas": tablas, "faltantes": faltantes}
 
 
 def crear_app(datos, results=RESULTS):
@@ -25,13 +120,13 @@ def crear_app(datos, results=RESULTS):
 
     @app.get("/")
     def inicio():
-        return render_template("inicio.html")
+        return render_template("inicio.html", seccion="inicio")
 
     @app.get("/ruta")
     def ruta():
         origen, destino = request.args.get("origen", ""), request.args.get("destino", "")
         contexto = {"lugares": lugares, "nombre_de": datos.nombre_de, "origen": origen, "destino": destino,
-                    "ruta": None, "mapa": None, "error": None}
+                    "ruta": None, "mapa": None, "error": None, "seccion": "ruta"}
         if not (origen and destino):               # sin los dos parámetros: solo el formulario
             return render_template("ruta.html", **contexto)
         try:
@@ -47,7 +142,7 @@ def crear_app(datos, results=RESULTS):
         feature = datos.envolvente["features"][0]
         anillo = feature["geometry"]["coordinates"][0][:-1]     # el último punto repite el primero
         vertices = [(lat, lon) for lon, lat in anillo]
-        return render_template("envolvente.html", mapa=mapa_envolvente(datos), vertices=vertices,
+        return render_template("envolvente.html", seccion="envolvente", mapa=mapa_envolvente(datos), vertices=vertices,
                                n_vertices=feature["properties"]["vertices"],
                                area_km2=feature["properties"]["area_km2"])
 
@@ -58,7 +153,7 @@ def crear_app(datos, results=RESULTS):
         contexto = {"lugares": lugares, "atractivos": datos.atractivos, "nombre_de": datos.nombre_de,
                     "visita_min": datos.visita_min, "elegidos": elegidos,
                     "partida": partida or ("C01" if "C01" in datos.nombre_de else lugares[0][0]),
-                    "it": None, "mapa": None, "error": None}
+                    "it": None, "mapa": None, "error": None, "seccion": "itinerario", "colores": COLORES}
         if not partida:                            # sin partida: solo el formulario
             return render_template("itinerario.html", **contexto)
         try:
@@ -73,7 +168,8 @@ def crear_app(datos, results=RESULTS):
     def vista_resultados(r):
         if r not in ARCHIVOS_RESULTADOS:
             abort(404)
-        return render_template("resultados.html", r=r, **resultados(r, results))
+        return render_template("resultados.html", r=r, seccion="resultados", requerimientos=list(ARCHIVOS_RESULTADOS),
+                               **presentar_resultados(resultados(r, results)))
 
     @app.get("/resultados/<r>/archivo/<nombre>")
     def imagen(r, nombre):

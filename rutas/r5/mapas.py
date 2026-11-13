@@ -5,7 +5,7 @@ el grupo no escribe JavaScript.
 """
 import folium
 
-COLORES = {"ruta": "#1f77b4", "held_karp": "#1f77b4", "voraz": "#ff7f0e", "envolvente": "#2ca02c"}
+COLORES = {"ruta": "#1F5F8B", "held_karp": "#1F5F8B", "voraz": "#B8322A", "envolvente": "#5E8C61"}
 
 
 def centro(datos):

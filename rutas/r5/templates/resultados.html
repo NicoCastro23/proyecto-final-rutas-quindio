@@ -1,18 +1,28 @@
 {% extends "base.html" %}
 {% block contenido %}
 <h1>Resultados de {{ r|upper }}</h1>
+<nav class="requerimientos" aria-label="Resultados por requerimiento">
+  {% for req in requerimientos %}<a href="/resultados/{{ req }}"{% if req == r %} aria-current="true"{% endif %}>{{ req|upper }}</a>{% endfor %}
+</nav>
 {% for imagen in imagenes %}
-<h2>{{ imagen }}</h2>
-<img src="{{ url_for('imagen', r=r, nombre=imagen) }}" alt="{{ imagen }}">
+<figure class="grafica">
+  <h2>{{ imagen.titulo }}</h2>
+  <p class="descripcion">{{ imagen.descripcion }} <code>{{ imagen.archivo }}</code></p>
+  <img src="{{ url_for('imagen', r=r, nombre=imagen.archivo) }}" alt="{{ imagen.descripcion }}" width="{{ imagen.ancho }}" height="{{ imagen.alto }}" loading="lazy">
+</figure>
 {% endfor %}
-{% for nombre, tabla in tablas %}
-<h2>{{ nombre }}</h2>
-{{ tabla|safe }}
+{% for tabla in tablas %}
+<section>
+  <h2>{{ tabla.titulo }}</h2>
+  <div class="tabla-ancha">{{ tabla.html }}</div>
+</section>
 {% endfor %}
 {% if faltantes %}
-<h2>Faltan</h2>
-<ul>
-  {% for archivo, comando in faltantes %}<li>{{ archivo }}: <code>{{ comando }}</code></li>{% endfor %}
-</ul>
+<section class="faltantes">
+  <h2>Faltan</h2>
+  <ul>
+    {% for f in faltantes %}<li>{{ f.titulo }} (<code>{{ f.archivo }}</code>): <code>{{ f.comando }}</code></li>{% endfor %}
+  </ul>
+</section>
 {% endif %}
 {% endblock %}

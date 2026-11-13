@@ -231,6 +231,113 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Nota: la plantilla `ruta.html` envuelve el resultado en `<div id="resultado-ruta">` y muestra «C01 Nombre → A02 Nombre»; `app.py` pasa `nombre_de` al contexto. Las pruebas (`test_app_r5.py`, `test_red_real_r5.py`) buscan el texto solo dentro de ese bloque; con la plantilla sin nombres la prueba sintética falló (`'C01 Cabecera Uno → A02 Atractivo Dos'` no estaba en el resultado, solo `C01 → A02`).
 - [x] Sugerencia 3: README, sección «Ejecutar la aplicación (R5)»: «de 6 a 8 atractivos», partida por defecto Armenia (C01) y requisito de `python3.13` instalado antes de crear `.venv`.
 
+## B5 · Ajuste visual (spec «Ajuste visual», V0–V10 y A1–A11; plan «Ajuste visual»)
+
+> **Reglas propias de B5** (además de las reglas del usuario de arriba):
+> 1. **No se toca** `rutas/r1..r4/`, `rutas/r5/servicios.py`, `rutas/r5/datos.py`, `rutas/r5/formato.py`, `requirements.txt`, `.gitignore` ni el `Dockerfile`. En `rutas/r5/mapas.py` solo cambia `COLORES`.
+> 2. **Sin JavaScript propio** (ni `<script`, ni `javascript:`, en plantillas ni en `estilos.css`) y **sin dependencias nuevas** (ni fuentes externas, ni `@import`, ni `url(http`).
+> 3. **Las pruebas actuales no se modifican.** Si una falla, se corrige la plantilla. Los fragmentos de los que dependen están en `plan.md`, «Pruebas actuales que dependen del HTML»; los más frágiles: el `<h2>` de `#resultado-ruta` en texto plano y en una línea; `value="…" checked` seguidos; «N vértices» y «X km²» en un mismo texto; «Regla de las 11 h» y «Faltan» solo en sus bloques condicionales; el nombre del archivo sigue visible en resultados.
+> 4. Las pruebas nuevas van en `tests/test_visual_r5.py` (sin marca `red`; usan `cliente_app`, `datos_app` o el helper `_cliente(tmp_path, …)` de `tests/test_app_r5.py`, que se importa o se copia). Cada una se ve fallar contra el HTML actual antes de cambiar la plantilla.
+> 5. Regresión de cada tarea (además de su prueba): `.venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py -q`; y cuando la tarea toca ruta, envolvente o itinerario, también `.venv/bin/python -m pytest tests/test_red_real_r5.py -q` (contiene «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5»).
+
+- [x] T25 · Línea base y guardia sin JavaScript propio (A9; restricciones)
+  - Archivos: `tests/test_visual_r5.py` (crear)
+  - Pasos: correr la suite y anotar la línea base (esperado, según T24: `-m "not red"` 497 pasan y 1 se salta; suite completa 536 pasan y 3 se saltan); comprobar que el árbol de lo prohibido está limpio con `git status --short -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 rutas/r5/servicios.py requirements.txt .gitignore Dockerfile` (vacío)
+  - Test primero: `tests/test_visual_r5.py::test_a9_sin_js_propio` (recorre las 6 plantillas de `rutas/r5/templates/` y `rutas/r5/static/*.css`; ninguna contiene `<script` ni `javascript:` (en minúsculas); exige que existan las 6 plantillas y `rutas/r5/static/estilos.css`). Rojo esperado: falta `estilos.css`. La guardia actual `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio` no se cambia
+  - Verificar: `.venv/bin/python -m pytest -q` (línea base) y `.venv/bin/python -m pytest tests/test_visual_r5.py -k a9` (rojo por la razón correcta; pasa a verde en T26)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: línea base 2026-11-12 (antes de cambiar nada): suite completa 535 pasan, 3 se saltan y 1 falla: `test_puerto_por_defecto`, porque un proceso ajeno (`python -m rutas.r5.app`, PID 71719) ya escucha en el puerto 5050; no es un fallo del código. `git status` de lo prohibido: vacío. `test_a9_sin_js_propio` rojo por `falta estilos.css`.
+
+- [x] T26 · Paleta: `COLORES` de `mapas.py` y variables de `estilos.css` (V0 paleta, V1, A11; deja A9 en verde)
+  - Archivos: `rutas/r5/mapas.py` (solo `COLORES = {"ruta": "#1F5F8B", "held_karp": "#1F5F8B", "voraz": "#B8322A", "envolvente": "#5E8C61"}`); `rutas/r5/static/estilos.css` (crear con los 15 encabezados de sección del plan; llenar la sección 1 «Paleta y escala»: las 7 variables de color, `--fuente-titulos`, `--fuente-texto`, `--fuente-ids` y los 4 tamaños)
+  - Test primero: `::test_a11_paleta_en_css` (regex `--guadua:\s*#2F4A3A`, `--hoja:\s*#5E8C61`, `--niebla:\s*#F3F6F4`, `--bahareque:\s*#D5DDD7`, `--tinta:\s*#1D2521`, `--cocora:\s*#1F5F8B`, `--cereza:\s*#B8322A`, sin distinguir mayúsculas), `::test_a11_sin_transition_all_ni_externos` (no `transition\s*:\s*all`, no `@import`, no `url(http`), `::test_a11_colores_de_mapas` (`COLORES["ruta"]` y `COLORES["held_karp"]` = valor de `--cocora`, `COLORES["voraz"]` = `--cereza`, `COLORES["envolvente"]` = `--hoja`, leídos del CSS y comparados en minúsculas). Rojo: falta el archivo y `COLORES` aún vale `#1f77b4`/`#ff7f0e`
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "a9 or a11" && .venv/bin/python -m pytest tests/test_mapas_r5.py tests/test_app_r5.py -q`
+  - anotar en `docs/anexo-ia.md`
+  - Nota: `estilos.css` se creó con las 15 secciones y se fue llenando por tarea (T26 la 1; T27 las 2 a 6, 14 y 15; T28 la 7 y 8; T29 la 9 y 10; T30 la 11; T32 la 12; T33 la 13).
+
+- [x] T27 · `base.html`: hoja enlazada, viewport, saltar al contenido, cabecera con curvas de nivel y menú con `aria-current` (V0 tipos/firma/movimiento, V1, V2, A1, A2, A3)
+  - Archivos: `rutas/r5/templates/base.html` (como en el plan, «Sección activa»: sin `<style>`; `<meta name="viewport" content="width=device-width, initial-scale=1">`; `<link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">`; `.saltar`; `.cabecera` con la marca y el menú de 4 enlaces; `<main id="contenido">`); `rutas/r5/app.py` (pasar `seccion` en las 5 vistas que renderizan plantilla: en `/ruta` y `/itinerario` dentro de `contexto`, para que también lo lleven las respuestas 400); `rutas/r5/static/estilos.css` (secciones 2 Base, 3 Foco visible, 4 Saltar al contenido, 5 Cabecera y menú, 6 Contenido, 14 Movimiento, 15 Pantallas angostas)
+  - Test primero: `::test_a1_estilos_servidos` (`GET /static/estilos.css` → 200 y `mimetype == "text/css"`), `::test_a1_base_sin_style` (el texto de `base.html` no contiene `<style` y contiene `estilos.css`), `::test_a2_viewport_y_saltar` (parametrizada con `/`, `/ruta`, `/ruta?origen=C01&destino=A02`, `/ruta?origen=X99&destino=C01` (400), `/envolvente`, `/itinerario`, `/itinerario?` + 6 atractivos, `/itinerario?partida=C01` (400), `/resultados/r1` … `/resultados/r4`: contiene `name="viewport"`, «Saltar al contenido», `href="#contenido"` e `id="contenido"`), `::test_a3_aria_current` (parametrizada `(url, texto_del_enlace)`: `/ruta`→«Ruta», `/envolvente`→«Envolvente», `/itinerario`→«Itinerario», `/resultados/r2`→«Resultados»: `html.count('aria-current="page"') == 1` y regex `aria-current="page"[^>]*>{texto}<`), `::test_v0_tipos_firma_y_movimiento` (el CSS contiene `"Iowan Old Style"`, `system-ui`, `ui-monospace`, `repeating-radial-gradient`, `:focus-visible`, `scale(0.97)`, `160ms ease-out`, `(hover: hover) and (pointer: fine)`, `prefers-reduced-motion: reduce`, `flex-wrap`). `test_a3` en `/resultados/r2` queda en verde solo cuando la vista pase `seccion` (aquí) y la navegación de R1–R4 use `aria-current="true"` (T32 lo mantiene)
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "a1 or a2 or a3 or v0" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py -q` (en especial `test_inicio_y_menu`)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: `seccion` se pasa en las 5 vistas (en `/ruta` y `/itinerario` dentro de `contexto`, así las respuestas 400 también lo llevan).
+
+- [x] T28 · Formularios y mensajes de Ruta e Itinerario (V3, V6, A4, A6)
+  - Archivos: `rutas/r5/templates/ruta.html` y `itinerario.html` (solo el formulario y los mensajes: `<label for>` + `id` en cada `<select>`; `<fieldset>`/`<legend>` «Atractivos (elige de 6 a 8)» con `<div class="casillas">`; casilla `<label class="casilla"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">…</span> nombre <span class="visita">… min</span></label>`; botones «Calcular ruta» y «Calcular itinerario»; `<p class="error" role="alert">`; en `ruta.html` `<p class="aviso" role="status">`); `rutas/r5/static/estilos.css` (secciones 7 Formularios y 8 Mensajes)
+  - Test primero: `::test_a4_labels_y_botones` (`/ruta`: `<label for="origen">`, `<label for="destino">`, `id="origen"`, `id="destino"`, `>Calcular ruta</button>`; `/itinerario`: `<label for="partida">`, `id="partida"`, `<fieldset`, `<legend>Atractivos (elige de 6 a 8)</legend>`, `>Calcular itinerario</button>`), `::test_v3_fieldset_y_cuadricula` (las 6 casillas `name="atractivos"` están entre `<fieldset` y `</fieldset>`, dentro de `class="casillas"`; cada casilla con `class="visita"`; el CSS tiene `grid-template-columns` en `.casillas`), `::test_a6_alert_y_status` (`/itinerario?partida=C01&atractivos=A01` → 400 y regex `role="alert"[^>]*>[^<]*entre 6 y 8`; `/ruta?origen=X99&destino=C01` → `role="alert"` con «lugar desconocido: X99»; `/ruta?origen=C01&destino=C01` → regex `role="status"[^>]*>origen y destino son el mismo lugar`; `/ruta?origen=C01&destino=A02` → sin `role="alert"`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "a4 or a6 or v3" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q` (en especial `test_caso_8_itinerario_400`, `test_ruta_formulario`, `test_itinerario_sin_parametros`, `test_ruta_incompleta`, `test_formulario_42_lugares_15_atractivos`)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: ninguna desviación; el `<h2>` y los `<option>` no cambiaron.
+
+- [x] T29 · Ruta: tarjetas de resumen y mapa con título (V4, V7, A5 en `/ruta`)
+  - Archivos: `rutas/r5/templates/ruta.html` (el resultado sigue dentro de `<div id="resultado-ruta">`; el `<h2>` queda en texto plano y en una línea; `<dl class="resumen">` con «Tiempo de viaje» (`… min` y `<small>(… s)</small>`), «Distancia» (`… km`) y «Nodos explorados»; cómputo en `<p class="nota">`; `<iframe class="mapa" title="Mapa de la ruta" srcdoc="{{ mapa }}">`); `rutas/r5/static/estilos.css` (secciones 9 Tarjetas de resumen y 10 Mapas y leyenda: `iframe.mapa` con `height: clamp(320px, 60vh, 560px)`; `tabular-nums` en `dl.resumen dd`)
+  - Test primero: `::test_v4_tarjetas_ruta` (`/ruta?origen=C01&destino=A02` con `_cliente`: el bloque entre `<dl class="resumen"` y `</dl>` contiene «Tiempo de viaje», `numero(M.loc["C01","A02"] / 60, 1) + " min"`, «Distancia», «Nodos explorados»), `::test_a5_iframes_con_title` (parametrizada por página; aquí solo `("/ruta?origen=C01&destino=A02", "Mapa de la ruta")`: el número de `<iframe` es igual al de `<iframe[^>]*title="` y aparece `title="Mapa de la ruta"`; T30 y T31 agregan sus parámetros). Rojo: hoy no hay `<dl>` ni `title`
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "v4_tarjetas_ruta or a5" && .venv/bin/python -m pytest tests/test_app_r5.py -k ruta -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -k "caso_2 or caso_3" -q` («29,7» y el texto de `#resultado-ruta`)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: el `<h2>` de `#resultado-ruta` sigue en texto plano y en una línea.
+
+- [x] T30 · Envolvente: tarjetas, tabla accesible y mapa con título (V4, V7, V8, A5 en `/envolvente`)
+  - Archivos: `rutas/r5/templates/envolvente.html` (`<dl class="resumen">` con «Polígono» → `{{ n_vertices }} vértices` y «Área» → `{{ area_km2|num(1) }} km²`, cada uno en una sola línea; `<iframe class="mapa" title="Mapa de la envolvente">`; tabla con `<caption>Vértices de la envolvente (grados)</caption>`, `<thead>` con tres `<th scope="col">`, y en cada fila `<th scope="row">{{ loop.index }}</th>`); `rutas/r5/static/estilos.css` (sección 11 Tablas: caption, filas alternadas, `tabular-nums` en `td`, `.tabla-ancha { overflow-x: auto }`)
+  - Test primero: `::test_v4_tarjetas_envolvente` (dentro de `<dl class="resumen"`: «4 vértices» y «29,6 km²»), `::test_v8_tabla_envolvente` (`<caption>`, `<thead>`, 3 `scope="col"`, 4 `scope="row"`, sin `<th></th>`), `::test_a5_iframes_con_title` (agrega `("/envolvente", "Mapa de la envolvente")`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "envolvente or a5" && .venv/bin/python -m pytest tests/test_app_r5.py -k envolvente -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -k caso_10 -q` («14 vértices» y «1 631,5»)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: el `<dd>` del área solo lleva `{{ area }} km²`; la etiqueta «Área» está en el `<dt>`.
+
+- [x] T31 · Itinerario: resumen, leyenda con los colores del mapa, tabla y orden de la página (V4, V5, V7, A5, A7)
+  - Archivos: `rutas/r5/app.py` (la vista de itinerario pasa `colores=COLORES` dentro de `contexto`; importar `COLORES` de `rutas.r5.mapas`); `rutas/r5/templates/itinerario.html` (orden: `<dl class="resumen">` (Held-Karp `metodo-hk`, voraz `metodo-voraz`, diferencia, brecha) → `<ul class="leyenda">` con `<span class="muestra" style="background: {{ colores.held_karp }}">` y `{{ colores.voraz }}` + `<iframe class="mapa" title="Mapa del itinerario">` → `<table class="comparacion">` con `<caption>Held-Karp frente al vecino más cercano</caption>`, `<thead>` «Medida» / «Held-Karp (óptimo)» (`class="metodo-hk"`) / «Vecino más cercano (voraz)» (`class="metodo-voraz"`) con `scope="col"` y filas con `<th scope="row">` → `<section class="regla">` si `it.jornada`, con su tabla con `<caption>`); `rutas/r5/static/estilos.css` (`.metodo-hk` y `.metodo-voraz` con `var(--cocora)` y `var(--cereza)`; `.leyenda`, `.muestra`)
+  - Test primero: `::test_v4_tarjetas_itinerario` (con `_cliente`, C01 + A01..A06: dentro de `<dl class="resumen"`: `numero(hk, 1)`, `numero(voraz, 1)`, `numero(diferencia, 1)`, `numero(brecha, 2) + " %"`), `::test_a7_leyenda_con_colores` (el bloque entre `class="leyenda"` y `</ul>` contiene `COLORES["held_karp"]`, `COLORES["voraz"]`, «Held-Karp» y «Vecino más cercano»), `::test_v5_tabla_comparacion` (`<caption>Held-Karp frente al vecino más cercano</caption>`, `<th scope="col">Medida</th>`, 6 `scope="row"` en la tabla de comparación, sin `<th></th>`, encabezados con `metodo-hk` y `metodo-voraz`), `::test_v5_orden_de_la_pagina` (carpeta con `visitas=[120] * 6`: posición de `class="resumen"` < `class="leyenda"` < `<iframe` < `class="comparacion"` < `class="regla"`), `::test_a5_iframes_con_title` (agrega el itinerario, «Mapa del itinerario»). Rojo: hoy el mapa va al final y no hay leyenda
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "itinerario or a7 or v5 or a5" && .venv/bin/python -m pytest tests/test_app_r5.py -k "itinerario or caso_8 or caso_14" -q && .venv/bin/python -m pytest tests/test_mapas_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -k "caso_9 or no_cabe or formulario" -q` («178,7», «190,4», «11,8»; sin «Regla de las 11 h» cuando cabe)
+  - anotar en `docs/anexo-ia.md`
+  - Nota: `<dl class="resumen">` usa `<div class="tarjeta">` por cada par `dt`/`dd` (HTML válido). La tabla de la regla usa `<th scope="row">` para el lugar. En la tarjeta y en el encabezado de cada método el color sale de `.metodo-hk` / `.metodo-voraz` (CSS), y la leyenda usa `COLORES` con `style` en línea.
+
+- [x] T32 · Resultados: títulos legibles, imágenes descritas, tablas con `<caption>` y navegación R1–R4 (V8, V9, A3 en resultados, A8)
+  - Archivos: `rutas/r5/app.py` (`TITULOS_RESULTADOS` con los 15 títulos y descripciones del plan; `TAMANOS_IMAGENES`; `tabla_con_titulo(html, descripcion, archivo)` con `markupsafe.escape`; `presentar_resultados(crudo)`; la vista pasa `seccion="resultados"`, `requerimientos=list(ARCHIVOS_RESULTADOS)` y `**presentar_resultados(resultados(r, results))`); `rutas/r5/templates/resultados.html` (como en el plan: `<nav class="requerimientos" aria-label="Resultados por requerimiento">` con R1–R4 y `aria-current="true"` en el actual; `<figure class="grafica">` con `<h2>`, `<p class="descripcion">` + `<code>archivo</code>` e `<img … alt="{{ descripcion }}" width height loading="lazy">`; tablas en `<div class="tabla-ancha">`; `<section class="faltantes">` con `<h2>Faltan</h2>` solo si hay); `rutas/r5/static/estilos.css` (sección 12 Resultados)
+  - Test primero: `::test_titulos_cubren_la_lista_fija` (las claves de `TITULOS_RESULTADOS` son exactamente los 15 archivos de `ARCHIVOS_RESULTADOS`; títulos no vacíos, distintos entre sí y distintos del nombre del archivo; cada descripción termina en «.» y no contiene «Faltan» ni «Regla de las 11 h»; `TITULOS_RESULTADOS["r2_cociente.csv"][0] == "Cociente lineal / cola de prioridad (10 pares cercanos)"`), `::test_tamanos_de_imagenes` (claves = las 4 imágenes; para `r2_tiempo_vs_explorados.png` y `r3_envolvente.png` de `results/` real, `(ancho, alto)` = los enteros de la cabecera IHDR de la PNG, leídos con `struct` en la prueba), `::test_tabla_con_titulo` (entrada `<table class="dataframe tabla"><thead><tr><th>a</th></tr></thead>…` y descripción `"x < y."` → el `<caption>` va justo después de la etiqueta `<table …>`, contiene `x &lt; y.` y `<code>archivo.csv</code>`; todos los `<th>` llevan `scope="col"`; las celdas no cambian), `::test_a8_imagen_y_titulo` (`/resultados/r2` sintético: la etiqueta `<img` tiene `alt` no vacío y distinto de `r2_tiempo_vs_explorados.png`, `width="1050"`, `height="675"` y `loading="lazy"`; aparece «Cociente lineal / cola de prioridad (10 pares cercanos)»), `::test_v8_tablas_de_resultados` (en `/resultados/r2` sintético: cada `<table` va seguida de `<caption>` y está dentro de `class="tabla-ancha"`; número de `class="tabla-ancha"` = número de tablas; hay `scope="col"`), `::test_v9_navegacion_requerimientos` (`/resultados/r3`: enlaces `href="/resultados/r1"` … `r4` dentro de `class="requerimientos"`; `aria-current="true"` en el de r3; un solo `aria-current="page"`, en «Resultados»), `::test_faltantes_con_titulo` (`/resultados/r4` sintético: el bloque `class="faltantes"` contiene el título de `r4_exactas.csv`, `r4_exactas.csv` y `python -m rutas.r4.medir_exactas`)
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "titulos or tamanos or tabla_con_titulo or a8 or v8_tablas or v9 or faltantes or a3" && .venv/bin/python -m pytest tests/test_app_r5.py -k "caso_11 or caso_12" -q && .venv/bin/python -m pytest tests/test_servicios_r5.py -k "resultados or lista_fija" -q` (en especial `test_caso_11_resultados_r2` («r2_cociente.csv» visible) y `test_caso_11_cuatro_paginas_reales` (sin «Faltan» en r2 y r3))
+  - Nota para después: cuando exista `results/r4/r4_tiempo_vs_k.png`, actualizar su tamaño en `TAMANOS_IMAGENES` (hoy aproximado) y agregarlo a `test_tamanos_de_imagenes`.
+  - anotar en `docs/anexo-ia.md`
+  - Nota: DESVIACIÓN DE CONTEO: la lista fija `ARCHIVOS_RESULTADOS` tiene **16** archivos (5 + 4 + 2 + 5), no 15 como dice el plan; `TITULOS_RESULTADOS` tiene los 16 y la prueba exige `== 16`. Se cambió además «origen–destino» por «origen-destino» (guion simple) en dos descripciones. Sigue pendiente actualizar el tamaño de `r4_tiempo_vs_k.png` cuando exista.
+
+- [x] T33 · Inicio con cuatro tarjetas (V10)
+  - Archivos: `rutas/r5/templates/inicio.html` (`<ul class="secciones">` con 4 `<li class="tarjeta-seccion">`, los textos del plan; corrige «envolvente convexa de los 42 lugares» por los nodos de la red); `rutas/r5/static/estilos.css` (sección 13 Inicio)
+  - Test primero: `::test_v10_inicio_tarjetas` (`GET /`: 4 `class="tarjeta-seccion"`; dentro de ellas `href="/ruta"`, `href="/envolvente"`, `href="/itinerario"`, `href="/resultados/r1"`; textos «Dijkstra con cola de prioridad», «QuickHull», «Held-Karp», «vecino más cercano»; contiene «nodos de la red» y no «envolvente convexa de los 42 lugares»; `aria-current="page"` en la marca)
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k v10 && .venv/bin/python -m pytest tests/test_app_r5.py -k "inicio or algoritmos" -q`
+  - anotar en `docs/anexo-ia.md`
+  - Nota: sin desviaciones.
+
+- [x] T34 · Suite completa y restricciones del ajuste (cierre automático de B5)
+  - Archivos: ninguno nuevo (R5 no genera resultados: no hay archivos que regenerar)
+  - Test primero: no aplica
+  - Comando:
+    ```bash
+    cd /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio && .venv/bin/python -m pytest && git diff --stat -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 rutas/r5/servicios.py rutas/r5/datos.py rutas/r5/formato.py requirements.txt .gitignore Dockerfile && git diff --stat -- tests/test_app_r5.py tests/test_red_real_r5.py tests/test_mapas_r5.py && grep -c "<style" rutas/r5/templates/base.html; wc -l rutas/r5/static/estilos.css
+    ```
+  - Verificar: todas las pruebas pasan (las de antes más las de `tests/test_visual_r5.py`; las `red` de R5 corren sin saltar); los dos `git diff --stat` están vacíos (nada prohibido tocado y las pruebas actuales sin cambios); `grep -c "<style"` da 0; `estilos.css` tiene unas 200 líneas (orientativo). Anotar el conteo final de pruebas aquí
+  - Cierre de B5 (automático): en verde → seguir con T35
+  - anotar en `docs/anexo-ia.md`
+  - Resultado (2026-11-12, implementer): `-m "not red"`: 540 pasan, 1 se salta, 1 falla (`test_app_r5.py::test_puerto_por_defecto`, porque el puerto 5050 está ocupado por un proceso ajeno, PID 71719, que ya corría antes de empezar B5; con el puerto libre no depende del ajuste: no toca la plantilla ni `main`). `-m red`: 39 pasan y 2 se saltan (los dos conocidos: `test_red_real.py:79` y `test_red_real_r4.py:126`; las `red` de R5 corren). Suite completa: 579 pasan, 3 se saltan, 1 falla (la misma). Pruebas nuevas: 44 en `tests/test_visual_r5.py`. Los dos `git diff --stat` (prohibidos y pruebas actuales) salen vacíos; `grep -c "<style" base.html` = 0; `estilos.css` tiene 148 líneas; sin `<script`, `javascript:`, `@import` ni `url(http`. `curl` con la app en el puerto 5071 (ya detenida): `/static/estilos.css` (text/css), `/`, `/ruta`, `/ruta?origen=C01&destino=C12`, `/envolvente`, `/itinerario?...` (caso 5) y `/resultados/r1..r4` dan 200. Mutaciones vistas fallar y restauradas: `COLORES["voraz"]` distinto del CSS, `<style>` en base, sin `scope="row"` en la tabla de la envolvente, `<span>` en el `<h2>` de la ruta (falla la prueba actual del texto de `#resultado-ruta`) y `transition: all`.
+  - Pendiente para el usuario: **«El puerto 5050 está ocupado»**: cerrar el servidor viejo (PID 71719) para que `test_puerto_por_defecto` pase; ese servidor usa las plantillas anteriores hasta que se reinicie.
+
+- [ ] T35 · Revisión manual en el navegador (A10) → `review.md`
+  - Archivos: ninguno de código; el resultado lo escribe el usuario (o el reviewer con el usuario) en `specs/r5-aplicacion/review.md`, sección «Ajuste visual (A10)»
+  - Test primero: no aplica (manual)
+  - URLs a revisar (con la app en el puerto 5050, cerrando antes el servidor viejo): `/`, `/ruta?origen=C01&destino=C12`, `/ruta?origen=C01&destino=C01`, `/envolvente`, `/itinerario?partida=C01&atractivos=A05&atractivos=A14&atractivos=A06&atractivos=A07&atractivos=A13&atractivos=A15`, el mismo con los 8 del caso 6 (`A05, A08, A04, A14, A06, A07, A12, A01`), `/itinerario?partida=C01&atractivos=A01` (error) y `/resultados/r1` a `/resultados/r4`.
+  - Preparación: `.venv/bin/python -m rutas.r5.app` y abrir `http://127.0.0.1:5050` en el navegador; tener a mano las herramientas de desarrollo (modo de diseño adaptable)
+  - Lista de pasos, **a ancho de escritorio (≈ 1280 px)** y **a ≈ 375 px** (modo adaptable, p. ej. iPhone SE 375 × 667):
+    1. Cabecera: se ven las curvas de nivel; el texto del menú se lee bien sobre ellas (contraste); a 375 px el menú se parte en dos líneas y **no hay desplazamiento horizontal** en ninguna página.
+    2. Teclado: con Tab desde la barra de direcciones aparece «Saltar al contenido» y lleva a `main`; el foco se ve en enlaces, selects, casillas y botones; la sección actual del menú se distingue.
+    3. Inicio: cuatro tarjetas legibles; «Resultados» lleva a R1 con la navegación R1–R4.
+    4. Ruta C01 → C12: etiquetas encima de los selects; botón «Calcular ruta» (se hunde un poco al presionarlo); tarjetas con «29,7 min», km y nodos; el mapa ocupa el ancho y una altura cómoda en las dos anchuras. C01 → C01: el aviso se ve como aviso.
+    5. Envolvente: tarjetas con «14 vértices» y «1 631,5 km²»; polígono en Hoja; tabla con título.
+    6. Itinerario con C01 y A05, A14, A06, A07, A13, A15: casillas en 2–3 columnas en escritorio y 1 a 375 px, con la duración alineada; resumen → leyenda y mapa → tabla; **los colores de la leyenda coinciden con las líneas del mapa** (Held-Karp azul Cocora, voraz rojo Cereza) y con el encabezado de la tabla. Con los 8 del caso 6, el bloque de la regla aparece al final. Con 5 casillas, el error se ve como error.
+    7. Resultados R1–R4: títulos legibles con su línea de descripción; imágenes escaladas sin deformarse; a 375 px las tablas anchas se desplazan **dentro** de su contenedor; R1 y R4 muestran los faltantes con su comando.
+    8. Movimiento: con el mouse, los cambios de color son suaves; en las herramientas de desarrollo, emular `prefers-reduced-motion: reduce` y comprobar que el botón ya no se escala.
+    9. Capturas para el documento técnico (sección 7.1): las cuatro secciones a ancho de escritorio (y, si se quiere, una a 375 px).
+  - Verificar: `review.md` registra fecha, quién, navegador y versión, las dos anchuras y el resultado de cada paso. Si algo obliga a cambiar el CSS o una plantilla, se corrige y se vuelve a correr el comando de T34 antes de cerrar
+  - Opcional, en la misma sesión: los pasos de navegador pendientes de los casos 16 y 17 (T23)
+  - Cierre de B5: suite en verde (T34) y A10 anotado. **DETENERSE** hasta el commit del usuario
+  - anotar en `docs/anexo-ia.md` (si se usó IA para revisar las capturas o redactar `review.md`)
+
 ## Cobertura
 
 | Caso / punto | Tarea |
@@ -258,3 +365,31 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 | R5 ejecución local con el README / Docker opcional | T18, T20, T21, T23 |
 | Secciones 7 y 8 (aplicación que muestra resultados y funciona con el README) | T17, T19, T21, T23, T24 |
 | Anexo de IA | T22 (y cada tarea con IA) |
+
+### Cobertura del ajuste visual (B5)
+
+| Punto / caso | Tarea |
+|---|---|
+| V0 paleta | T26 |
+| V0 tipografía, curvas de nivel, movimiento | T27, T35 |
+| V0 textos (botones con verbo concreto, inicio) | T28, T33 |
+| V1 hoja propia sin CSS en línea | T26, T27 |
+| V2 viewport, saltar, `aria-current`, foco, menú en 375 px | T27, T35 |
+| V3 formularios | T28 |
+| V4 tarjetas de resumen | T29, T30, T31 |
+| V5 colores, leyenda, tabla y orden del itinerario | T26, T31 |
+| V6 mensajes con `role` | T28 |
+| V7 iframes con `title` y altura adaptable | T29, T30, T31, T35 |
+| V8 tablas | T30, T32 |
+| V9 resultados | T32 |
+| V10 inicio | T33 |
+| A1, A2, A3 | T27 (A3 en resultados también T32) |
+| A4, A6 | T28 |
+| A5 | T29, T30, T31 |
+| A7 | T31 |
+| A8 | T32 |
+| A9 | T25, T26 |
+| A10 (manual) | T35 |
+| A11 | T26 |
+| Pruebas actuales intactas («29,7», «178,7», «190,4», «11,8», «14 vértices», «1 631,5») | T25–T34 (regresión de cada tarea), T34 |
+| Sin dependencias; `servicios.py` y R1–R4 sin tocar | T25, T34 |

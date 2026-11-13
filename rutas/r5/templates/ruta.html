@@ -2,28 +2,30 @@
 {% block contenido %}
 <h1>Ruta entre dos lugares</h1>
 <form method="get" action="/ruta">
-  Origen
-  <select name="origen">
+  <label for="origen">Origen</label>
+  <select id="origen" name="origen">
     {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == origen %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
   </select>
-  Destino
-  <select name="destino">
+  <label for="destino">Destino</label>
+  <select id="destino" name="destino">
     {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == destino %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
   </select>
-  <button type="submit">Calcular</button>
+  <button type="submit">Calcular ruta</button>
 </form>
 
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
 {% if ruta %}
 <div id="resultado-ruta">
 <h2>{{ ruta.origen }} {{ nombre_de[ruta.origen] }} → {{ ruta.destino }} {{ nombre_de[ruta.destino] }}</h2>
-<p>Tiempo de viaje: <strong>{{ ruta.tiempo_min|num(1) }} min</strong> ({{ ruta.tiempo_s|num(1) }} s)</p>
-<p>Distancia: {{ ruta.distancia_km|num(2) }} km</p>
-<p>Nodos explorados: {{ ruta.nodos_explorados|num(0) }} ·
-   Cómputo: {{ ruta.computo_ms|num(3) }} ms (informativo, no es la medición de R2)</p>
-{% if ruta.aviso %}<p class="aviso">{{ ruta.aviso }}</p>{% endif %}
-<iframe srcdoc="{{ mapa }}"></iframe>
+<dl class="resumen">
+  <div class="tarjeta"><dt>Tiempo de viaje</dt><dd>{{ ruta.tiempo_min|num(1) }} min <small>({{ ruta.tiempo_s|num(1) }} s)</small></dd></div>
+  <div class="tarjeta"><dt>Distancia</dt><dd>{{ ruta.distancia_km|num(2) }} km</dd></div>
+  <div class="tarjeta"><dt>Nodos explorados</dt><dd>{{ ruta.nodos_explorados|num(0) }}</dd></div>
+</dl>
+<p class="nota">Cómputo: {{ ruta.computo_ms|num(3) }} ms (informativo, no es la medición de R2)</p>
+{% if ruta.aviso %}<p class="aviso" role="status">{{ ruta.aviso }}</p>{% endif %}
+<iframe class="mapa" title="Mapa de la ruta" srcdoc="{{ mapa }}"></iframe>
 </div>
 {% endif %}
 {% endblock %}

@@ -2,48 +2,73 @@
 {% block contenido %}
 <h1>Itinerario del día</h1>
 <form method="get" action="/itinerario">
-  Partida
-  <select name="partida">
+  <label for="partida">Partida</label>
+  <select id="partida" name="partida">
     {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == partida %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
   </select>
-  <p>Atractivos (de 6 a 8):</p>
-  {% for id in atractivos %}
-  <label><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> {{ id }} · {{ nombre_de[id] }} ({{ visita_min[id]|num(0) }} min)</label><br>
-  {% endfor %}
-  <button type="submit">Calcular</button>
+  <fieldset>
+    <legend>Atractivos (elige de 6 a 8)</legend>
+    <div class="casillas">
+      {% for id in atractivos %}
+      <label class="casilla"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">{{ id }}</span> {{ nombre_de[id] }} <span class="visita">{{ visita_min[id]|num(0) }} min</span></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <button type="submit">Calcular itinerario</button>
 </form>
 
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
 {% if it %}
 {% set hk = it.held_karp %}{% set vo = it.voraz %}
-<h2>Comparación</h2>
-<table>
-  <tr><th></th><th>Held-Karp (óptimo)</th><th>Vecino más cercano (voraz)</th></tr>
-  <tr><td>Orden de visita</td>
+<dl class="resumen">
+  <div class="tarjeta metodo-hk"><dt>Held-Karp (óptimo)</dt><dd>{{ hk.desplazamiento_min|num(1) }} min</dd></div>
+  <div class="tarjeta metodo-voraz"><dt>Vecino más cercano (voraz)</dt><dd>{{ vo.desplazamiento_min|num(1) }} min</dd></div>
+  <div class="tarjeta"><dt>Diferencia</dt><dd>{{ it.diferencia_min|num(1) }} min</dd></div>
+  <div class="tarjeta"><dt>Brecha</dt><dd>{{ it.brecha_pct|num(2) }} %</dd></div>
+</dl>
+
+<ul class="leyenda">
+  <li><span class="muestra" style="background: {{ colores.held_karp }}"></span>Held-Karp (óptimo)</li>
+  <li><span class="muestra" style="background: {{ colores.voraz }}"></span>Vecino más cercano (voraz)</li>
+</ul>
+<iframe class="mapa" title="Mapa del itinerario" srcdoc="{{ mapa }}"></iframe>
+
+<div class="tabla-ancha">
+<table class="comparacion">
+  <caption>Held-Karp frente al vecino más cercano</caption>
+  <thead><tr><th scope="col">Medida</th><th scope="col" class="metodo-hk">Held-Karp (óptimo)</th><th scope="col" class="metodo-voraz">Vecino más cercano (voraz)</th></tr></thead>
+  <tbody>
+  <tr><th scope="row">Orden de visita</th>
       <td>{% for id in hk.recorrido %}{{ nombre_de[id] }}{% if not loop.last %} → {% endif %}{% endfor %}</td>
       <td>{% for id in vo.recorrido %}{{ nombre_de[id] }}{% if not loop.last %} → {% endif %}{% endfor %}</td></tr>
-  <tr><td>Desplazamiento (min)</td><td>{{ hk.desplazamiento_min|num(1) }}</td><td>{{ vo.desplazamiento_min|num(1) }}</td></tr>
-  <tr><td>Visitas (min)</td><td>{{ hk.visitas_min|num(1) }}</td><td>{{ vo.visitas_min|num(1) }}</td></tr>
-  <tr><td>Jornada (h)</td><td>{{ (hk.jornada_min / 60)|num(2) }}</td><td>{{ (vo.jornada_min / 60)|num(2) }}</td></tr>
-  <tr><td>Cabe en 11 h</td><td>{{ "Sí" if hk.cabe else "No" }}</td><td>{{ "Sí" if vo.cabe else "No" }}</td></tr>
-  <tr><td>Cómputo (ms, informativo)</td><td>{{ hk.computo_ms|num(3) }}</td><td>{{ vo.computo_ms|num(3) }}</td></tr>
+  <tr><th scope="row">Desplazamiento (min)</th><td>{{ hk.desplazamiento_min|num(1) }}</td><td>{{ vo.desplazamiento_min|num(1) }}</td></tr>
+  <tr><th scope="row">Visitas (min)</th><td>{{ hk.visitas_min|num(1) }}</td><td>{{ vo.visitas_min|num(1) }}</td></tr>
+  <tr><th scope="row">Jornada (h)</th><td>{{ (hk.jornada_min / 60)|num(2) }}</td><td>{{ (vo.jornada_min / 60)|num(2) }}</td></tr>
+  <tr><th scope="row">Cabe en 11 h</th><td>{{ "Sí" if hk.cabe else "No" }}</td><td>{{ "Sí" if vo.cabe else "No" }}</td></tr>
+  <tr><th scope="row">Cómputo (ms, informativo)</th><td>{{ hk.computo_ms|num(3) }}</td><td>{{ vo.computo_ms|num(3) }}</td></tr>
+  </tbody>
 </table>
-<p>Diferencia voraz − Held-Karp: {{ it.diferencia_min|num(1) }} min (brecha {{ it.brecha_pct|num(2) }} %)</p>
+</div>
 
 {% if it.jornada %}
+<section class="regla">
 <h2>Regla de las 11 h (R4, informativo)</h2>
 <p>Held-Karp no cabe en 11 h; la regla quitaría estos atractivos (el mapa muestra los que elegiste):</p>
+<div class="tabla-ancha">
 <table>
-  <tr><th>Lugar</th><th>Visita (min)</th><th>Desvío (min)</th><th>Ahorro (min)</th></tr>
+  <caption>Atractivos que quita la regla</caption>
+  <thead><tr><th scope="col">Lugar</th><th scope="col">Visita (min)</th><th scope="col">Desvío (min)</th><th scope="col">Ahorro (min)</th></tr></thead>
+  <tbody>
   {% for q in it.jornada.quitados %}
-  <tr><td>{{ q.id }} · {{ q.lugar }}</td><td>{{ q.visita_min|num(1) }}</td><td>{{ q.desvio_min|num(1) }}</td><td>{{ q.ahorro_min|num(1) }}</td></tr>
+  <tr><th scope="row">{{ q.id }} · {{ q.lugar }}</th><td>{{ q.visita_min|num(1) }}</td><td>{{ q.desvio_min|num(1) }}</td><td>{{ q.ahorro_min|num(1) }}</td></tr>
   {% endfor %}
+  </tbody>
 </table>
+</div>
 <p>Jornada final: {{ it.jornada.jornada_final_min|num(1) }} min
    ({{ "cabe" if it.jornada.cabe_final else "todavía no cabe" }} en 11 h)</p>
+</section>
 {% endif %}
-
-<iframe srcdoc="{{ mapa }}"></iframe>
 {% endif %}
 {% endblock %}

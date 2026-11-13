@@ -1,6 +1,6 @@
 # Aplicación — Requerimiento 5
 Enunciado: sección 5, Requerimiento 5 (párrafo inicial, punto 1 con sus cuatro viñetas y la viñeta de ejecución local); sección 7 (entregable «Aplicación: ejecutable localmente siguiendo el README»); sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»). Peso: 5 %.
-Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (497 sin red; 14 de R5 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la revisión en el navegador de los casos 16 y 17)
+Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (497 sin red; 14 de R5 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la revisión en el navegador de los casos 16 y 17) · ☑ ajuste visual: spec aprobada (2026-11-12) · ☑ plan (Puerta 2, 2026-11-12) · ☐ código
 Depende de:
 - `r1-red-vial` (cerrado): `rutas.r1.persistencia` (`cargar_grafo_procesado`, `cargar_lugares_nodos`), `rutas.r1.aristas.mejor_arista` (geometría de cada tramo) y `data/catalogo.csv`.
 - `r2-dijkstra` (cerrado): `rutas.r2.adyacencia.construir_adyacencia`, `rutas.r2.dijkstra.consultar` (versión `cola_prioridad`), `rutas.r2.ruta.detalle_ruta` y `rutas.r2.matriz.cargar_matriz`.
@@ -187,7 +187,7 @@ No se mide en R5: no se aplica el protocolo de la sección 6. Los `computo_ms` d
 
 Uso de IA en `docs/anexo-ia.md`.
 
-## Ajuste visual (2026-11-12, en Puerta 1 del ajuste)
+## Ajuste visual (2026-11-12, aprobado en Puerta 1 del ajuste el 2026-11-12)
 Origen: decisión del grupo de mejorar la parte visual con una auditoría y CSS propio (`specs/r5-aplicacion/auditoria-visual.md`, hecha con la skill `web-design-guidelines`). El enunciado no evalúa el diseño en R5. Esto ayuda en la sustentación y en las capturas del documento técnico, pero **no cambia lo que se calcula ni lo que se muestra**. Restricciones:
 - sin JavaScript propio (la guardia sigue vigente);
 - sin dependencias nuevas;
@@ -218,7 +218,7 @@ V0. **Dirección visual.** Sale de las skills `frontend-design` (anthropics/skil
   - con `prefers-reduced-motion: reduce` se quita la escala y se dejan solo los cambios de color.
 - **Textos:** voz activa y verbos concretos. Los errores dicen qué pasó y cómo arreglarlo, sin disculparse.
 
-V1. **Hoja de estilos propia** en `rutas/r5/static/estilos.css`, servida por Flask como estático. `base.html` la enlaza y deja de tener el CSS en línea. Debe ser corta y comentada por secciones, para que cada integrante pueda explicarla. Usa variables CSS para los colores, con la paleta café del menú actual y los dos colores de método del punto V5.
+V1. **Hoja de estilos propia** en `rutas/r5/static/estilos.css`, servida por Flask como estático. `base.html` la enlaza y deja de tener el CSS en línea. Debe ser corta y comentada por secciones, para que cada integrante pueda explicarla. Usa variables CSS para los colores, con la paleta de V0 (5 colores base y los 2 de método, usados también en V5).
 V2. **Base:**
 - `<meta name="viewport">` y enlace «Saltar al contenido» hacia `<main id="contenido">`;
 - menú con `aria-current="page"` en la sección activa (la vista pasa el nombre de la sección) y estados `:hover` y `:focus-visible` en enlaces y botones;
