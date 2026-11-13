@@ -103,6 +103,19 @@ def test_v0_tipos_firma_y_movimiento():
         assert fragmento in css, fragmento
 
 
+def test_v0_cifras_tabulares():
+    """Las cifras de las tarjetas, de las celdas y la duración de visita de las casillas usan dígitos de ancho fijo, para que las columnas alineen."""
+    css = _css()
+    assert re.search(r"\.tarjeta dd\s*\{[^}]*font-variant-numeric:\s*tabular-nums", css), \
+        "el bloque «.tarjeta dd» debe aplicar font-variant-numeric: tabular-nums"
+    # `^td` al inicio de línea: evita confundirlo con el bloque «th, td».
+    assert re.search(r"(?m)^td\s*\{[^}]*font-variant-numeric:\s*tabular-nums", css), \
+        "el bloque «td» debe aplicar font-variant-numeric: tabular-nums"
+    # La duración de visita de las casillas (`.visita`) también lleva cifras tabulares.
+    assert re.search(r"(?m)^\.visita\s*\{[^}]*font-variant-numeric:\s*tabular-nums", css), \
+        "el bloque «.visita» debe aplicar font-variant-numeric: tabular-nums"
+
+
 # ---- T28: formularios y mensajes (A4, A6, V3, V6) ----
 def test_a4_labels_y_botones(cliente_app):
     ruta = cliente_app.get("/ruta").get_data(as_text=True)
