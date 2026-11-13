@@ -144,3 +144,120 @@ Ninguno.
 - El comando de arranque (`.venv/bin/python -m rutas.r5.app`) y la alternativa con Docker.
 - Una frase de complejidad que remita a R2 y R4 (la app no agrega algoritmos) y aclare que los `computo_ms` de la pantalla son informativos y no son la medición del protocolo.
 - Pendientes de otros requerimientos que la app ya avisa: la medición real de R4 (`r4_exactas.csv`, `r4_tiempo_vs_k.png`, «Reproducir R4» en el README) y la gráfica de R1 (`r1_tiempos_componente.png`).
+
+## Ronda 2: ajuste visual (B5): APROBADO
+
+Fecha: 2026-11-12. Revisa el commit `1e27b50` (B5, T25 a T34) más el cambio sin commit de `tests/test_app_r5.py` (simulación de `puerto_libre`). El veredicto cubre lo automatizable. **A10 (T35, revisión manual en el navegador) queda pendiente del usuario** y no se da por hecha.
+
+Pruebas: ✅ (corridas por el revisor, con la instancia del usuario escuchando en 5050)
+- `.venv/bin/python -m pytest -m "not red"` → 541 pasan, 1 se salta, 41 deseleccionadas (8,6 s). `test_puerto_por_defecto` y `test_main_arranca` pasan aunque el 5050 esté ocupado.
+- `.venv/bin/python -m pytest -m red -rs` → 39 pasan, 2 se saltan (los conocidos: `tests/test_red_real.py:79`, falta `radio_2km.graphml`; `tests/test_red_real_r4.py:126`, falta `r4_exactas.csv`). Las `red` de R5 corren todas.
+- `tests/test_visual_r5.py` → 44 pasan.
+
+**No-regresión.** `git diff dfe3b60 -- tests/test_app_r5.py tests/test_red_real_r5.py tests/test_mapas_r5.py` muestra solo las 2 líneas nuevas de `_main_con_run_falso` (`tests/test_app_r5.py:242-243`), que simulan `rutas.r5.app.puerto_libre` con `True`. Solo la usan `test_main_arranca` y `test_puerto_por_defecto`. `test_puerto_ocupado` (línea 227) no pasa por ahí y sigue ocupando un socket real, así que el caso «puerto ocupado → 1» sigue probado de verdad. `main` llama a `puerto_libre` por nombre global (`app.py:211`), por lo que la simulación sí tiene efecto. No se debilitó ninguna aserción: siguen «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5».
+
+**Archivos prohibidos.** `git diff --stat dfe3b60` sobre `rutas/r5/servicios.py`, `datos.py`, `formato.py`, `rutas/r1..r4`, `requirements.txt`, `.gitignore` y `Dockerfile` sale vacío. En `mapas.py` solo cambia la línea de `COLORES` (`mapas.py:8`).
+
+| Caso / punto de la spec | Cumplido | Test |
+|---|---|---|
+| A1 hoja servida, sin `<style>` | ✅ | `tests/test_visual_r5.py::test_a1_estilos_servidos`, `::test_a1_base_sin_style` |
+| A2 viewport, saltar, `id="contenido"` (12 URLs, incluidas las 400) | ✅ | `::test_a2_viewport_y_saltar` |
+| A3 un solo `aria-current="page"` y en el enlace correcto | ✅ | `::test_a3_aria_current`, `::test_v9_navegacion_requerimientos` |
+| A4 labels, fieldset, legend y botones | ✅ | `::test_a4_labels_y_botones` |
+| A5 `title` en cada iframe | ✅ | `::test_a5_iframes_con_title` (3 páginas) |
+| A6 `role="alert"` / `role="status"` | ✅ | `::test_a6_alert_y_status` |
+| A7 leyenda con los hex de `COLORES` | ✅ | `::test_a7_leyenda_con_colores` |
+| A8 imagen (alt, width, height, lazy) y título legible | ✅ | `::test_a8_imagen_y_titulo`, `::test_tamanos_de_imagenes` (IHDR real) |
+| A9 sin JS propio | ✅ | `::test_a9_sin_js_propio`, `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio` |
+| A10 revisión manual en el navegador | ⏳ usuario (T35) | — |
+| A11 7 variables; sin `transition: all`, `@import` ni `url(http`; `COLORES` = Cocora/Cereza/Hoja | ✅ | `::test_a11_paleta_en_css`, `::test_a11_sin_transition_all_ni_externos`, `::test_a11_colores_de_mapas` |
+| V0 paleta | ✅ | `::test_a11_paleta_en_css` |
+| V0 tipografía, firma y movimiento | ✅ (texto del CSS) | `::test_v0_tipos_firma_y_movimiento`; el aspecto, en A10 |
+| V0 textos (verbos concretos) | ✅ | `::test_a4_labels_y_botones`, `::test_v10_inicio_tarjetas` |
+| V1 hoja propia | ✅ | `::test_a1_*` |
+| V2 viewport, saltar, `aria-current`, foco | ✅ | `::test_a2_*`, `::test_a3_*`, `::test_v0_*` (`:focus-visible`); 375 px en A10 |
+| V3 formularios | ✅ | `::test_a4_*`, `::test_v3_fieldset_y_cuadricula` |
+| V4 tarjetas | ✅ (parcial: `tabular-nums` sin prueba, ver sugerencia 1) | `::test_v4_tarjetas_ruta`, `::test_v4_tarjetas_envolvente`, `::test_v4_tarjetas_itinerario` |
+| V5 colores, leyenda, tabla y orden | ✅ (parcial: el color del encabezado sin prueba, ver sugerencia 2) | `::test_a7_*`, `::test_v5_tabla_comparacion`, `::test_v5_orden_de_la_pagina` |
+| V6 mensajes con `role` | ✅ | `::test_a6_alert_y_status` |
+| V7 iframes con `title` y altura adaptable | ✅ (la altura, en A10) | `::test_a5_*` |
+| V8 tablas | ✅ | `::test_v8_tabla_envolvente`, `::test_tabla_con_titulo`, `::test_v8_tablas_de_resultados` |
+| V9 resultados | ✅ | `::test_titulos_cubren_la_lista_fija`, `::test_tamanos_de_imagenes`, `::test_a8_*`, `::test_v9_*`, `::test_faltantes_con_titulo` |
+| V10 inicio | ✅ | `::test_v10_inicio_tarjetas` |
+
+### Comprobaciones propias del revisor
+
+**Restricciones.** En el HTML servido no hay `<script` fuera del `srcdoc` de Folium ni `<style` (comprobado en las 11 URLs). `estilos.css` no tiene `@import`, `url(` ni fuentes externas. Las únicas URL externas están dentro del `srcdoc` de los mapas (Leaflet, CDN y mosaicos de OSM), igual que antes de B5; la spec las admite. El `style="background: …"` de la leyenda (`itinerario.html:32-33`) es un atributo, aprobado en la Puerta 2 (V-1 a V-11).
+
+**`estilos.css` (148 líneas, 15 secciones comentadas).** Se lee de corrido, con un comentario por sección que dice para qué sirve, y usa solo variables de la paleta más `#fff`. Cualquier integrante lo puede explicar.
+- Especificidad: no encontré reglas que se anulen. Las parejas que podrían chocar ganan en el orden correcto: `.menu a:hover` (0,2,1) sobre `.cabecera a` (0,1,1); `.cabecera [aria-current="page"]` (0,2,0) sobre `.menu a` (0,1,1); `thead .metodo-hk` (0,1,1) sobre `thead th` (0,0,2); `.tarjeta.metodo-hk` (0,2,0) sobre `.tarjeta`; `.casilla` sobre `label`. Selectores de uno o dos niveles, sin `!important`.
+- Movimiento: no hay `transition: all`. El botón usa `transition: transform 160ms ease-out` y `:active { transform: scale(0.97) }`. Los cambios de color al pasar el mouse (150 ms) están solo dentro de `@media (hover: hover) and (pointer: fine)` (`estilos.css:131-135`). `prefers-reduced-motion: reduce` (`:136-139`) va después, con la misma especificidad, así que gana: quita la escala y deja solo las transiciones de color, como pide la skill emil-design-eng.
+- Desviación menor del plan, no anotada en tasks: el plan ponía `.menu a:hover` en Niebla y `button:hover` en Guadua. Eso último no habría hecho nada, porque el botón ya es Guadua. El código usa Bahareque y Cocora (`estilos.css:133-134`). Es una mejora y el contraste sigue bien (ver tabla).
+
+**Contraste WCAG 2.x** (luminancia relativa sRGB, calculada con un script; AA pide ≥ 4,5:1 para texto normal y ≥ 3:1 para texto grande y para contornos de controles):
+
+| Par | Razón | AA texto |
+|---|---|---|
+| Tinta `#1D2521` sobre Niebla `#F3F6F4` | 14,42:1 | ✅ (AAA) |
+| Tinta sobre blanco (tarjetas y tablas) | 15,69:1 | ✅ |
+| Blanco sobre Guadua `#2F4A3A` (menú, botón, `thead`) | 9,72:1 | ✅ (AAA) |
+| Blanco sobre la línea de las curvas (Hoja al 35 % sobre Guadua ≈ `#3F6148`) | 6,97:1 | ✅ (el peor caso del menú) |
+| Cocora `#1F5F8B` sobre Niebla | 6,29:1 | ✅ |
+| Cereza `#B8322A` sobre Niebla | 5,47:1 | ✅ |
+| Cocora / Cereza sobre blanco | 6,84:1 / 5,95:1 | ✅ |
+| Blanco sobre Cocora (`thead` de Held-Karp, botón al pasar el mouse) | 6,84:1 | ✅ |
+| Blanco sobre Cereza (`thead` del voraz) | 5,95:1 | ✅ |
+| Enlaces Guadua sobre Niebla / sobre blanco | 8,93:1 / 9,72:1 | ✅ (AAA) |
+| Bahareque sobre Guadua (menú al pasar el mouse) | 7,01:1 | ✅ |
+| Anillo de foco: Cocora sobre Niebla / Niebla sobre Guadua | 6,29:1 / 8,93:1 | ✅ (≥ 3:1) |
+| Hoja `#5E8C61` sobre Niebla | 3,57:1 | No apta para texto; solo se usa en bordes (≥ 3:1 ✅). Ninguna regla usa `color: var(--hoja)` |
+| Bahareque sobre blanco (borde del `<select>`) | 1,39:1 | ❌ como contorno de control (ver sugerencia 3) |
+
+**Accesibilidad de las plantillas.** `<label for>` coincide con el `id` de los tres `<select>`; las casillas están en `<fieldset>` + `<legend>` y cada una va dentro de su `<label>`; `<nav aria-label>` en el menú y en R1–R4; `aria-current="page"` en el menú y `"true"` en R1–R4 (V-2); `role="alert"` y `role="status"`; `title` en los tres `<iframe>`; `<caption>`, `<thead>` y `th scope="col"`/`"row"` en la tabla de la envolvente, en la comparación, en la tabla de la regla y en las de pandas (`tabla_con_titulo`, que escapa con `markupsafe`); `<img>` con `alt` descriptivo, `width`, `height` y `loading="lazy"`; `lang="es"`.
+
+**Fidelidad al V0.** Hay un solo elemento distintivo: la cabecera con `repeating-radial-gradient` (`estilos.css:45-52`). El resto es sobrio: tarjetas con borde superior, sin sombras, gradientes ni animaciones de entrada. Evita los tres clichés de la skill frontend-design. El fondo es gris verdoso (`#F3F6F4`), no crema `#F4F1EA`, y no hay acento terracota. No es negro con acento ácido. Tampoco es el estilo «periódico» de líneas finas y radio cero (usa radio de 4 px y tarjetas). La serifa del sistema queda en los títulos, con mesura.
+
+**Mutaciones** (hechas por el revisor sobre el árbol de trabajo y restauradas desde una copia; `git status` al final es igual al del inicio):
+
+| Mutación | Resultado |
+|---|---|
+| Quitar `title="Mapa de la ruta"` | ❌ 1 falla (`test_a5`) ✔ |
+| `aria-current="page"` en la navegación R1–R4 | ❌ 2 fallan (`test_a3[r2]`, `test_v9`) ✔ |
+| Sacar el `:hover` de `@media (hover: hover) and (pointer: fine)` | ❌ 1 falla (`test_v0`) ✔ |
+| Quitar `role="alert"` del itinerario | ❌ 1 falla (`test_a6`) ✔ |
+| Poner el mapa antes del resumen | ❌ 1 falla (`test_v5_orden`) ✔ |
+| Quitar todo `font-variant-numeric: tabular-nums` | ✅ 541 pasan: **sobrevive** (sugerencia 1) |
+| `thead .metodo-hk` con Cereza (encabezado de Held-Karp en rojo, distinto del mapa) | ✅ 541 pasan: **sobrevive** (sugerencia 2) |
+| Borrar el bloque `prefers-reduced-motion` dejando la cadena en un comentario | ✅ sobrevive (sugerencia 4) |
+
+**App real con `curl`** (puerto 5087, ya detenida; no se tocó el 5050). `/static/estilos.css` → 200 `text/css`. `/`, `/ruta?origen=C01&destino=C12`, `/ruta?origen=C01&destino=C01`, `/envolvente`, `/itinerario` con los 6 y con los 8 del caso 6, y `/resultados/r1..r4` → 200. `/itinerario?partida=C01&atractivos=A01` → 400 con `role="alert"` «elige entre 6 y 8 atractivos (llegaron 1)». Cada página tiene un solo `aria-current="page"` y en la sección correcta. Ruta: «29,7 min (1 783,4 s)», «24,00 km», «7 360» en tarjetas, y el `<h2>` en texto plano con los nombres. C01→C01: `role="status"` con el aviso. Envolvente: «14 vértices» y «1 631,5 km²». Leyenda con `#1F5F8B` y `#B8322A`. Caso 6: aparece el bloque de la regla con su `<caption>`. r2: títulos legibles, `<caption>` en las 3 tablas y `alt` descriptivo. r4: «Faltan» con título, archivo y comando.
+
+### Bloqueantes
+Ninguno.
+
+### Sugerencias (no bloquean)
+1. `tests/test_visual_r5.py:98-103`: la tabla «Verificación del ajuste» del plan dice que se comprueba `tabular-nums` en el CSS, pero `test_v0_tipos_firma_y_movimiento` no lo incluye. La mutación que lo quita de `estilos.css:71,86,108` sobrevive. Bastaría con agregar `"tabular-nums"` a la lista o, mejor, `re.search(r"\.tarjeta dd\s*\{[^}]*tabular-nums", css)` y lo mismo con `td`.
+2. `tests/test_visual_r5.py:190-198`: V5 pide que el encabezado de cada método tenga el mismo color que el mapa. La prueba solo mira la clase `metodo-hk`/`metodo-voraz` en el `<th>`, no que `estilos.css:89-92` la asocie con `var(--cocora)`/`var(--cereza)`. Habría que agregar una aserción sobre el texto del CSS, por ejemplo `re.search(r"thead \.metodo-hk\s*\{[^}]*var\(--cocora\)", css)`.
+3. `rutas/r5/static/estilos.css:66`: el borde del `<select>` en Bahareque sobre blanco tiene 1,39:1. WCAG 1.4.11 pide ≥ 3:1 para el contorno de un control. Usar `var(--hoja)` (3,89:1) o un gris más oscuro lo resuelve sin cambiar el estilo. Los bordes de tarjetas y tablas son decorativos y pueden quedar en Bahareque.
+4. `tests/test_visual_r5.py:98-103`: la prueba busca cadenas sueltas en el CSS, que también se cumplen dentro de un comentario. Si se quiere más firmeza, comprobar `@media (prefers-reduced-motion: reduce)\s*\{` seguido de `transform: none`. Es una debilidad pequeña, porque hoy ningún comentario repite esas cadenas.
+5. `rutas/r5/static/estilos.css:56`: `.cabecera [aria-current="page"]` solo cambia `border-bottom-color`. La marca (que lleva `aria-current` en `/`) no tiene borde, así que en el inicio no se ve qué sección está activa. Se podría dar a `.marca` el mismo `border-bottom: 3px solid transparent` que a `.menu a`, o aceptarlo así (el título de la página ya lo dice). Conviene revisarlo en T35.
+6. `rutas/r5/app.py:80`: el tamaño de `r4_tiempo_vs_k.png` sigue aproximado (ya anotado en T32). Cuando exista la PNG, hay que corregirlo y agregarlo a `test_tamanos_de_imagenes`.
+7. `docs/anexo-ia.md:24`: dice «las pruebas actuales siguen en verde sin cambios (`git diff` de ellas vacío)». Con el arreglo de `puerto_libre` ya no es cierto: conviene una línea que diga que se simuló `puerto_libre` en `_main_con_run_falso` y por qué.
+8. `specs/r5-aplicacion/tasks.md` (T27/T34): anotar la desviación de los colores al pasar el mouse (Bahareque y Cocora en lugar de Niebla y Guadua, ver «Comprobaciones»), para que spec, plan y código digan lo mismo.
+9. Commit pendiente: `tests/test_app_r5.py`, `specs/r5-aplicacion/tasks.md` y este `review.md`.
+
+### Pendiente del usuario: T35 / A10 (navegador, no automatizable)
+- Con la instancia del 5050 **reiniciada**, porque un servidor viejo sirve las plantillas anteriores: los 9 pasos de T35 a ≈ 1280 px y a ≈ 375 px. Lo más importante:
+  - que las curvas de nivel no tapen el menú (la línea más clara da 6,97:1, pero hay que verlo);
+  - que a 375 px no haya desplazamiento horizontal y que las tablas de pandas se desplacen dentro de `.tabla-ancha`;
+  - que la casilla tenga 1 columna en móvil y 2 o 3 en escritorio;
+  - que los colores de la leyenda coincidan con las líneas del mapa y con el encabezado de la tabla;
+  - que el botón se hunda al presionar y no lo haga con `prefers-reduced-motion` emulado;
+  - que el foco se vea con Tab y que «Saltar al contenido» funcione;
+  - revisar de paso la sugerencia 5 (la marca en el inicio).
+- Anotar aquí la fecha, quién, el navegador y su versión, las dos anchuras y el resultado de cada paso. Si algo obliga a cambiar el CSS, volver a correr el comando de T34.
+- Siguen pendientes de la ronda 1 los casos 16 y 17 en el navegador.
+
+### Pendiente para el documento técnico
+- Capturas de las cuatro secciones a ancho de escritorio, y una a 375 px si se quiere, tomadas en T35.
+- Si el documento menciona la interfaz, basta una línea: la hoja de estilos es propia, sin JavaScript ni recursos externos, y el diseño no cambia ningún resultado (sección 8: el diseño no se evalúa en R5).

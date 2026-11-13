@@ -239,6 +239,8 @@ def _main_con_run_falso(tmp_path, monkeypatch, argv):
     processed, catalogo, _ = carpeta_app_sintetica(tmp_path)
     guardado = []
     monkeypatch.setattr("flask.Flask.run", lambda self, **k: guardado.append(k))
+    # El puerto se da por libre: la prueba no debe depender de lo que haya abierto en el equipo
+    monkeypatch.setattr("rutas.r5.app.puerto_libre", lambda host, puerto: True)
     return main(argv, processed=processed, catalogo=catalogo), guardado
 
 

@@ -306,6 +306,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Nota: sin desviaciones.
 
 - [x] T34 · Suite completa y restricciones del ajuste (cierre automático de B5)
+  - Nota: `_main_con_run_falso` en `tests/test_app_r5.py` simula ahora `rutas.r5.app.puerto_libre` (devuelve `True`); antes `test_puerto_por_defecto` y `test_main_arranca` fallaban si la app ya escuchaba en 5050. `test_puerto_ocupado` sigue con un socket real ocupado en puerto efímero (determinista). Código de la app sin tocar.
   - Archivos: ninguno nuevo (R5 no genera resultados: no hay archivos que regenerar)
   - Test primero: no aplica
   - Comando:
