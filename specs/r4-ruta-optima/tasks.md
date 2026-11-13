@@ -200,7 +200,7 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
 
 ## Cierre
 
-- [ ] T23 · Anexo de IA y «Reproducir R4» en el README
+- [x] T23 · Anexo de IA y «Reproducir R4» en el README
   - Archivos: `docs/anexo-ia.md` (local; entradas de R4: plan y tareas con el agente planner; código y pruebas con el implementer; cómo se verificó: casos a mano 1–10 y 17, tabla del caso 3, FB contra `itertools` y FB = HK (11, 12, 19a), contador contra lecturas reales (15), itinerario contra la enumeración del coordinador (19c), mutaciones temporales); `README.md` (sección «Reproducir R4» después de «Reproducir R3»: requisito de haber corrido R1 y R2; tabla con `rutas.r4.instancias`, `rutas.r4.itinerario`, `rutas.r4.calidad`, `rutas.r4.medir_memoria`, `rutas.r4.medir_exactas` (larga, enchufado, ≈ 10–15 min) y `rutas.r4.tablas`, y lo que deja cada uno; semillas 2026 y 2026..2035; pruebas `pytest -m "not red"`, `pytest tests/test_red_real_r4.py` y `pytest`)
   - Test primero: no aplica (documentación)
   - Verificar: `grep -n "R4" docs/anexo-ia.md && grep -n "rutas.r4.medir_exactas" README.md`

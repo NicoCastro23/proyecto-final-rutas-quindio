@@ -168,6 +168,41 @@ La prueba lenta (`test_peor_caso_2k_4k_sin_recursion_error`, marcador `lento`) *
 - Los casos de la clase usan la sección R3 de la copia versionada `tests/datos/red_clase.json`, así que no necesitan datos descargados.
 - La semilla de los cuadrados (2026) queda documentada en `results/r3/r3_puntos.json`.
 
+## Reproducir R4
+
+Todas las órdenes se corren desde la raíz del repositorio, con el mismo entorno de R1. **Requisito:** haber hecho R1 y R2 (deben existir `data/processed/` con el grafo, `lugares_nodos.csv` y `matriz_tiempos.csv`). R4 usa Python 3.13.18 (instalado con Homebrew); R1 a R3 usaron 3.13.8.
+
+### Comandos, en orden
+
+| Orden | Qué hace | Deja |
+|---|---|---|
+| `.venv/bin/python -m rutas.r4.instancias` | Elige la muestra anidada de 12 lugares (semilla 2026) y las instancias de calidad (k = 5, 8, 10, 12; semillas 2026..2035). Determinista y rápido. No mide tiempos. | `results/r4/r4_instancias.json` |
+| `.venv/bin/python -m rutas.r4.itinerario` | Arma el itinerario por defecto con Held-Karp y la regla de las 11 h (quita atractivos hasta que cabe). Determinista y rápido. | `results/r4/r4_itinerario.csv` y `r4_itinerario.json` |
+| `.venv/bin/python -m rutas.r4.calidad` | Compara la heurística voraz con el óptimo de Held-Karp en 10 instancias por k y calcula la brecha. Determinista y rápido; no se cronometra. | `results/r4/r4_calidad_detalle.csv` y `r4_calidad.csv` |
+| `.venv/bin/python -m rutas.r4.medir_memoria` | Estima las celdas y los bytes de la tabla de Held-Karp para k = 5..12 y mide el pico con `tracemalloc`. Rápido. | `results/r4/r4_memoria.csv` |
+| `.venv/bin/python -m rutas.r4.medir_exactas` | **Medición larga.** Mide fuerza bruta y Held-Karp para k = 5..12 (5 repeticiones, mediana en ms; límite de 5 min por método: si se pasa, queda «no completada»). La fuerza bruta debería tardar ≈ 23 s con k = 11 y de 4,5 a 5,5 min con k = 12, así que la corrida completa tarda ≈ 8–10 min. Medir con el portátil enchufado y sin otros procesos pesados. | `results/r4/r4_exactas.csv` y `results/r4/maquina.json` |
+| `.venv/bin/python -m rutas.r4.tablas` | Genera las tablas y la gráfica (tiempo vs k, eje y logarítmico) desde los CSV, no a mano. | `results/r4/tablas_r4.md` y `r4_tiempo_vs_k.png` |
+
+Opciones de `medir_exactas`:
+
+- `--k-max N`: k máximo a medir (por defecto 12). Útil para una prueba rápida, por ejemplo `--k-max 8`.
+- `--salida CARPETA`: carpeta donde escribe (por defecto `results/r4/`). En una prueba rápida conviene apuntar a otra carpeta para no pisar los resultados reales.
+- `--repeticiones N`: número de repeticiones (por defecto 5).
+
+Pruebas:
+
+```bash
+.venv/bin/python -m pytest -m "not red"                 # sin datos descargados
+.venv/bin/python -m pytest tests/test_red_real_r4.py    # sobre la red real de R4 (necesita data/processed)
+.venv/bin/python -m pytest                              # todas
+```
+
+### Notas
+
+- **Semillas.** 2026 para la muestra anidada de los experimentos exactos y 2026..2035 para las 10 instancias de calidad por k; quedan documentadas en `results/r4/r4_instancias.json`.
+- **Rápidos y deterministas:** `instancias`, `itinerario` y `calidad` dan siempre los mismos archivos; `medir_memoria` también es rápido (el pico de `tracemalloc` puede variar un poco). La única medición larga y dependiente de la máquina es `medir_exactas`.
+- La matriz de tiempos es asimétrica; la partida de todos los recorridos es C01 y Held-Karp devuelve el recorrido, no solo el tiempo.
+
 ## Ejecutar la aplicación (R5)
 
 Todas las órdenes se corren desde la raíz del repositorio. R4 y R5 usan Python 3.13.18 (instalado con Homebrew); R1 a R3 usaron 3.13.8.
