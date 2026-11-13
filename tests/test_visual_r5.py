@@ -211,6 +211,16 @@ def test_v5_tabla_comparacion(cliente_app):
     assert re.search(r'<th scope="col" class="metodo-voraz">', tabla)
 
 
+def test_v5_colores_encabezado_metodos():
+    """El encabezado de cada método en la tabla de comparación usa el mismo color que su línea en el mapa."""
+    css = _css()
+    # `^thead` al inicio de línea y regex limitada al bloque (`[^}]*`): no se confunde con las tarjetas.
+    assert re.search(r"(?m)^thead \.metodo-hk\s*\{[^}]*background(-color)?:\s*var\(--cocora\)", css), \
+        "el encabezado «thead .metodo-hk» debe tener de fondo var(--cocora), el color de Held-Karp en el mapa"
+    assert re.search(r"(?m)^thead \.metodo-voraz\s*\{[^}]*background(-color)?:\s*var\(--cereza\)", css), \
+        "el encabezado «thead .metodo-voraz» debe tener de fondo var(--cereza), el color del vecino más cercano en el mapa"
+
+
 def test_v5_orden_de_la_pagina(tmp_path):
     cliente, _ = _cliente(tmp_path, visitas=[120] * 6)
     html = cliente.get("/itinerario?" + QUERY_ITINERARIO).get_data(as_text=True)
