@@ -339,6 +339,15 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Cierre de B5: suite en verde (T34) y A10 anotado. **DETENERSE** hasta el commit del usuario
   - anotar en `docs/anexo-ia.md` (si se usó IA para revisar las capturas o redactar `review.md`)
 
+## Ronda 2, sugerencias del reviewer
+
+- [x] Sugerencia 1: cifras tabulares también en `.tarjeta dd`, `td` y `.visita`
+  - Nota: prueba `test_v0_cifras_tabulares` en `tests/test_visual_r5.py`, que exige `font-variant-numeric: tabular-nums` en los tres bloques.
+- [x] Sugerencia 2: el encabezado de cada método usa su color de fondo
+  - Nota: prueba `test_v5_colores_encabezado_metodos`, con regex que exigen `background` y no solo el color.
+- [x] Sugerencia 3: contorno del `<select>` con `var(--hoja)` (WCAG 1.4.11, ≥ 3:1)
+  - Nota: prueba nueva `test_v0_contorno_select`, falló antes (Bahareque sobre blanco da 1,39:1) y pasa después (Hoja da 3,89:1); cambio en `rutas/r5/static/estilos.css:66`; `spec.md` ya actualizada. Fieldset, tarjetas y tablas siguen en Bahareque (bordes decorativos).
+
 ## Cobertura
 
 | Caso / punto | Tarea |

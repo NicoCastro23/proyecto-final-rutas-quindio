@@ -63,7 +63,7 @@ main { max-width: 70rem; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
 /* Etiqueta encima de cada campo; las casillas de atractivos en cuadrícula (2-3 columnas, 1 en 375 px). */
 form { display: grid; gap: 0.5rem; max-width: 40rem; }
 label { font-weight: 600; }
-select { font: inherit; padding: 0.4rem; border: 1px solid var(--bahareque); border-radius: 4px; background: #fff; }
+select { font: inherit; padding: 0.4rem; border: 1px solid var(--hoja); border-radius: 4px; background: #fff; }
 fieldset { border: 1px solid var(--bahareque); border-radius: 4px; padding: 0.75rem; margin: 0.5rem 0 0; }
 legend { font-weight: 600; padding: 0 0.25rem; }
 .casillas { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 0.4rem 1rem; }

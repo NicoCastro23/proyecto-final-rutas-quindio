@@ -200,7 +200,7 @@ V0. **Dirección visual.** Sale de las skills `frontend-design` (anthropics/skil
   - «Guadua» `#2F4A3A`: menú y títulos.
   - «Hoja» `#5E8C61`: acento y envolvente.
   - «Niebla» `#F3F6F4`: fondo.
-  - «Bahareque» `#D5DDD7`: líneas y bordes.
+  - «Bahareque» `#D5DDD7`: líneas y bordes decorativos (fieldset, tarjetas, tablas). El contorno de los controles de formulario (`<select>`) va en «Hoja», porque Bahareque sobre blanco da 1,39:1 y WCAG 1.4.11 pide ≥ 3:1 para el contorno de un control; Hoja da 3,89:1 (sugerencia 3 de la ronda 2 del ajuste visual).
   - «Tinta» `#1D2521`: texto.
   - Métodos: «Cocora» `#1F5F8B` para la ruta y Held-Karp, y «Cereza» `#B8322A` para el voraz.
 

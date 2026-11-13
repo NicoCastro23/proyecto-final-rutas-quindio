@@ -116,6 +116,13 @@ def test_v0_cifras_tabulares():
         "el bloque «.visita» debe aplicar font-variant-numeric: tabular-nums"
 
 
+def test_v0_contorno_select():
+    """El contorno del «select» usa var(--hoja): Bahareque sobre blanco da 1,39:1 y el criterio WCAG 1.4.11 (componentes de interfaz) pide al menos 3:1; Hoja da 3,89:1."""
+    css = _css()
+    assert re.search(r"(?m)^select\s*\{[^}]*border(-color)?:[^;}]*var\(--hoja\)", css), \
+        "el contorno del «select» debe usar var(--hoja): Bahareque sobre blanco da 1,39:1 y WCAG 1.4.11 pide ≥ 3:1"
+
+
 # ---- T28: formularios y mensajes (A4, A6, V3, V6) ----
 def test_a4_labels_y_botones(cliente_app):
     ruta = cliente_app.get("/ruta").get_data(as_text=True)
