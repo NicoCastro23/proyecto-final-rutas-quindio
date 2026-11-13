@@ -187,6 +187,78 @@ No se mide en R5: no se aplica el protocolo de la sección 6. Los `computo_ms` d
 
 Uso de IA en `docs/anexo-ia.md`.
 
+## Ajuste visual (2026-11-12, en Puerta 1 del ajuste)
+Origen: decisión del grupo de mejorar la parte visual con una auditoría y CSS propio (`specs/r5-aplicacion/auditoria-visual.md`, hecha con la skill `web-design-guidelines`). El enunciado no evalúa el diseño en R5. Esto ayuda en la sustentación y en las capturas del documento técnico, pero **no cambia lo que se calcula ni lo que se muestra**. Restricciones:
+- sin JavaScript propio (la guardia sigue vigente);
+- sin dependencias nuevas;
+- sin tocar R1–R4 ni `servicios.py`;
+- las pruebas actuales siguen en verde, incluidos los textos «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5».
+
+V0. **Dirección visual.** Sale de las skills `frontend-design` (anthropics/skills) y `emil-design-eng` (emilkowalski/skill), copiadas a `.claude/skills/` desde VerYganar-frontend el 2026-11-12.
+- **Tema:** una herramienta académica sobre la red vial del Quindío. La ven el docente y el jurado en la sustentación. Su único trabajo es mostrar con claridad qué calculó cada algoritmo.
+- **Paleta:** inspirada en el Paisaje Cultural Cafetero, evitando a propósito los dos clichés que señala la skill (fondo crema con acento terracota, y fondo negro con acento ácido). Hay 7 colores con nombre en variables CSS (5 base y 2 de método):
+  - «Guadua» `#2F4A3A`: menú y títulos.
+  - «Hoja» `#5E8C61`: acento y envolvente.
+  - «Niebla» `#F3F6F4`: fondo.
+  - «Bahareque» `#D5DDD7`: líneas y bordes.
+  - «Tinta» `#1D2521`: texto.
+  - Métodos: «Cocora» `#1F5F8B` para la ruta y Held-Karp, y «Cereza» `#B8322A` para el voraz.
+
+  `COLORES` de `mapas.py` pasa a usar estos mismos valores.
+- **Tipografía:** sin fuentes externas (la app debe funcionar sin internet aparte de los mosaicos del mapa).
+  - Títulos: serifa del sistema, `"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif`.
+  - Texto: `system-ui, sans-serif`.
+  - Ids de lugar: `ui-monospace`.
+  - Escala de tipos con 4 tamaños.
+- **Elemento distintivo (uno solo):** una franja de cabecera con curvas de nivel hechas solo con CSS (`repeating-radial-gradient` en tonos Guadua y Hoja), que evoca la cordillera. Lleva el título y el menú. El resto de la página es sobrio.
+- **Movimiento mínimo** (emil-design-eng):
+  - botones con `transform: scale(0.97)` en `:active` y `transition: transform 160ms ease-out`;
+  - cambios de color al pasar el mouse en 150 ms, solo dentro de `@media (hover: hover) and (pointer: fine)`;
+  - nunca `transition: all`;
+  - con `prefers-reduced-motion: reduce` se quita la escala y se dejan solo los cambios de color.
+- **Textos:** voz activa y verbos concretos. Los errores dicen qué pasó y cómo arreglarlo, sin disculparse.
+
+V1. **Hoja de estilos propia** en `rutas/r5/static/estilos.css`, servida por Flask como estático. `base.html` la enlaza y deja de tener el CSS en línea. Debe ser corta y comentada por secciones, para que cada integrante pueda explicarla. Usa variables CSS para los colores, con la paleta café del menú actual y los dos colores de método del punto V5.
+V2. **Base:**
+- `<meta name="viewport">` y enlace «Saltar al contenido» hacia `<main id="contenido">`;
+- menú con `aria-current="page"` en la sección activa (la vista pasa el nombre de la sección) y estados `:hover` y `:focus-visible` en enlaces y botones;
+- el menú se adapta (se parte en dos líneas) en pantallas de 375 px de ancho sin desbordarse.
+V3. **Formularios:**
+- cada `<select>` con `<label for>`;
+- las casillas de atractivos en `<fieldset>` + `<legend>` («Atractivos (elige de 6 a 8)»), en una cuadrícula de 2 o 3 columnas, con la duración de visita alineada;
+- botones con texto específico: «Calcular ruta» y «Calcular itinerario».
+V4. **Resumen destacado:** los números clave van en «tarjetas», un bloque `<dl>` con estilo de tarjeta, con `tabular-nums`:
+- en Ruta: tiempo (min), distancia (km) y nodos explorados;
+- en Itinerario: Held-Karp, voraz, diferencia y brecha;
+- en Envolvente: vértices y área.
+
+El valor que hoy está en texto sigue apareciendo con el mismo formato.
+V5. **Itinerario:**
+- color fijo para Held-Karp y otro para el voraz, iguales en el mapa (`COLORES` de `mapas.py`), en el encabezado de la tabla y en una **leyenda en HTML** junto al mapa;
+- la tabla de comparación con `<caption>`, `<thead>`, `th scope` y sin celda vacía en la esquina («Medida»);
+- orden de la página: resumen → mapa → tabla de comparación → regla de las 11 h.
+V6. **Mensajes:** el error con `role="alert"` y el aviso con `role="status"`.
+V7. **Mapas:** cada `<iframe>` lleva un `title` descriptivo («Mapa de la ruta», «Mapa de la envolvente», «Mapa del itinerario») y una altura que se adapta a la pantalla.
+V8. **Tablas:** `<caption>`, `<thead>`, `th scope`, filas alternadas, `tabular-nums` en los números y un contenedor con desplazamiento horizontal para las tablas anchas de pandas.
+V9. **Resultados:**
+- cada archivo con un **título legible** y una línea que dice de qué se trata (p. ej. `r2_cociente.csv` → «Cociente lineal / cola de prioridad (10 pares cercanos)»), definidos junto a `ARCHIVOS_RESULTADOS` en un diccionario nuevo de `app.py` o de un módulo de presentación, no en `servicios.py`;
+- imágenes con `alt` descriptivo, `width`, `height` y `loading="lazy"`;
+- navegación entre R1, R2, R3 y R4 dentro de la página.
+V10. **Inicio:** cuatro tarjetas (Ruta, Envolvente, Itinerario y Resultados), cada una con una línea de qué hace y el algoritmo que usa. El enlace de Resultados lleva a la navegación de R1 a R4.
+
+**Casos de prueba del ajuste** (cliente de pruebas de Flask, con datos sintéticos salvo que se diga otra cosa):
+- A1. `GET /static/estilos.css` → 200 `text/css`. `base.html` lo enlaza y ya no contiene `<style>`.
+- A2. Todas las páginas tienen `name="viewport"`, el enlace «Saltar al contenido» y `id="contenido"`.
+- A3. `aria-current="page"` en el enlace correcto en `/ruta`, `/envolvente`, `/itinerario` y `/resultados/r2`, y en ningún otro enlace.
+- A4. En `/ruta` aparecen `<label for="origen">` y `<label for="destino">`. En `/itinerario` aparecen `<label for="partida">`, `<fieldset>` y `<legend>`. Los botones dicen «Calcular ruta» y «Calcular itinerario».
+- A5. Cada `<iframe>` tiene `title`.
+- A6. Una entrada inválida en `/itinerario` produce `role="alert"`, y origen = destino produce `role="status"`.
+- A7. La leyenda del itinerario usa los mismos colores hexadecimales que `COLORES` de `mapas.py`.
+- A8. En `/resultados/r2`, la imagen tiene `alt` distinto del nombre del archivo, `width`, `height` y `loading="lazy"`, y el título de `r2_cociente.csv` es el legible.
+- A11. `estilos.css` define las 7 variables de la paleta y no contiene `transition: all` ni `@import` ni `url(http`. `COLORES` de `mapas.py` coincide con «Cocora» y «Cereza».
+- A9. La guardia «sin JavaScript propio» sigue en verde: ninguna plantilla ni `estilos.css` contiene `<script` ni `javascript:`.
+- A10. Revisión manual del usuario en el navegador, a ancho de escritorio y a unos 375 px (herramientas de desarrollo), anotada en `review.md`. Las capturas para el documento técnico salen de aquí.
+
 ## Decisiones
 Resueltas por el grupo (2026-11-11):
 - Flask + Folium, ya en `requirements.txt`, sin dependencias nuevas.
