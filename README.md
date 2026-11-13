@@ -225,7 +225,7 @@ Imprime «Datos cargados en … s» y la dirección; abre `http://127.0.0.1:5050
 - **Qué muestra cada sección.**
   - *Ruta*: elige origen y destino y dibuja la ruta más corta (Dijkstra, R2) sobre las vías, con el tiempo en minutos.
   - *Itinerario*: elige un lugar de partida (por defecto Armenia, C01) y de 6 a 8 atractivos; muestra el recorrido óptimo (Held-Karp) y el voraz, con tiempos por tramo y la regla de las 11 h (R4).
-  - *Envolvente*: el polígono convexo de los 42 lugares sobre el mapa, con su número de vértices y su área (R3).
+  - *Envolvente*: el polígono convexo que encierra los 8 791 nodos de la componente de la red vial (14 vértices, 1 631,5 km²), dibujado sobre el mapa con los 42 lugares como referencia (R3).
   - *Resultados*: las imágenes y tablas de `results/r1` a `results/r4`.
 - **Internet.** El mapa necesita conexión: Leaflet y las teselas de OpenStreetMap se cargan desde la red.
 - **Archivos que pueden faltar.** La gráfica de R1 (`results/r1/r1_tiempos_componente.png`) y los resultados exactos de R4 (`results/r4/r4_exactas.csv` y `results/r4/r4_tiempo_vs_k.png`) pueden no estar. La sección *Resultados* no falla: avisa qué archivo falta y el comando que lo genera (por ejemplo `.venv/bin/python -m rutas.r1.tablas` o `.venv/bin/python -m rutas.r4.medir_exactas`).
