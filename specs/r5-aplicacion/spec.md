@@ -1,6 +1,6 @@
 # Aplicación — Requerimiento 5
 Enunciado: sección 5, Requerimiento 5 (párrafo inicial, punto 1 con sus cuatro viñetas y la viñeta de ejecución local); sección 7 (entregable «Aplicación: ejecutable localmente siguiendo el README»); sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»). Peso: 5 %.
-Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (497 sin red; 14 de R5 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la revisión en el navegador de los casos 16 y 17) · ☑ ajuste visual: spec aprobada (2026-11-12) · ☑ plan (Puerta 2, 2026-11-12) · ☑ código y verificado (review.md, ronda 2: APROBADO; pendiente T35 en el navegador)
+Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (497 sin red; 14 de R5 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la revisión en el navegador de los casos 16 y 17) · ajuste visual v1 (2026-11-12) reemplazado · ☑ diseño v2 apple-design: spec aprobada (2026-11-15) · ☐ plan · ☐ código
 Depende de:
 - `r1-red-vial` (cerrado): `rutas.r1.persistencia` (`cargar_grafo_procesado`, `cargar_lugares_nodos`), `rutas.r1.aristas.mejor_arista` (geometría de cada tramo) y `data/catalogo.csv`.
 - `r2-dijkstra` (cerrado): `rutas.r2.adyacencia.construir_adyacencia`, `rutas.r2.dijkstra.consultar` (versión `cola_prioridad`), `rutas.r2.ruta.detalle_ruta` y `rutas.r2.matriz.cargar_matriz`.
@@ -24,7 +24,7 @@ No implementa algoritmos nuevos: llama a las funciones verificadas de R2 y R4. S
 - `data/processed/` y `results/` están versionados, excepto `results/r4/r4_exactas.csv` y `r4_tiempo_vs_k.png` (pendientes de la medición de R4) y la gráfica de R1 (`r1_tiempos_componente.png` no está en `results/r1/`).
 
 ## Entradas y salidas
-**Tecnología (decisión del grupo):** Flask 3.1.3 y Folium 0.20.0, ya fijadas en `requirements.txt`. Las plantillas son Jinja2, que viene con Flask. No se agregan dependencias. Las páginas son formularios HTML simples, sin JavaScript propio; el mapa lo genera Folium con Leaflet.
+**Tecnología (decisión del grupo):** Flask 3.1.3 y Folium 0.20.0, ya fijadas en `requirements.txt`. Las plantillas son Jinja2, que viene con Flask. No se agregan dependencias. Las páginas son formularios HTML simples; desde el diseño v2 (2026-11-15) se permite un poco de JavaScript propio con Motion, solo como mejora progresiva (ver «Diseño visual v2»); el mapa lo genera Folium con Leaflet.
 
 **Arranque:** `.venv/bin/python -m rutas.r5.app [--puerto 5050]`, que abre en `http://127.0.0.1:5050`. Se usa 5050 y no 5000 porque en macOS el 5000 lo ocupa AirPlay.
 
@@ -98,7 +98,7 @@ El plan confirma los nombres exactos contra `results/` y los README de cada requ
    - Tramos: para dibujar, cada tramo consecutivo del recorrido se calcula con `consultar` (cola de prioridad) y se obtienen sus coordenadas como en el punto 2. El tiempo de cada tramo debe coincidir con la matriz (±1e-6 s), porque R2 la calculó con la misma función.
    - Regla de las 11 h: si Held-Karp no cabe, se llama `itinerario_dia(T, ids, s, atractivos, visita_min)` (la regla de R4, sin cambios) y se muestra su resultado.
 5. **Resultados.** Para cada requerimiento se muestran las imágenes y tablas de la lista fija que existan, y por cada una que falte, el aviso con su comando. Nunca hay error 500 por un archivo faltante. Las imágenes se sirven solo desde la lista fija: un nombre fuera de la lista da 404.
-6. **Estilo.** Una plantilla base con un menú de 4 enlaces, un CSS mínimo en línea y textos en español. Se prefiere lo legible: cada integrante debe poder explicar cada ruta y cada plantilla en la sustentación.
+6. **Estilo.** Una plantilla base con un menú de 4 enlaces, textos en español y el estilo definido en «Diseño visual v2» (hoja `estilos.css` y, como mejora progresiva, `app.js` con Motion). Se prefiere lo legible: cada integrante debe poder explicar cada ruta y cada plantilla en la sustentación.
 7. **Extras aprobados por el grupo:**
    - nodos explorados y cómputo en ms en la ruta;
    - brecha % y cómputo en ms en el itinerario;
@@ -187,77 +187,102 @@ No se mide en R5: no se aplica el protocolo de la sección 6. Los `computo_ms` d
 
 Uso de IA en `docs/anexo-ia.md`.
 
-## Ajuste visual (2026-11-12, aprobado en Puerta 1 del ajuste el 2026-11-12)
-Origen: decisión del grupo de mejorar la parte visual con una auditoría y CSS propio (`specs/r5-aplicacion/auditoria-visual.md`, hecha con la skill `web-design-guidelines`). El enunciado no evalúa el diseño en R5. Esto ayuda en la sustentación y en las capturas del documento técnico, pero **no cambia lo que se calcula ni lo que se muestra**. Restricciones:
-- sin JavaScript propio (la guardia sigue vigente);
-- sin dependencias nuevas;
-- sin tocar R1–R4 ni `servicios.py`;
-- las pruebas actuales siguen en verde, incluidos los textos «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5».
+## Diseño visual v2: apple-design (2026-11-15, aprobado en Puerta 1 el 2026-11-15)
+**Reemplaza por completo** la sección «Ajuste visual» v1 (V0–V10 y A1–A11, del 2026-11-12, implementada en B5 y aprobada en la ronda 2 de `review.md`; su historia queda en git). El grupo no quedó conforme con v1 y decidió rehacer el diseño desde cero con la skill `apple-design` (emilkowalski/skills, instalada el 2026-11-15 en `.claude/skills/apple-design` con `npx skills add`; registro en `skills-lock.json`).
 
-V0. **Dirección visual.** Sale de las skills `frontend-design` (anthropics/skills) y `emil-design-eng` (emilkowalski/skill), copiadas a `.claude/skills/` desde VerYganar-frontend el 2026-11-12.
-- **Tema:** una herramienta académica sobre la red vial del Quindío. La ven el docente y el jurado en la sustentación. Su único trabajo es mostrar con claridad qué calculó cada algoritmo.
-- **Paleta:** inspirada en el Paisaje Cultural Cafetero, evitando a propósito los dos clichés que señala la skill (fondo crema con acento terracota, y fondo negro con acento ácido). Hay 7 colores con nombre en variables CSS (5 base y 2 de método):
-  - «Guadua» `#2F4A3A`: menú y títulos.
-  - «Hoja» `#5E8C61`: acento y envolvente.
-  - «Niebla» `#F3F6F4`: fondo.
-  - «Bahareque» `#D5DDD7`: líneas y bordes decorativos (fieldset, tarjetas, tablas). El contorno de los controles de formulario (`<select>`) va en «Hoja», porque Bahareque sobre blanco da 1,39:1 y WCAG 1.4.11 pide ≥ 3:1 para el contorno de un control; Hoja da 3,89:1 (sugerencia 3 de la ronda 2 del ajuste visual).
-  - «Tinta» `#1D2521`: texto.
-  - Métodos: «Cocora» `#1F5F8B` para la ruta y Held-Karp, y «Cereza» `#B8322A` para el voraz.
+El enunciado no evalúa el diseño en R5. Sigue valiendo que el rediseño **no cambia lo que se calcula ni lo que se muestra**. Se conservan:
+- `servicios.py`, `datos.py` y `formato.py`, R1–R4, `requirements.txt`, `.gitignore` y el `Dockerfile` sin cambios;
+- todas las pruebas funcionales en verde, incluidos los textos «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5»;
+- la estructura accesible que ya tenía v1: etiquetas, `fieldset`, `aria-current`, `role`, `title` de iframes, `caption`/`scope` y títulos legibles de resultados.
 
-  `COLORES` de `mapas.py` pasa a usar estos mismos valores.
-- **Tipografía:** sin fuentes externas (la app debe funcionar sin internet aparte de los mosaicos del mapa).
-  - Títulos: serifa del sistema, `"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif`.
-  - Texto: `system-ui, sans-serif`.
-  - Ids de lugar: `ui-monospace`.
-  - Escala de tipos con 4 tamaños.
-- **Elemento distintivo (uno solo):** una franja de cabecera con curvas de nivel hechas solo con CSS (`repeating-radial-gradient` en tonos Guadua y Hoja), que evoca la cordillera. Lleva el título y el menú. El resto de la página es sobrio.
-- **Movimiento mínimo** (emil-design-eng):
-  - botones con `transform: scale(0.97)` en `:active` y `transition: transform 160ms ease-out`;
-  - cambios de color al pasar el mouse en 150 ms, solo dentro de `@media (hover: hover) and (pointer: fine)`;
-  - nunca `transition: all`;
-  - con `prefers-reduced-motion: reduce` se quita la escala y se dejan solo los cambios de color.
-- **Textos:** voz activa y verbos concretos. Los errores dicen qué pasó y cómo arreglarlo, sin disculparse.
+**Cambio de regla aprobado por el usuario (2026-11-15): se permite un poco de JavaScript.**
+- Solo hay dos archivos:
+  - `rutas/r5/static/vendor/motion.js`: Motion 14.14.0 (licencia MIT), el build para navegador `dist/motion.js` copiado sin cambios, con su `LICENSE.md` al lado y el SHA-256 `521cfef8910fdd997463ea9881d4b790e017331e3d2f79c02adfc4d5fe1f2cae`.
+  - `rutas/r5/static/app.js`: propio, comentado en español y de **150 líneas como máximo**.
+- No hay `<script>` en línea, atributos `on…=`, CDN, npm ni paso de compilación. No se agregan dependencias de Python.
+- **Mejora progresiva:** la app funciona completa sin JavaScript (las pruebas con el cliente de Flask no lo ejecutan). La validación sigue en el servidor y el JS solo agrega movimiento y ayudas.
 
-V1. **Hoja de estilos propia** en `rutas/r5/static/estilos.css`, servida por Flask como estático. `base.html` la enlaza y deja de tener el CSS en línea. Debe ser corta y comentada por secciones, para que cada integrante pueda explicarla. Usa variables CSS para los colores, con la paleta de V0 (5 colores base y los 2 de método, usados también en V5).
-V2. **Base:**
-- `<meta name="viewport">` y enlace «Saltar al contenido» hacia `<main id="contenido">`;
-- menú con `aria-current="page"` en la sección activa (la vista pasa el nombre de la sección) y estados `:hover` y `:focus-visible` en enlaces y botones;
-- el menú se adapta (se parte en dos líneas) en pantallas de 375 px de ancho sin desbordarse.
-V3. **Formularios:**
-- cada `<select>` con `<label for>`;
-- las casillas de atractivos en `<fieldset>` + `<legend>` («Atractivos (elige de 6 a 8)»), en una cuadrícula de 2 o 3 columnas, con la duración de visita alineada;
-- botones con texto específico: «Calcular ruta» y «Calcular itinerario».
-V4. **Resumen destacado:** los números clave van en «tarjetas», un bloque `<dl>` con estilo de tarjeta, con `tabular-nums`:
-- en Ruta: tiempo (min), distancia (km) y nodos explorados;
-- en Itinerario: Held-Karp, voraz, diferencia y brecha;
-- en Envolvente: vértices y área.
+D0. **Dirección (apple-design).** Los principios que guían el rediseño son propósito, simplicidad sin minimalismo vacío, oficio y orientación.
+- **Tema:** una herramienta académica para mostrar qué calculó cada algoritmo.
+- **Emoción buscada:** calma y confianza.
+- **Regla:** lo más importante de cada página es lo más visible. Primero va un título grande y una línea que diga qué hace la página, luego el resumen y luego el detalle.
 
-El valor que hoy está en texto sigue apareciendo con el mismo formato.
-V5. **Itinerario:**
-- color fijo para Held-Karp y otro para el voraz, iguales en el mapa (`COLORES` de `mapas.py`), en el encabezado de la tabla y en una **leyenda en HTML** junto al mapa;
-- la tabla de comparación con `<caption>`, `<thead>`, `th scope` y sin celda vacía en la esquina («Medida»);
-- orden de la página: resumen → mapa → tabla de comparación → regla de las 11 h.
-V6. **Mensajes:** el error con `role="alert"` y el aviso con `role="status"`.
-V7. **Mapas:** cada `<iframe>` lleva un `title` descriptivo («Mapa de la ruta», «Mapa de la envolvente», «Mapa del itinerario») y una altura que se adapta a la pantalla.
-V8. **Tablas:** `<caption>`, `<thead>`, `th scope`, filas alternadas, `tabular-nums` en los números y un contenedor con desplazamiento horizontal para las tablas anchas de pandas.
-V9. **Resultados:**
-- cada archivo con un **título legible** y una línea que dice de qué se trata (p. ej. `r2_cociente.csv` → «Cociente lineal / cola de prioridad (10 pares cercanos)»), definidos junto a `ARCHIVOS_RESULTADOS` en un diccionario nuevo de `app.py` o de un módulo de presentación, no en `servicios.py`;
-- imágenes con `alt` descriptivo, `width`, `height` y `loading="lazy"`;
-- navegación entre R1, R2, R3 y R4 dentro de la página.
-V10. **Inicio:** cuatro tarjetas (Ruta, Envolvente, Itinerario y Resultados), cada una con una línea de qué hace y el algoritmo que usa. El enlace de Resultados lleva a la navegación de R1 a R4.
+D1. **Tipografía:**
+- fuente del sistema `-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif`, con `font-optical-sizing: auto`;
+- títulos grandes con `clamp()`, `line-height` ≈ 1,05–1,15 y espaciado entre letras negativo (−0,02 em en el más grande);
+- texto a `line-height: 1,5` y espaciado 0;
+- la jerarquía se arma con peso, tamaño e interlineado juntos;
+- espacios en `rem`;
+- números con `tabular-nums`;
+- ids de lugar en `ui-monospace`.
 
-**Casos de prueba del ajuste** (cliente de pruebas de Flask, con datos sintéticos salvo que se diga otra cosa):
-- A1. `GET /static/estilos.css` → 200 `text/css`. `base.html` lo enlaza y ya no contiene `<style>`.
-- A2. Todas las páginas tienen `name="viewport"`, el enlace «Saltar al contenido» y `id="contenido"`.
-- A3. `aria-current="page"` en el enlace correcto en `/ruta`, `/envolvente`, `/itinerario` y `/resultados/r2`, y en ningún otro enlace.
-- A4. En `/ruta` aparecen `<label for="origen">` y `<label for="destino">`. En `/itinerario` aparecen `<label for="partida">`, `<fieldset>` y `<legend>`. Los botones dicen «Calcular ruta» y «Calcular itinerario».
-- A5. Cada `<iframe>` tiene `title`.
-- A6. Una entrada inválida en `/itinerario` produce `role="alert"`, y origen = destino produce `role="status"`.
-- A7. La leyenda del itinerario usa los mismos colores hexadecimales que `COLORES` de `mapas.py`.
-- A8. En `/resultados/r2`, la imagen tiene `alt` distinto del nombre del archivo, `width`, `height` y `loading="lazy"`, y el título de `r2_cociente.csv` es el legible.
-- A11. `estilos.css` define las 7 variables de la paleta y no contiene `transition: all` ni `@import` ni `url(http`. `COLORES` de `mapas.py` coincide con «Cocora» y «Cereza».
-- A9. La guardia «sin JavaScript propio» sigue en verde: ninguna plantilla ni `estilos.css` contiene `<script` ni `javascript:`.
-- A10. Revisión manual del usuario en el navegador, a ancho de escritorio y a unos 375 px (herramientas de desarrollo), anotada en `review.md`. Las capturas para el documento técnico salen de aquí.
+D2. **Color (claro y oscuro automático).** Variables CSS con un bloque `@media (prefers-color-scheme: dark)` y `color-scheme: light dark`.
+- Base clara: fondo `#F5F5F7`, superficie `#FFFFFF`, texto `#1D1D1F`, texto secundario `#6E6E73`, separador `rgba(0,0,0,.1)`, acento `#0071E3`.
+- Base oscura: fondo `#000000`, superficie `#1C1C1E`, texto `#F5F5F7`, texto secundario `#98989D`, separador `rgba(255,255,255,.15)`, acento `#2997FF`.
+- Métodos (iguales en el mapa, la leyenda y la tabla; `COLORES` de `mapas.py` los usa):
+  - ruta y Held-Karp: azul `#007AFF`;
+  - voraz: naranja `#FF9500`;
+  - envolvente: verde `#34C759`.
+- El naranja nunca se usa como color de texto sobre fondo claro, solo en líneas, muestras y fondos con texto oscuro.
+- Todo texto cumple un contraste WCAG de 4,5:1 en los dos modos, y los bordes de los controles 3:1.
+- Los mapas de Folium siguen claros en modo oscuro; se acepta y se anota.
+
+D3. **Materiales y profundidad:**
+- la barra de navegación es fija arriba y translúcida (`backdrop-filter: blur(20px) saturate(180%)` con fondo semitransparente);
+- en lugar de una línea divisoria, un desvanecido suave donde el contenido pasa por debajo;
+- las tarjetas son superficies con radio de unos 18 px y sombra suave, más profunda en las superficies grandes;
+- nunca se apila una superficie translúcida clara sobre otra;
+- con `prefers-reduced-transparency: reduce` todo queda sólido;
+- con `prefers-contrast: more`, fondos sólidos y bordes definidos.
+
+D4. **Orientación y agrupación:**
+- el menú tiene la marca más 4 enlaces específicos (Ruta, Envolvente, Itinerario, Resultados) y marca la página activa;
+- en Resultados, un **control segmentado** R1 | R2 | R3 | R4 hecho con enlaces;
+- cada control va cerca de lo que afecta.
+
+D5. **Formularios estilo «lista agrupada»:**
+- los selectores de origen y destino (y el de partida) en un grupo con esquinas redondeadas;
+- los atractivos como **fichas seleccionables**: el `<label>` completo es el área de clic, con la casilla real visible o accesible, el nombre y la duración;
+- el botón principal es relleno, en el color de acento, con forma de píldora y texto específico («Calcular ruta», «Calcular itinerario»);
+- los errores con `role="alert"` y su siguiente paso.
+
+D6. **Movimiento.** Lo que no está en esta lista no se anima.
+- **M1 respuesta al pulsar (CSS):** `transform: scale(0.97)` en `:active` con 100 ms ease-out en botones, fichas y segmentos.
+- **M2 entrada del resultado (JS, `app.js`):** al cargar una página con resultado, las tarjetas del resumen entran con un resorte críticamente amortiguado, sin rebote (Motion `animate`, `type: "spring"`, `bounce: 0`, `duration: 0.4`), desde `opacity: 0` y `y: 8px`, escalonadas unos 40 ms. **Nunca hay rebote**, porque en esta app nada se lanza con un gesto.
+- **M3 contador en vivo del itinerario (JS):** junto a la leyenda de los atractivos aparece «N elegidos (elige de 6 a 8)». El servidor lo pone con el valor inicial y el JS lo actualiza al marcar y desmarcar. Va en `aria-live="polite"`, y su estado (fuera de rango o en rango) se indica con texto e ícono, no solo con color. El botón no se deshabilita: valida el servidor.
+- **M4 transiciones entre páginas (CSS):** `@view-transition { navigation: auto; }` con un fundido corto. El indicador del control segmentado tiene `view-transition-name`, para que se deslice entre R1 y R4. En navegadores sin soporte simplemente no se anima.
+- **Movimiento reducido:** con `prefers-reduced-motion: reduce`, sin escala ni desplazamiento. M2 pasa a un fundido de opacidad de 200 ms o a nada (el JS lo consulta con `matchMedia`), y M4 se desactiva.
+- **Rendimiento:** solo se animan `transform` y `opacity`, nunca `transition: all`.
+
+D7. **Inicio:** un título grande y 4 tarjetas grandes, una por sección, con una línea de qué hace y el algoritmo que usa. Sin texto de relleno.
+
+D8. **Lo que se quita de v1:** la paleta cafetera, los títulos con serifa y la cabecera con curvas de nivel. Las pruebas de v1 que fijaban esos detalles (paleta Guadua/Cocora, curvas de nivel, ausencia total de `<script`) se **reescriben** para v2. No es debilitarlas: cambió la spec. Las pruebas de estructura accesible de v1 se conservan.
+
+**Casos de prueba de v2** (cliente de Flask y lectura de archivos):
+- B1. `GET /static/estilos.css` → 200 `text/css`; `base.html` sin `<style>`.
+- B2. **Guardia de JavaScript:**
+  - las plantillas solo tienen `<script src="/static/vendor/motion.js" defer>` y `<script src="/static/app.js" defer>`, en `base.html`;
+  - ninguna plantilla tiene `<script>` en línea, atributos `on[a-z]+=` ni `javascript:`;
+  - en `rutas/r5/static/` no hay más `.js` que esos dos;
+  - `app.js` tiene ≤ 150 líneas, no usa `fetch(`, `XMLHttpRequest`, `eval(`, `innerHTML` ni `document.write`, y consulta `prefers-reduced-motion`.
+- B3. `vendor/motion.js` tiene el SHA-256 de arriba y `vendor/LICENSE.md` existe.
+- B4. `estilos.css` cumple todo esto:
+  - define las variables de D2 en claro y en un bloque `prefers-color-scheme: dark`;
+  - declara `color-scheme`;
+  - tiene bloques `prefers-reduced-motion`, `prefers-reduced-transparency` y `prefers-contrast`, `@view-transition` y `backdrop-filter`;
+  - no tiene `transition: all`, `@import` ni `url(http`.
+- B5. `COLORES` de `mapas.py` = `#007AFF` / `#FF9500` / `#34C759`, iguales a las variables de método del CSS y a la leyenda del itinerario.
+- B6. `/itinerario` con 6 casillas marcadas muestra el contador «6 elegidos» en un elemento con `aria-live="polite"`. Sin casillas muestra «0 elegidos».
+- B7. `/resultados/r2` muestra el control segmentado con 4 enlaces y `aria-current="page"` en R2.
+- B8. Siguen en verde todas las pruebas funcionales de R5 y las de estructura accesible de v1 (las equivalentes a A2–A8).
+- B9. **Manual (usuario):** en Chrome y en Safari, en modo claro y oscuro, a ≈1280 px y ≈375 px, con el movimiento reducido emulado. Se revisa:
+  - que las tarjetas entren sin rebote;
+  - que el contador responda;
+  - que el indicador del segmentado se deslice;
+  - que la barra translúcida sea legible al pasar contenido por debajo;
+  - el contraste en los dos modos.
+
+  Se anota en `review.md` y de ahí salen las capturas para `evidencias/r5/`.
 
 ## Decisiones
 Resueltas por el grupo (2026-11-11):
