@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block contenido %}
 <h1>Resultados de {{ r|upper }}</h1>
-<nav class="requerimientos" aria-label="Resultados por requerimiento">
-  {% for req in requerimientos %}<a href="/resultados/{{ req }}"{% if req == r %} aria-current="true"{% endif %}>{{ req|upper }}</a>{% endfor %}
+<p class="entradilla">Tablas y gráficas de las mediciones de cada requerimiento, leídas de <code>results/</code>.</p>
+<nav class="segmentado" aria-label="Resultados por requerimiento">
+  {% for req in requerimientos %}<a href="/resultados/{{ req }}"{% if req == r %} aria-current="page"{% endif %}>{{ req|upper }}{% if req == r %}<span class="indicador" aria-hidden="true"></span>{% endif %}</a>{% endfor %}
 </nav>
 {% for imagen in imagenes %}
 <figure class="grafica">

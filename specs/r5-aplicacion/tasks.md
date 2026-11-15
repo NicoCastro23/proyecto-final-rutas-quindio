@@ -367,7 +367,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 > 5. **Regresión de cada tarea**, además de su prueba: `.venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q`. Si la tarea toca `base.html`, ruta, envolvente o itinerario, también `.venv/bin/python -m pytest tests/test_red_real_r5.py -q` (contiene «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5»).
 > 6. B6 es un solo bloque: T36 a T45. Al cerrar T45 el trabajo se **DETIENE** hasta el commit del usuario. T46 (B9) es del usuario.
 
-- [ ] T36 · Línea base y Motion en `vendor/` con su hash (B3)
+- [x] T36 · Línea base y Motion en `vendor/` con su hash (B3)
   - Archivos: `rutas/r5/static/vendor/motion.js` y `rutas/r5/static/vendor/LICENSE.md` (copias sin cambios); `tests/test_visual_r5.py` (abrir la sección «Diseño v2»)
   - Pasos previos:
     1. `git rev-parse --short HEAD` → anotar aquí como `BASE_B6` (lo usa T45);
@@ -380,8 +380,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     - Rojo esperado: la carpeta `vendor/` no existe.
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k b3 && shasum -a 256 rutas/r5/static/vendor/motion.js && ! git check-ignore -q rutas/r5/static/vendor/motion.js`
   - anotar en `docs/anexo-ia.md`
+  - Nota (2026-11-15): `BASE_B6` = `b79167c` (HEAD al empezar T36). Línea base: `-m "not red"` 545 pasan y 1 se salta (no 541, que era la de la ronda 2). `git status` de lo prohibido, vacío. Hash de `motion.js` = el de la spec (copiado del scratchpad, sin cambios); `git check-ignore` no lo ignora.
 
-- [ ] T37 · Guardia de JavaScript nueva, `app.js` mínimo y los dos `<script>` en `base.html` (B2; D8, «ausencia total de `<script`»)
+- [x] T37 · Guardia de JavaScript nueva, `app.js` mínimo y los dos `<script>` en `base.html` (B2; D8, «ausencia total de `<script`»)
   - Archivos:
     - `tests/test_visual_r5.py`: borrar `test_a9_sin_js_propio`; agregar las `test_b2_*` de abajo; agregar `/static/app.js` a `test_b3_js_servidos`.
     - `tests/test_app_r5.py`: cambiar **solo** el bucle de plantillas de `test_sin_algoritmos_ni_js_propio` y la última línea de `test_inicio_y_menu`, como dice el plan. Las aserciones de algoritmos, de `requirements.txt` y de los `href` no cambian.
@@ -399,8 +400,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b2 or b3" && .venv/bin/python -m pytest tests/test_app_r5.py -q && git diff -- tests/test_app_r5.py`. El diff muestra solo las 2 aserciones.
   - Mutaciones que deben fallar y luego se restauran: `onclick="x"` en `ruta.html`; `fetch(` en un comentario de `app.js`; un `rutas/r5/static/x.js` vacío.
   - anotar en `docs/anexo-ia.md`
+  - Nota: mutaciones vistas fallar y restauradas: `onclick="x"` en `ruta.html` (`test_b2_sin_js_en_linea`), `fetch(` en un comentario de `app.js` (`test_b2_app_js_limites`) y un `static/x.js` vacío (`test_b2_solo_dos_archivos_js`). `git diff` de `test_app_r5.py` muestra solo las 2 aserciones.
 
-- [ ] T38 · `estilos.css` v2: colores claro y oscuro, tipografía, contraste, M1 y `COLORES` (D1, D2, D6 M1 y movimiento reducido, D8; parte de B4 y B5)
+- [x] T38 · `estilos.css` v2: colores claro y oscuro, tipografía, contraste, M1 y `COLORES` (D1, D2, D6 M1 y movimiento reducido, D8; parte de B4 y B5)
   - Archivos:
     - `rutas/r5/static/estilos.css`: reescribirlo completo con las 20 secciones del plan. En esta tarea se llenan:
       - las secciones 1 a 6;
@@ -427,8 +429,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b4 or b5 or d8 or cifras or cuadricula or transition_all or a7" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`. Fijarse en las conservadas `test_v0_cifras_tabulares`, `test_v3_fieldset_y_cuadricula`, `test_a7_leyenda_con_colores`, `test_a11_sin_transition_all_ni_externos` y en `test_mapas_r5.py::test_mapa_itinerario`.
   - Mutación que debe fallar y luego se restaura: `--texto-secundario: #8E8E93` en claro (falla `test_b4_contraste`).
   - anotar en `docs/anexo-ia.md`
+  - Nota: (1) `base.html` también cambió `class="cabecera"` por `class="barra"` en esta tarea (la tabla del plan pone esa aserción en `test_d8_sin_rastros_de_v1` de T38), así que `test_d4_menu` ya pasó en verde al escribirse en T39 (la parte de la plantilla estaba hecha); su verdad la dan el CSS y los otros tres tests de T39, que sí se vieron fallar. (2) Se borró también el auxiliar `_variable`, que solo usaban las pruebas borradas. (3) Mutación vista fallar y restaurada: `--texto-secundario: #8E8E93` (`test_b4_contraste` y `test_b4_variables_claro_y_oscuro`).
 
-- [ ] T39 · Barra translúcida, superficies y preferencias del sistema (D3, menú de D4; B4)
+- [x] T39 · Barra translúcida, superficies y preferencias del sistema (D3, menú de D4; B4)
   - Archivos:
     - `rutas/r5/templates/base.html`: `<header class="barra">` en lugar de `class="cabecera"`; el resto igual.
     - `rutas/r5/static/estilos.css`: secciones 7, 8, 9 completa y 14 (mapas y leyenda, con `color-scheme: light` en `iframe.mapa`), más el resto de la 19 (`prefers-reduced-transparency`, `prefers-contrast: more`) y el `@supports not` de la barra.
@@ -440,8 +443,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     - Rojo esperado: no hay `.barra` ni bloques de preferencias.
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b4 or d3 or d4 or a2 or a3 or v10" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`
   - anotar en `docs/anexo-ia.md`
+  - Nota: `test_b4_barra_translucida` usa `_regla(css, ".barra")` (la regla principal, al inicio de línea) y no todas las reglas `.barra`, porque `prefers-contrast: more` sí lleva `border-bottom` y el desvanecido solo aplica a la barra normal. `.tarjeta-seccion` queda con su superficie y `--sombra-grande` en la sección 9 (el enlace extendido y la cuadrícula son de T44).
 
-- [ ] T40 · Lista agrupada, botón píldora y errores con su siguiente paso (D5; Ruta y la partida del Itinerario)
+- [x] T40 · Lista agrupada, botón píldora y errores con su siguiente paso (D5; Ruta y la partida del Itinerario)
   - Archivos:
     - `rutas/r5/templates/ruta.html`: `.grupo` y `.fila`; `class="boton-principal"`; el error con su siguiente paso. El bloque `#resultado-ruta` no cambia.
     - `rutas/r5/templates/itinerario.html`: solo el grupo de la partida, el botón y el error. Las fichas son de T41.
@@ -458,8 +462,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     - `test_caso_8_itinerario_400`;
     - `test_ruta_sintetica_app` (el `<h2>` en texto plano).
   - anotar en `docs/anexo-ia.md`
+  - Nota: sin desviaciones. Los mensajes de `servicios.py` no cambian; el siguiente paso se agrega en la plantilla.
 
-- [ ] T41 · Fichas de atractivos y contador renderizado por el servidor (fichas de D5, M3 en el servidor; B6)
+- [x] T41 · Fichas de atractivos y contador renderizado por el servidor (fichas de D5, M3 en el servidor; B6)
   - Archivos:
     - `rutas/r5/app.py`: `MIN_ATRACTIVOS`, `MAX_ATRACTIVOS` y `contador_elegidos(n)`; primero como stub con `raise NotImplementedError`, para que la prueba falle por la razón correcta. En la vista `/itinerario`, `contexto["contador"] = contador_elegidos(n)`, donde `n` es el número de casillas que quedan marcadas, en las tres salidas: formulario vacío, 200 y 400.
     - `rutas/r5/templates/itinerario.html`: `fieldset` con `aria-describedby="contador"`; `<legend>` según DV-2; `<p id="contador" class="contador" aria-live="polite" data-estado=…>` con ícono, cuenta, regla y estado; fichas `<label class="ficha">` con `checked` justo después de `value`.
@@ -477,8 +482,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     - `test_formulario_42_lugares_15_atractivos`;
     - `test_itinerario_bloque_regla_no_aparece_si_cabe`.
   - anotar en `docs/anexo-ia.md`
+  - Nota: opción A de DV-2; en `test_a4_labels_y_botones` cambió solo el fragmento `<legend>Atractivos</legend>`. `test_contador_limites_iguales_a_servicios` pasó desde el principio porque las constantes ya existían en el stub; la prueba ata los límites al mensaje de `validar_itinerario`.
 
-- [ ] T42 · `app.js`: M2, entrada de las tarjetas, y M3, contador en vivo (D6 M2 y M3, movimiento reducido; B2)
+- [x] T42 · `app.js`: M2, entrada de las tarjetas, y M3, contador en vivo (D6 M2 y M3, movimiento reducido; B2)
   - Archivos: `rutas/r5/static/app.js`, completo como el esbozo del plan y de ≤ 150 líneas
   - Test primero:
     - `::test_b2_app_js_m2_m3`
@@ -488,8 +494,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Mutación que debe fallar y luego se restaura: `bounce: 0.2`.
   - Prueba de humo opcional: `.venv/bin/python -m rutas.r5.app --puerto 5061`; abrir `/itinerario`, marcar y desmarcar fichas, y ver que el contador cambia. Detener el servidor. La comprobación formal es B9 (T46).
   - anotar en `docs/anexo-ia.md`
+  - Nota: `app.js` tiene 92 líneas. `node --check` da sintaxis correcta; el comportamiento (resorte sin rebote, contador) no se ejecuta en las pruebas y queda para B9 (T46); tampoco se pudo cargar `motion.js` en un entorno de Node sin DOM. Mutación vista fallar y restaurada: `bounce: 0.2` (`test_b2_app_js_m2_m3`).
 
-- [ ] T43 · Control segmentado en Resultados y transición entre páginas (D4 y M4 de D6; B7 y B4)
+- [x] T43 · Control segmentado en Resultados y transición entre páginas (D4 y M4 de D6; B7 y B4)
   - Archivos:
     - `rutas/r5/templates/resultados.html`: `<nav class="segmentado">` con `aria-current="page"` en el actual y el `<span class="indicador" aria-hidden="true">` **después** del texto.
     - `rutas/r5/templates/base.html`: en Resultados, el menú usa `aria-current="true"` (DV-1).
@@ -502,8 +509,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b7 or view_transition or a3 or a8 or v8 or faltantes or titulos" && .venv/bin/python -m pytest tests/test_app_r5.py -k "caso_11 or caso_12" -q && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q`. Fijarse en `test_caso_11_cuatro_paginas_reales`: sin «Faltan» en r2 y r3.
   - Mutaciones que deben fallar y luego se restauran: `aria-current="page"` en «Resultados» del menú; `@view-transition` fuera de `no-preference`.
   - anotar en `docs/anexo-ia.md`
+  - Nota: mutaciones vistas fallar y restauradas: `aria-current="page"` en «Resultados» del menú (`test_b7_control_segmentado`) y `@view-transition` fuera de `no-preference` (`test_b4_view_transition`).
 
-- [ ] T44 · Encabezado de cada página e inicio (D0, D7)
+- [x] T44 · Encabezado de cada página e inicio (D0, D7)
   - Archivos:
     - `rutas/r5/templates/inicio.html`, `ruta.html`, `envolvente.html`, `itinerario.html` y `resultados.html`: `<p class="entradilla">` justo después del `<h1>`, con los textos del plan (DV-12).
     - `inicio.html`: un solo enlace por tarjeta.
@@ -514,8 +522,9 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
     - Rojo esperado: no hay entradillas ni el enlace extendido.
   - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "d0 or d7 or v10" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`. Fijarse en `test_ruta_incompleta`, `test_caso_11_cuatro_paginas_reales` y `test_itinerario_bloque_regla_no_aparece_si_cabe`: las entradillas no pueden decir «desconocido», «Tiempo de viaje», «Faltan» ni «Regla de las 11 h».
   - anotar en `docs/anexo-ia.md`
+  - Nota: sin desviaciones; las entradillas son las del plan y ninguna contiene las palabras prohibidas.
 
-- [ ] T45 · Suite completa, restricciones y mutaciones (cierre automático de B6; B8)
+- [x] T45 · Suite completa, restricciones y mutaciones (cierre automático de B6; B8)
   - Archivos: ninguno nuevo. R5 no genera resultados, así que no hay archivos que regenerar.
   - Test primero: no aplica
   - Comando (reemplazar `BASE_B6` por el hash anotado en T36):
@@ -540,6 +549,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Anotar aquí el conteo final de pruebas.
   - Cierre de B6: en verde, el trabajo se **DETIENE** hasta el commit del usuario. Después sigue T46, que hace el usuario.
   - anotar en `docs/anexo-ia.md`
+  - Nota (2026-11-15), conteo final: completa 645 pasan y 3 se saltan; `-m "not red"` 606 pasan y 1 se salta (antes 545 y 1); `-m red` 39 pasan y 2 se saltan (los 2 saltos conocidos). Los dos `git diff --stat` salen vacíos; el diff de `test_app_r5.py` muestra solo las 2 aserciones; hash de `motion.js` correcto; 2 `.js` (`app.js` 92 líneas, `estilos.css` 200); sin `package.json` ni `node_modules`. Mutación extra vista fallar y restaurada: `COLORES["voraz"]` = `#FF9501` (`test_b5_colores_de_metodos`). `curl` a un puerto distinto de 5050: 200 en `/static/estilos.css`, `/static/app.js`, `/static/vendor/motion.js` y las 4 secciones, con «29,7», «178,7», «190,4» y «11,8». El trabajo se DETIENE hasta el commit del usuario; T46 es del usuario.
 
 - [ ] T46 · B9: revisión manual del usuario en Chrome y Safari → `review.md` y capturas en `evidencias/r5/`
   - Archivos: ninguno de código. El usuario, o el reviewer con el usuario, escribe el resultado en `specs/r5-aplicacion/review.md`, sección «Diseño v2 (B9)», y guarda las capturas en `evidencias/r5/`.

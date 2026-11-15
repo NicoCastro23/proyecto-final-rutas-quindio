@@ -1,148 +1,200 @@
-/* Hoja de estilos de R5. Sin fuentes ni recursos externos; cada sección dice para qué sirve. */
+/* Hoja de estilos de R5, diseño v2 (apple-design). Sin recursos externos; cada sección dice para qué sirve. */
 
-/* 1. Paleta y escala */
-/* Siete colores con nombre: cinco base y dos de método (también usados en los mapas). */
+/* 1. Colores, modo claro (D2): fondo, superficie, texto, acento y un color por método (= COLORES de mapas.py). */
 :root {
-  --guadua: #2F4A3A;      /* menú y títulos */
-  --hoja: #5E8C61;        /* acento: bordes y envolvente (no se usa para texto: poco contraste) */
-  --niebla: #F3F6F4;      /* fondo */
-  --bahareque: #D5DDD7;   /* líneas y bordes */
-  --tinta: #1D2521;       /* texto */
-  --cocora: #1F5F8B;      /* ruta y Held-Karp */
-  --cereza: #B8322A;      /* vecino más cercano y errores */
-  --fuente-titulos: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --fuente-texto: system-ui, sans-serif;
-  --fuente-ids: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --t-pequeno: 0.875rem;  /* notas y captions */
-  --t-base: 1rem;         /* texto */
-  --t-medio: 1.25rem;     /* h2 y valores de las tarjetas */
-  --t-grande: 1.75rem;    /* h1 y marca */
+  color-scheme: light dark;
+  --fondo: #F5F5F7;
+  --superficie: #FFFFFF;
+  --texto: #1D1D1F;
+  --texto-secundario: #6E6E73;
+  --separador: rgba(0, 0, 0, 0.1);
+  --acento: #0071E3;
+  --metodo-hk: #007AFF;
+  --metodo-voraz: #FF9500;
+  --metodo-envolvente: #34C759;
+  /* Extras que piden los contrastes (DV-4 a DV-6): contorno de controles 3:1 y botón con texto blanco 4,5:1. */
+  --borde-control: #8E8E93;
+  --relleno-boton: #0071E3;
+  --texto-boton: #FFFFFF;
+  --barra: rgba(245, 245, 247, 0.72);
+  --sombra-chica: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --sombra-grande: 0 2px 6px rgba(0, 0, 0, 0.05), 0 12px 32px rgba(0, 0, 0, 0.10);
 }
 
-/* 2. Base */
-/* Una caja predecible, fondo Niebla, texto Tinta; títulos con serifa; enlaces en Guadua (no en Hoja). */
+/* 2. Colores, modo oscuro (D2): mismas variables; los métodos no cambian porque el mapa sigue claro. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #000000;
+    --superficie: #1C1C1E;
+    --texto: #F5F5F7;
+    --texto-secundario: #98989D;
+    --separador: rgba(255, 255, 255, 0.15);
+    --acento: #2997FF;
+    --barra: rgba(28, 28, 30, 0.72);
+    --sombra-chica: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --sombra-grande: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* 3. Tipografía y medidas (D1): fuente del sistema, ids en monoespaciada, radios. */
+:root {
+  --fuente: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --fuente-ids: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radio: 18px;
+  --radio-control: 10px;
+  --radio-pildora: 980px;
+}
+
+/* 4. Base: caja predecible, fondo y texto del modo, 1rem con interlineado 1,5; imágenes fluidas. */
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; background: var(--niebla); color: var(--tinta); font: var(--t-base)/1.5 var(--fuente-texto); }
-h1, h2 { font-family: var(--fuente-titulos); color: var(--guadua); line-height: 1.2; }
-h1 { font-size: var(--t-grande); margin: 0 0 1rem; }
-h2 { font-size: var(--t-medio); margin: 1.5rem 0 0.5rem; }
-a { color: var(--guadua); text-decoration: underline; }
-.id { font-family: var(--fuente-ids); font-size: 0.9em; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font: 400 1rem/1.5 var(--fuente);
+       font-optical-sizing: auto; letter-spacing: 0; }
 img { max-width: 100%; height: auto; }
 
-/* 3. Foco visible */
-/* El foco del teclado siempre se ve: anillo Cocora (Niebla dentro de la cabecera, que es oscura). */
-:focus-visible { outline: 3px solid var(--cocora); outline-offset: 2px; }
-.cabecera :focus-visible { outline-color: var(--niebla); }
+/* 5. Títulos y textos (D0, D1): la jerarquía sale de tamaño, peso e interlineado juntos. */
+h1 { font-size: clamp(2rem, 1.25rem + 3vw, 3.25rem); line-height: 1.05; letter-spacing: -0.02em; font-weight: 700; margin: 0 0 0.75rem; }
+h2 { font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem); line-height: 1.15; letter-spacing: -0.01em; font-weight: 600; margin: 2rem 0 0.75rem; }
+a { color: var(--texto); text-decoration: underline; }       /* en --acento solo sobre una superficie (DV-5) */
+.id, code { font-family: var(--fuente-ids); font-size: 0.9em; }
+.entradilla { font-size: 1.1875rem; line-height: 1.4; color: var(--texto-secundario); max-width: 40rem; margin: 0 0 1.5rem; }
+.nota, caption, dt, .visita { font-size: 0.875rem; line-height: 1.4; letter-spacing: 0.01em; }
 
-/* 4. Saltar al contenido */
-/* Enlace oculto hasta recibir el foco: salta el menú y va directo al contenido. */
-.saltar { position: absolute; left: -999px; top: 0; background: var(--niebla); padding: 0.5rem 1rem; z-index: 10; }
-.saltar:focus { left: 0; }
+/* 6. Foco visible y saltar al contenido: el anillo del teclado siempre se ve; el destino no queda bajo la barra. */
+:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.saltar { position: absolute; left: -999px; top: 0; z-index: 20; padding: 0.5rem 1rem; background: var(--superficie); border-radius: var(--radio-control); }
+.saltar:focus { left: 0.5rem; top: 0.5rem; }
+#contenido { scroll-margin-top: 5rem; }
 
-/* 5. Cabecera y menú */
-/* Franja con curvas de nivel (el único adorno): círculos concéntricos finos en Hoja sobre Guadua. */
-.cabecera {
+/* 7. Barra de navegación translúcida (D3, D4): fija arriba; el contenido pasa por debajo y se desenfoca. */
+.barra {
+  position: sticky; top: 0; z-index: 10;
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.5rem;
-  padding: 1rem 1.25rem;
-  background-color: var(--guadua);
-  background-image: repeating-radial-gradient(ellipse at 85% 140%,
-      transparent 0 22px, rgb(94 140 97 / 0.35) 22px 24px);
+  padding: 0.75rem 1.25rem;
+  background: var(--barra);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  view-transition-name: barra;               /* queda quieta mientras la página cambia (M4) */
 }
-.cabecera a { color: #fff; text-decoration: none; }
-.marca { font-family: var(--fuente-titulos); font-size: var(--t-grande); line-height: 1.2; }
-.menu { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }   /* en 375 px se parte en dos líneas */
-.menu a { padding: 0.25rem 0; border-bottom: 3px solid transparent; }
-.cabecera [aria-current="page"] { border-bottom-color: #fff; }     /* la sección actual, subrayada gruesa */
+.barra::after {                              /* desvanecido suave en lugar de una línea divisoria */
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 0.75rem;
+  background: linear-gradient(var(--separador), transparent); pointer-events: none;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .barra { background: var(--fondo); }       /* sin desenfoque no hay material: la barra queda sólida y legible */
+}
+.marca { font-weight: 600; text-decoration: none; }
+.menu { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }      /* en 375 px se parte en dos líneas */
+.menu a { font-weight: 500; text-decoration: none; }
+.barra [aria-current] { font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.3rem; }
 
-/* 6. Contenido */
-/* El contenido no se estira más de ~70rem. */
-main { max-width: 70rem; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+/* 8. Contenido: main de ~68rem; el título y su entradilla van antes de cualquier control. */
+main { max-width: 68rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
 
-/* 7. Formularios */
-/* Etiqueta encima de cada campo; las casillas de atractivos en cuadrícula (2-3 columnas, 1 en 375 px). */
-form { display: grid; gap: 0.5rem; max-width: 40rem; }
+/* 9. Superficies y tarjetas (D3): radio de 18 px y sombra suave; las superficies grandes llevan la sombra profunda. */
+.tarjeta, .tabla-ancha, .grafica, .faltantes { background: var(--superficie); border-radius: var(--radio); box-shadow: var(--sombra-chica); }
+iframe.mapa, .tarjeta-seccion { background: var(--superficie); border-radius: var(--radio); box-shadow: var(--sombra-grande); }
+dl.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.tarjeta { padding: 1rem 1.25rem; }
+.tarjeta dt { color: var(--texto-secundario); }
+.tarjeta small { font-size: 0.875rem; font-weight: 400; color: var(--texto-secundario); }
+.tarjeta.metodo-hk { box-shadow: inset 0 3px 0 var(--metodo-hk), var(--sombra-chica); }       /* franja del color del método */
+.tarjeta.metodo-voraz { box-shadow: inset 0 3px 0 var(--metodo-voraz), var(--sombra-chica); }
+.tarjeta dd { margin: 0; font-size: 1.75rem; line-height: 1.1; letter-spacing: -0.01em; font-weight: 600;
+              font-variant-numeric: tabular-nums; }
+
+/* 10. Formularios en lista agrupada (D5): filas con etiqueta y control dentro de un grupo de esquinas redondeadas.
+       El contorno del select usa --borde-control (3:1). */
+form { display: grid; gap: 1.25rem; max-width: 40rem; margin-top: 1.5rem; }
+.grupo { background: var(--superficie); border-radius: var(--radio); box-shadow: var(--sombra-chica); }
+.fila { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1.25rem; }
+.fila + .fila { border-top: 1px solid var(--separador); }
 label { font-weight: 600; }
-select { font: inherit; padding: 0.4rem; border: 1px solid var(--hoja); border-radius: 4px; background: #fff; }
-fieldset { border: 1px solid var(--bahareque); border-radius: 4px; padding: 0.75rem; margin: 0.5rem 0 0; }
-legend { font-weight: 600; padding: 0 0.25rem; }
-.casillas { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 0.4rem 1rem; }
-.casilla { display: flex; align-items: baseline; gap: 0.4rem; font-weight: 400; }
-.visita { margin-left: auto; font-size: var(--t-pequeno); white-space: nowrap; font-variant-numeric: tabular-nums; }
-button { justify-self: start; font: inherit; font-weight: 600; padding: 0.5rem 1.25rem; border: 0; border-radius: 4px;
-         background: var(--guadua); color: #fff; cursor: pointer; }
+select { font: inherit; padding: 0.4rem 0.6rem; color: var(--texto); background: var(--superficie);
+         border: 1px solid var(--borde-control); border-radius: var(--radio-control); }
 
-/* 8. Mensajes */
-/* Error con borde Cereza; aviso con borde Hoja. Ambos con fondo claro. */
-.error, .aviso { padding: 0.6rem 0.9rem; border-left: 4px solid; background: #fff; border-radius: 0 4px 4px 0; max-width: 40rem; }
-.error { border-color: var(--cereza); }
-.aviso { border-color: var(--hoja); }
+/* 11. Fichas de atractivos y contador (D5, M3): el <label> entero es el área de clic; la casilla real sigue visible. */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { float: left; margin-right: 1rem; padding: 0; font-weight: 600; font-size: 1.125rem; }
+.contador { margin: 0 0 1rem; color: var(--texto-secundario); font-variant-numeric: tabular-nums; }
+.contador .icono { display: inline-block; width: 1.25rem; font-weight: 700; color: var(--texto); }   /* ✓ o !, con texto al lado */
+.casillas { clear: both; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.5rem; }
+.ficha { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.75rem 1rem; font-weight: 400; cursor: pointer;
+         background: var(--superficie); border: 1px solid var(--separador); border-radius: var(--radio-control); }
+.ficha input { accent-color: var(--acento); }
+.ficha:has(input:checked) { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+.ficha:has(input:focus-visible) { outline: 3px solid var(--acento); outline-offset: 2px; }
+.visita { margin-left: auto; color: var(--texto-secundario); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-/* 9. Tarjetas de resumen */
-/* Números clave en tarjetas: borde superior Hoja, valor grande con cifras de ancho fijo. */
-dl.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; margin: 1rem 0; }
-.tarjeta { background: #fff; border: 1px solid var(--bahareque); border-top: 4px solid var(--hoja); border-radius: 4px; padding: 0.6rem 0.9rem; }
-.tarjeta dt { font-size: var(--t-pequeno); }
-.tarjeta dd { margin: 0; font-size: var(--t-medio); font-variant-numeric: tabular-nums; }
-.tarjeta small { font-size: var(--t-pequeno); }
-.nota { font-size: var(--t-pequeno); }
-.tarjeta.metodo-hk { border-top-color: var(--cocora); }     /* mismos colores que las líneas del mapa */
-.tarjeta.metodo-voraz { border-top-color: var(--cereza); }
-thead .metodo-hk { background: var(--cocora); }
-thead .metodo-voraz { background: var(--cereza); }
+/* 12. Botón principal (D5): relleno, en píldora, con el texto de lo que hace. */
+.boton-principal { justify-self: start; font: inherit; font-weight: 600; padding: 0.75rem 1.75rem; border: 0; cursor: pointer;
+                   border-radius: var(--radio-pildora); background: var(--relleno-boton); color: var(--texto-boton); }
 
-/* 10. Mapas y leyenda */
-/* El mapa ocupa todo el ancho y una altura que se adapta a la pantalla; la leyenda explica sus colores. */
-iframe.mapa { width: 100%; height: clamp(320px, 60vh, 560px); border: 1px solid var(--bahareque); border-radius: 4px; background: #fff; }
-.leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; padding: 0; margin: 0.5rem 0; }
-.muestra { display: inline-block; width: 1.5rem; height: 0.4rem; margin-right: 0.4rem; vertical-align: middle; border-radius: 2px; }
+/* 13. Mensajes (D5): sobre superficie, con una franja a la izquierda; el texto va siempre en --texto. */
+.error, .aviso { max-width: 40rem; margin: 1.25rem 0; padding: 0.75rem 1.25rem; background: var(--superficie);
+                 border-radius: var(--radio); box-shadow: var(--sombra-chica); }
+.error { box-shadow: inset 4px 0 0 var(--metodo-voraz), var(--sombra-chica); }
+.aviso { box-shadow: inset 4px 0 0 var(--acento), var(--sombra-chica); }
 
-/* 11. Tablas */
-/* Tablas legibles: título (caption) arriba, encabezado en Guadua, filas alternadas, números alineados.
-   .tabla-ancha desplaza la tabla dentro de su caja en pantallas angostas (las de pandas son anchas). */
-table { border-collapse: collapse; margin: 0.5rem 0; background: #fff; }
-caption { caption-side: top; text-align: left; font-size: var(--t-pequeno); padding: 0.25rem 0; }
-th, td { border: 1px solid var(--bahareque); padding: 0.35rem 0.7rem; text-align: left; }
-thead th { background: var(--guadua); color: #fff; }
-tbody tr:nth-child(even) { background: var(--niebla); }
+/* 14. Mapas y leyenda: el mapa de Folium es claro en los dos modos (se acepta); la leyenda explica sus colores. */
+iframe.mapa { width: 100%; height: clamp(20rem, 60vh, 35rem); border: 0; color-scheme: light; margin: 1rem 0; }
+.leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; padding: 0; margin: 1rem 0 0; }
+.muestra { display: inline-block; width: 1.5rem; height: 0.4rem; margin-right: 0.5rem; vertical-align: middle;
+           border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2); }   /* el contorno rescata al naranja sobre blanco */
+
+/* 15. Tablas: sobre superficie, línea separadora, franja de color en el encabezado de cada método (DV-7). */
+table { border-collapse: collapse; margin: 0.5rem 0; background: var(--superficie); }
+caption { caption-side: top; text-align: left; color: var(--texto-secundario); padding: 0.25rem 0; }
+th, td { border-bottom: 1px solid var(--separador); padding: 0.5rem 0.75rem; text-align: left; }
 td { font-variant-numeric: tabular-nums; }
+thead .metodo-hk { box-shadow: inset 0 -3px 0 var(--metodo-hk); }
+thead .metodo-voraz { box-shadow: inset 0 -3px 0 var(--metodo-voraz); }
 .tabla-ancha { overflow-x: auto; }
 
-/* 12. Resultados */
-/* Navegación R1-R4 (el actual en negrita y subrayado grueso), gráficas con su descripción y faltantes. */
-.requerimientos { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-bottom: 1rem; }
-.requerimientos [aria-current="true"] { font-weight: 700; text-decoration-thickness: 3px; }
-.grafica { margin: 0 0 1.5rem; }
-.descripcion { font-size: var(--t-pequeno); margin: 0 0 0.5rem; }
-.faltantes { border-left: 4px solid var(--hoja); background: #fff; padding: 0.25rem 1rem; margin-top: 1.5rem; }
-code { font-family: var(--fuente-ids); font-size: 0.9em; }
+/* 16. Resultados: control segmentado R1 | R2 | R3 | R4 (D4, M4) y gráficas.
+       Los 4 segmentos miden lo mismo, así que entre R1 y R4 el indicador solo se traslada. */
+.segmentado { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 20rem; padding: 0.25rem; margin: 1.5rem 0;
+              border-radius: var(--radio-control); background: rgba(118, 118, 128, 0.12); }
+.segmentado a { position: relative; z-index: 0; padding: 0.4rem 0; text-align: center; font-weight: 500; text-decoration: none; }
+.segmentado [aria-current] { font-weight: 600; }
+.segmentado .indicador { position: absolute; inset: 0; z-index: -1; border-radius: 8px; background: var(--superficie);
+                         box-shadow: var(--sombra-chica); view-transition-name: indicador-segmento; }
+.grafica { margin: 0 0 1.5rem; padding: 1rem 1.25rem; }
+.grafica h2 { margin-top: 0; }
+.descripcion { color: var(--texto-secundario); font-size: 0.875rem; line-height: 1.4; margin: 0 0 0.75rem; }
+.faltantes { padding: 0.25rem 1.25rem; margin-top: 1.5rem; box-shadow: inset 4px 0 0 var(--acento), var(--sombra-chica); }
 
-/* 13. Inicio */
-/* Cuatro tarjetas en cuadrícula; el título de cada una es el enlace. */
-.secciones { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
-.tarjeta-seccion { background: #fff; border: 1px solid var(--bahareque); border-top: 4px solid var(--hoja); border-radius: 4px; padding: 0.75rem 1rem; }
+/* 17. Inicio (D7): cuatro tarjetas grandes; el enlace del título se extiende a toda la tarjeta. */
+.secciones { list-style: none; padding: 0; margin: 2rem 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+.tarjeta-seccion { position: relative; padding: 1.5rem; }
 .tarjeta-seccion h2 { margin-top: 0; }
+.tarjeta-seccion h2 a { text-decoration: none; }
+.tarjeta-seccion h2 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radio); }
 
-/* 14. Movimiento */
-/* Movimiento mínimo: el botón se hunde al presionar; los colores cambian suave solo con mouse.
-   Nunca se anima "all": solo las propiedades que cambian. */
-button { transition: transform 160ms ease-out; }
-button:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) {
-  a, button { transition: color 150ms ease-out, background-color 150ms ease-out, transform 160ms ease-out; }
-  .menu a:hover { color: var(--bahareque); }
-  button:hover { background-color: var(--cocora); }
+/* 18. Movimiento (D6). Solo M1 y M4 están aquí; M2 y M3 están en app.js. Solo se animan transform y opacity. */
+.boton-principal, .ficha, .segmentado a { transition: transform 100ms ease-out; }
+.boton-principal:active, .ficha:active, .segmentado a:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }                 /* M4: fundido corto entre páginas */
 }
-@media (prefers-reduced-motion: reduce) {     /* sin escala; se dejan solo los cambios de color */
-  button, a { transition: color 150ms ease-out, background-color 150ms ease-out; }
-  button:active { transform: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 180ms; animation-timing-function: ease-out; }
+::view-transition-group(indicador-segmento) { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); }
+
+/* 19. Preferencias del sistema (D3, D6): menos movimiento, menos transparencia, más contraste. */
+@media (prefers-reduced-motion: reduce) {
+  .boton-principal:active, .ficha:active, .segmentado a:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .barra { background: var(--fondo); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --separador: var(--texto-secundario); }
+  .barra { background: var(--fondo); -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid var(--texto); }
+  .barra::after { display: none; }
+  .tarjeta, .ficha, .tabla-ancha, .tarjeta-seccion, .segmentado { border: 1px solid var(--texto); }
 }
 
-/* 15. Pantallas angostas */
-/* En pantallas angostas: márgenes y tamaños menores (el menú ya se parte solo con flex-wrap). */
+/* 20. Pantallas angostas: márgenes menores y, en cada fila, la etiqueta encima del campo. */
 @media (max-width: 40rem) {
-  .cabecera { padding: 0.75rem 1rem; }
-  .marca { font-size: var(--t-medio); }
-  main { padding: 1rem; }
-  h1 { font-size: var(--t-medio); }
+  main { padding: 1.25rem 1rem 3rem; }
+  .fila { flex-direction: column; align-items: stretch; gap: 0.5rem; }
 }

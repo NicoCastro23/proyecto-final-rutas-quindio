@@ -21,47 +21,11 @@ def _css():
     return _leer(R5 / "static" / "estilos.css")
 
 
-# ---- T25: A9, sin JavaScript propio ----
-def test_a9_sin_js_propio():
-    """Ni las plantillas ni la hoja de estilos llevan <script ni javascript:."""
-    archivos = [R5 / "templates" / f"{nombre}.html" for nombre in PLANTILLAS]
-    archivos.append(R5 / "static" / "estilos.css")
-    for archivo in archivos:
-        assert archivo.exists(), f"falta {archivo.name}"
-        texto = _leer(archivo).lower()
-        assert "<script" not in texto and "javascript:" not in texto, archivo.name
-
-
-# ---- T26: paleta (A11, V0) ----
-PALETA = {"guadua": "#2F4A3A", "hoja": "#5E8C61", "niebla": "#F3F6F4", "bahareque": "#D5DDD7",
-          "tinta": "#1D2521", "cocora": "#1F5F8B", "cereza": "#B8322A"}
-
-
-def _variable(css, nombre):
-    """Valor hexadecimal de la variable --nombre, en minúsculas (None si no está definida)."""
-    encontrado = re.search(rf"--{nombre}:\s*(#[0-9a-fA-F]{{6}})", css)
-    return encontrado.group(1).lower() if encontrado else None
-
-
-def test_a11_paleta_en_css():
-    css = _css()
-    for nombre, valor in PALETA.items():
-        assert _variable(css, nombre) == valor.lower(), nombre
-
-
+# ---- T26: sin transition: all ni recursos externos (A11) ----
 def test_a11_sin_transition_all_ni_externos():
     css = _css()
     assert not re.search(r"transition\s*:\s*all", css)
     assert "@import" not in css and "url(http" not in css
-
-
-def test_a11_colores_de_mapas():
-    from rutas.r5.mapas import COLORES
-    css = _css()
-    assert COLORES["ruta"].lower() == _variable(css, "cocora")
-    assert COLORES["held_karp"].lower() == _variable(css, "cocora")
-    assert COLORES["voraz"].lower() == _variable(css, "cereza")
-    assert COLORES["envolvente"].lower() == _variable(css, "hoja")
 
 
 # ---- T27: base, hoja enlazada, saltar al contenido, menú (A1, A2, A3, V0) ----
@@ -88,7 +52,7 @@ def test_a2_viewport_y_saltar(cliente_app, url):
 
 
 @pytest.mark.parametrize("url,texto", [("/ruta", "Ruta"), ("/envolvente", "Envolvente"),
-                                       ("/itinerario", "Itinerario"), ("/resultados/r2", "Resultados")])
+                                       ("/itinerario", "Itinerario")])
 def test_a3_aria_current(cliente_app, url, texto):
     html = cliente_app.get(url).get_data(as_text=True)
     assert html.count('aria-current="page"') == 1
@@ -123,22 +87,6 @@ def _bloque_media(css, consulta):
     return None
 
 
-def test_v0_tipos_firma_y_movimiento():
-    css = _css_sin_comentarios()
-    for fragmento in ('"Iowan Old Style"', "system-ui", "ui-monospace", "repeating-radial-gradient",
-                      ":focus-visible", "scale(0.97)", "160ms ease-out",
-                      "(hover: hover) and (pointer: fine)", "prefers-reduced-motion: reduce", "flex-wrap"):
-        assert fragmento in css, fragmento
-
-
-def test_v0_movimiento_reducido_quita_la_escala():
-    """Con prefers-reduced-motion: reduce, «button:active» anula la escala con «transform: none»."""
-    bloque = _bloque_media(_css_sin_comentarios(), "(prefers-reduced-motion: reduce)")
-    assert bloque is not None, "falta el bloque «@media (prefers-reduced-motion: reduce)» (fuera de comentarios)"
-    assert re.search(r"button:active\s*\{[^}]*transform:\s*none", bloque), \
-        "dentro de prefers-reduced-motion: reduce, «button:active» debe llevar «transform: none»"
-
-
 def test_v0_cifras_tabulares():
     """Las cifras de las tarjetas, de las celdas y la duración de visita de las casillas usan dígitos de ancho fijo, para que las columnas alineen."""
     css = _css()
@@ -152,13 +100,6 @@ def test_v0_cifras_tabulares():
         "el bloque «.visita» debe aplicar font-variant-numeric: tabular-nums"
 
 
-def test_v0_contorno_select():
-    """El contorno del «select» usa var(--hoja): Bahareque sobre blanco da 1,39:1 y el criterio WCAG 1.4.11 (componentes de interfaz) pide al menos 3:1; Hoja da 3,89:1."""
-    css = _css()
-    assert re.search(r"(?m)^select\s*\{[^}]*border(-color)?:[^;}]*var\(--hoja\)", css), \
-        "el contorno del «select» debe usar var(--hoja): Bahareque sobre blanco da 1,39:1 y WCAG 1.4.11 pide ≥ 3:1"
-
-
 # ---- T28: formularios y mensajes (A4, A6, V3, V6) ----
 def test_a4_labels_y_botones(cliente_app):
     ruta = cliente_app.get("/ruta").get_data(as_text=True)
@@ -167,7 +108,7 @@ def test_a4_labels_y_botones(cliente_app):
         assert fragmento in ruta, fragmento
     itinerario = cliente_app.get("/itinerario").get_data(as_text=True)
     for fragmento in ('<label for="partida">', 'id="partida"', "<fieldset",
-                      "<legend>Atractivos (elige de 6 a 8)</legend>", ">Calcular itinerario</button>"):
+                      "<legend>Atractivos</legend>", ">Calcular itinerario</button>"):
         assert fragmento in itinerario, fragmento
 
 
@@ -254,16 +195,6 @@ def test_v5_tabla_comparacion(cliente_app):
     assert re.search(r'<th scope="col" class="metodo-voraz">', tabla)
 
 
-def test_v5_colores_encabezado_metodos():
-    """El encabezado de cada método en la tabla de comparación usa el mismo color que su línea en el mapa."""
-    css = _css()
-    # `^thead` al inicio de línea y regex limitada al bloque (`[^}]*`): no se confunde con las tarjetas.
-    assert re.search(r"(?m)^thead \.metodo-hk\s*\{[^}]*background(-color)?:\s*var\(--cocora\)", css), \
-        "el encabezado «thead .metodo-hk» debe tener de fondo var(--cocora), el color de Held-Karp en el mapa"
-    assert re.search(r"(?m)^thead \.metodo-voraz\s*\{[^}]*background(-color)?:\s*var\(--cereza\)", css), \
-        "el encabezado «thead .metodo-voraz» debe tener de fondo var(--cereza), el color del vecino más cercano en el mapa"
-
-
 def test_v5_orden_de_la_pagina(tmp_path):
     cliente, _ = _cliente(tmp_path, visitas=[120] * 6)
     html = cliente.get("/itinerario?" + QUERY_ITINERARIO).get_data(as_text=True)
@@ -345,16 +276,6 @@ def test_v8_tablas_de_resultados(cliente_app):
     assert 'scope="col"' in html
 
 
-def test_v9_navegacion_requerimientos(cliente_app):
-    html = cliente_app.get("/resultados/r3").get_data(as_text=True)
-    nav = _bloque(html, 'class="requerimientos"', "</nav>")
-    for r in ("r1", "r2", "r3", "r4"):
-        assert f'href="/resultados/{r}"' in nav
-    assert re.search(r'href="/resultados/r3"[^>]*aria-current="true"|aria-current="true"[^>]*href="/resultados/r3"', nav)
-    assert nav.count('aria-current="true"') == 1
-    assert html.count('aria-current="page"') == 1
-
-
 def test_faltantes_con_titulo(cliente_app):
     from rutas.r5.app import TITULOS_RESULTADOS
     html = cliente_app.get("/resultados/r4").get_data(as_text=True)
@@ -374,3 +295,393 @@ def test_v10_inicio_tarjetas(cliente_app):
         assert texto in tarjetas, texto
     assert "nodos de la red" in html and "envolvente convexa de los 42 lugares" not in html
     assert re.search(r'class="marca"[^>]*aria-current="page"', html)
+
+
+# ======================================================================================
+# Diseño v2 (apple-design). Casos B1 a B8 de la spec; ninguna prueba lleva la marca `red`.
+# ======================================================================================
+import hashlib
+
+STATIC = R5 / "static"
+SHA256_MOTION = "521cfef8910fdd997463ea9881d4b790e017331e3d2f79c02adfc4d5fe1f2cae"
+
+
+# ---- T36: Motion en vendor/ con su hash (B3) ----
+def test_b3_motion_con_hash_y_licencia():
+    motion = STATIC / "vendor" / "motion.js"
+    licencia = STATIC / "vendor" / "LICENSE.md"
+    assert motion.exists(), "falta static/vendor/motion.js"
+    assert hashlib.sha256(motion.read_bytes()).hexdigest() == SHA256_MOTION
+    assert licencia.exists() and "MIT" in _leer(licencia)
+    assert "Motion" in _leer(motion)
+
+
+@pytest.mark.parametrize("url", ["/static/vendor/motion.js", "/static/app.js"])
+def test_b3_js_servidos(cliente_app, url):
+    assert cliente_app.get(url).status_code == 200
+
+
+# ---- T37: guardia de JavaScript (B2) ----
+SCRIPT_MOTION = '<script src="/static/vendor/motion.js" defer></script>'
+SCRIPT_APP = '<script src="/static/app.js" defer></script>'
+
+
+def _plantillas():
+    return {nombre: _leer(R5 / "templates" / f"{nombre}.html") for nombre in PLANTILLAS}
+
+
+def test_b2_scripts_solo_en_base():
+    """base.html tiene exactamente los dos <script> permitidos, en <head> y en ese orden; las demás, ninguno."""
+    plantillas = _plantillas()
+    base = plantillas["base"]
+    head = base[base.index("<head>"):base.index("</head>")]
+    assert base.lower().count("<script") == 2
+    assert head.index(SCRIPT_MOTION) < head.index(SCRIPT_APP)
+    for nombre, texto in plantillas.items():
+        if nombre != "base":
+            assert "<script" not in texto.lower(), nombre
+
+
+def test_b2_sin_js_en_linea():
+    """Todo <script> lleva src= y se cierra vacío; sin atributos on…= ni javascript: en plantillas ni en el CSS."""
+    for nombre, texto in _plantillas().items():
+        for etiqueta in re.findall(r"<script[^>]*>.*?</script>", texto, flags=re.S | re.I):
+            assert re.fullmatch(r'<script src="[^"]+" defer></script>', etiqueta), (nombre, etiqueta)
+        assert not re.search(r"\son[a-z]+\s*=", texto, flags=re.I), f"{nombre} tiene un atributo on…="
+        assert "javascript:" not in texto.lower(), nombre
+    assert "javascript:" not in _css().lower()
+
+
+def test_b2_solo_dos_archivos_js():
+    encontrados = {ruta.relative_to(STATIC).as_posix() for ruta in STATIC.rglob("*.js")}
+    assert encontrados == {"app.js", "vendor/motion.js"}
+
+
+def test_b2_app_js_limites():
+    texto = _leer(STATIC / "app.js")
+    assert len(texto.splitlines()) <= 150
+    for prohibido in ("fetch(", "XMLHttpRequest", "eval(", "innerHTML", "document.write", "http"):
+        assert prohibido not in texto, prohibido
+    assert "matchMedia" in texto and "prefers-reduced-motion" in texto
+
+
+@pytest.mark.parametrize("url", PAGINAS)
+def test_b2_html_servido_solo_dos_scripts(cliente_app, url):
+    """Los <script> de Folium van escapados dentro de srcdoc, así que el HTML servido tiene solo 2."""
+    html = cliente_app.get(url).get_data(as_text=True)
+    assert html.lower().count("<script") == 2
+
+
+# ---- T38: colores, tipografía, contraste y movimiento M1 (B4, B5, D1, D2, D6, D8) ----
+CLARO = {"fondo": "#F5F5F7", "superficie": "#FFFFFF", "texto": "#1D1D1F", "texto-secundario": "#6E6E73",
+         "separador": "rgba(0,0,0,.1)", "acento": "#0071E3", "metodo-hk": "#007AFF",
+         "metodo-voraz": "#FF9500", "metodo-envolvente": "#34C759"}
+OSCURO = {"fondo": "#000000", "superficie": "#1C1C1E", "texto": "#F5F5F7", "texto-secundario": "#98989D",
+          "separador": "rgba(255,255,255,.15)", "acento": "#2997FF"}
+SELECTORES_M1 = r"\.boton-principal{}\s*,\s*\.ficha{}\s*,\s*\.segmentado a{}"
+
+
+def _normal(valor):
+    """Valor de una variable sin espacios, en minúsculas y con «.1» en lugar de «0.1» (para comparar)."""
+    return re.sub(r"(?<!\d)0\.", ".", valor.replace(" ", "").lower())
+
+
+def _variables(bloque):
+    """Diccionario {nombre: valor} de las variables «--nombre: valor;» de un bloque de CSS."""
+    return {n: _normal(v) for n, v in re.findall(r"--([a-z-]+)\s*:\s*([^;]+);", bloque)}
+
+
+def _variables_claro_y_oscuro():
+    css = _css_sin_comentarios()
+    oscuro = _bloque_media(css, "(prefers-color-scheme: dark)")
+    assert oscuro is not None, "falta el bloque «@media (prefers-color-scheme: dark)»"
+    primero = re.search(r":root\s*\{([^}]*)\}", css.replace(oscuro, "")).group(1)
+    return _variables(primero), _variables(oscuro)
+
+
+def _regla(css, selector):
+    """Cuerpo de la regla cuyo selector empieza una línea (None si no existe)."""
+    encontrada = re.search(r"(?m)^" + re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    return encontrada.group(1) if encontrada else None
+
+
+def _luminancia(hexadecimal):
+    canales = [int(hexadecimal.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    lineales = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in canales]
+    return 0.2126 * lineales[0] + 0.7152 * lineales[1] + 0.0722 * lineales[2]
+
+
+def _contraste(a, b):
+    """Razón de contraste WCAG 2.x entre dos colores «#RRGGBB»."""
+    claro, oscuro = sorted((_luminancia(a), _luminancia(b)), reverse=True)
+    return (claro + 0.05) / (oscuro + 0.05)
+
+
+def test_b4_variables_claro_y_oscuro():
+    claro, oscuro = _variables_claro_y_oscuro()
+    for nombre, valor in CLARO.items():
+        assert claro.get(nombre) == _normal(valor), f"claro --{nombre}"
+    for nombre, valor in OSCURO.items():
+        assert oscuro.get(nombre) == _normal(valor), f"oscuro --{nombre}"
+
+
+def test_b4_color_scheme():
+    assert "color-scheme: light dark" in _css_sin_comentarios()
+    assert '<meta name="color-scheme" content="light dark">' in _leer(R5 / "templates" / "base.html")
+
+
+def test_b4_tipografia():
+    css = _css_sin_comentarios()
+    assert '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif' in css
+    assert "font-optical-sizing: auto" in css and "ui-monospace" in css and ":focus-visible" in css
+    h1 = _regla(css, "h1")
+    assert h1 and "clamp(" in h1 and "line-height: 1.05" in h1 and "letter-spacing: -0.02em" in h1
+    for familia in re.findall(r"font-family\s*:\s*([^;]+);", css):
+        assert not re.search(r"(?<!sans-)\bserif\b", familia), familia
+
+
+def test_b4_contraste():
+    claro, oscuro = _variables_claro_y_oscuro()
+    for modo, variables in (("claro", claro), ("oscuro", {**claro, **oscuro})):
+        for fondo in ("fondo", "superficie"):
+            for texto in ("texto", "texto-secundario"):
+                assert _contraste(variables[texto].upper(), variables[fondo].upper()) >= 4.5, (modo, texto, fondo)
+        assert _contraste(variables["acento"].upper(), variables["superficie"].upper()) >= 4.5, modo
+        assert _contraste(variables["texto-boton"].upper(), variables["relleno-boton"].upper()) >= 4.5, modo
+        assert _contraste(variables["borde-control"].upper(), variables["superficie"].upper()) >= 3, modo
+
+
+def test_b4_contorno_de_controles():
+    regla = _regla(_css_sin_comentarios(), "select")
+    assert regla and re.search(r"border(-color)?:[^;}]*var\(--borde-control\)", regla)
+
+
+def test_b5_colores_de_metodos():
+    from rutas.r5.mapas import COLORES
+    claro, oscuro = _variables_claro_y_oscuro()
+    esperados = {"ruta": "#007AFF", "held_karp": "#007AFF", "voraz": "#FF9500", "envolvente": "#34C759"}
+    assert COLORES == esperados
+    for clave, variable in (("held_karp", "metodo-hk"), ("voraz", "metodo-voraz"), ("envolvente", "metodo-envolvente")):
+        assert claro[variable] == COLORES[clave].lower(), variable
+        assert variable not in oscuro, f"--{variable} no cambia en modo oscuro (el mapa sigue claro)"
+
+
+def test_b5_encabezados_de_metodo():
+    """Franja y no fondo: blanco sobre #007AFF da 4,02:1 (DV-7)."""
+    css = _css_sin_comentarios()
+    for selector, variable in (("thead .metodo-hk", "--metodo-hk"), ("thead .metodo-voraz", "--metodo-voraz")):
+        regla = _regla(css, selector)
+        assert regla and f"var({variable})" in regla and "background" not in regla, selector
+
+
+def test_d8_sin_rastros_de_v1():
+    from rutas.r5.mapas import COLORES
+    css = _css_sin_comentarios()
+    for prohibido in ("Iowan", "Palatino", "Georgia", "repeating-radial-gradient"):
+        assert prohibido not in css, prohibido
+    assert "serif" not in css.replace("sans-serif", "")
+    for variable in ("guadua", "hoja", "niebla", "bahareque", "tinta", "cocora", "cereza"):
+        assert f"--{variable}" not in css, variable
+    assert not set(COLORES.values()) & {"#1F5F8B", "#B8322A", "#5E8C61"}
+    for nombre, texto in _plantillas().items():
+        assert 'class="cabecera"' not in texto, nombre
+
+
+def test_b4_movimiento_m1():
+    css = _css_sin_comentarios()
+    assert re.search(SELECTORES_M1.format("", "", "") + r"\s*\{[^}]*transition:\s*transform 100ms ease-out", css)
+    assert re.search(SELECTORES_M1.format(":active", ":active", ":active") + r"\s*\{[^}]*transform:\s*scale\(0\.97\)", css)
+    for declaracion in re.findall(r"transition\s*:\s*([^;}]+)", css):
+        for parte in declaracion.split(","):
+            assert parte.split()[0] in ("transform", "opacity"), declaracion
+
+
+def test_b4_movimiento_reducido():
+    bloque = _bloque_media(_css_sin_comentarios(), "(prefers-reduced-motion: reduce)")
+    assert bloque is not None, "falta el bloque «@media (prefers-reduced-motion: reduce)»"
+    assert re.search(SELECTORES_M1.format(":active", ":active", ":active") + r"\s*\{[^}]*transform:\s*none", bloque)
+
+
+# ---- T39: barra translúcida, superficies y preferencias del sistema (D3, D4, B4) ----
+def _cuerpo_de(css, selector):
+    """Cuerpos de todas las reglas cuya lista de selectores incluye `selector`, unidos (vacío si no hay)."""
+    cuerpos = []
+    for lista, cuerpo in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        if selector in [s.strip() for s in lista.split(",")]:
+            cuerpos.append(cuerpo)
+    return " ".join(cuerpos)
+
+
+def test_b4_barra_translucida():
+    css = _css_sin_comentarios()
+    barra = _regla(css, ".barra")        # la regla principal (las de @media y @supports van indentadas)
+    assert barra, "falta la regla «.barra {»"
+    assert "position: sticky" in barra
+    assert "backdrop-filter: blur(20px) saturate(180%)" in barra
+    assert "-webkit-backdrop-filter: blur(20px) saturate(180%)" in barra
+    assert "border-bottom" not in barra, "en lugar de una línea divisoria, un desvanecido"
+    assert "linear-gradient" in _cuerpo_de(css, ".barra::after")
+
+
+def test_b4_preferencias():
+    css = _css_sin_comentarios()
+    transparencia = _bloque_media(css, "(prefers-reduced-transparency: reduce)")
+    assert transparencia is not None and "backdrop-filter: none" in _cuerpo_de(transparencia, ".barra")
+    contraste = _bloque_media(css, "(prefers-contrast: more)")
+    assert contraste is not None and "backdrop-filter: none" in _cuerpo_de(contraste, ".barra")
+    assert re.search(r"border(-bottom)?:\s*1px solid", contraste)
+    soporte = re.search(r"@supports not[^{]*\{(.*?)\}\s*\}", css, flags=re.S)
+    assert soporte and "background: var(--fondo)" in soporte.group(1)
+
+
+def test_d3_superficies():
+    css = _css_sin_comentarios()
+    assert "--radio: 18px" in css
+    tarjeta = _cuerpo_de(css, ".tarjeta")
+    assert "var(--radio)" in tarjeta and "var(--sombra-chica)" in tarjeta
+    for selector in ("iframe.mapa", ".tarjeta-seccion"):
+        assert "var(--sombra-grande)" in _cuerpo_de(css, selector), selector
+    assert "color-scheme: light" in _cuerpo_de(css, "iframe.mapa")
+
+
+@pytest.mark.parametrize("url", PAGINAS)
+def test_d4_menu(cliente_app, url):
+    html = cliente_app.get(url).get_data(as_text=True)
+    barra = _bloque(html, '<header class="barra">', "</header>")
+    assert 'class="marca"' in barra
+    menu = _bloque(barra, '<nav class="menu"', "</nav>")
+    assert re.findall(r"<a [^>]*>([^<]+)</a>", menu) == ["Ruta", "Envolvente", "Itinerario", "Resultados"]
+
+
+# ---- T40: lista agrupada, botón píldora y errores con su siguiente paso (D5) ----
+def test_d5_lista_agrupada(cliente_app):
+    ruta = cliente_app.get("/ruta").get_data(as_text=True)
+    grupo = _bloque(ruta, '<div class="grupo">', "<button")
+    filas = re.findall(r'<div class="fila">(.*?)</div>', grupo, flags=re.S)
+    assert len(filas) == 2
+    for fila, campo in zip(filas, ("origen", "destino")):
+        assert f'<label for="{campo}">' in fila and f'<select id="{campo}" name="{campo}">' in fila
+    itinerario = cliente_app.get("/itinerario").get_data(as_text=True)
+    grupo = _bloque(itinerario, '<div class="grupo">', "<fieldset")
+    filas = re.findall(r'<div class="fila">(.*?)</div>', grupo, flags=re.S)
+    assert len(filas) == 1 and '<label for="partida">' in filas[0] and '<select id="partida"' in filas[0]
+    assert "var(--radio)" in _cuerpo_de(_css_sin_comentarios(), ".grupo")
+
+
+def test_d5_boton_principal(cliente_app):
+    assert 'class="boton-principal">Calcular ruta</button>' in cliente_app.get("/ruta").get_data(as_text=True)
+    assert 'class="boton-principal">Calcular itinerario</button>' in cliente_app.get("/itinerario").get_data(as_text=True)
+    boton = _cuerpo_de(_css_sin_comentarios(), ".boton-principal")
+    for variable in ("--radio-pildora", "--relleno-boton", "--texto-boton"):
+        assert f"var({variable})" in boton, variable
+
+
+def test_d5_error_con_siguiente_paso(cliente_app):
+    html = cliente_app.get("/ruta?origen=X99&destino=C01").get_data(as_text=True)
+    assert re.search(r'role="alert"[^>]*>[^<]*lugar desconocido: X99[^<]*Elige el origen y el destino', html)
+    html = cliente_app.get("/itinerario?partida=C01&atractivos=A01").get_data(as_text=True)
+    assert re.search(r'role="alert"[^>]*>[^<]*entre 6 y 8[^<]*vuelve a calcular', html)
+
+
+# ---- T41: fichas de atractivos y contador renderizado por el servidor (D5, M3, B6) ----
+@pytest.mark.parametrize("n,cuenta,estado,en_rango", [
+    (0, "0 elegidos", "faltan 6", False), (1, "1 elegido", "faltan 5", False),
+    (5, "5 elegidos", "falta 1", False), (6, "6 elegidos", "listo para calcular", True),
+    (8, "8 elegidos", "listo para calcular", True), (9, "9 elegidos", "sobra 1", False),
+    (10, "10 elegidos", "sobran 2", False)])
+def test_contador_elegidos(n, cuenta, estado, en_rango):
+    from rutas.r5.app import contador_elegidos
+    assert contador_elegidos(n) == {"cuenta": cuenta, "estado": estado, "en_rango": en_rango}
+
+
+def test_contador_limites_iguales_a_servicios(tmp_path):
+    from rutas.r5.app import MAX_ATRACTIVOS, MIN_ATRACTIVOS
+    from rutas.r5.servicios import ErrorEntrada, validar_itinerario
+    _, datos = _cliente(tmp_path)
+    with pytest.raises(ErrorEntrada) as error:
+        validar_itinerario(datos, "C01", [])
+    assert f"entre {MIN_ATRACTIVOS} y {MAX_ATRACTIVOS}" in str(error.value)
+
+
+@pytest.mark.parametrize("consulta,texto,estado", [
+    ("", "! 0 elegidos (elige de 6 a 8) · faltan 6", "fuera"),
+    (QUERY_ITINERARIO, "✓ 6 elegidos (elige de 6 a 8) · listo para calcular", "en-rango"),
+    ("?partida=C01&atractivos=A01", "! 1 elegido (elige de 6 a 8) · faltan 5", "fuera"),
+    ("?partida=C01&atractivos=A01&atractivos=A01&atractivos=C02", "! 1 elegido (elige de 6 a 8) · faltan 5", "fuera")])
+def test_b6_contador_en_la_pagina(cliente_app, consulta, texto, estado):
+    url = "/itinerario" + (consulta if consulta.startswith("?") or not consulta else "?" + consulta)
+    html = cliente_app.get(url).get_data(as_text=True)
+    contador = re.search(r'<p id="contador"([^>]*)>(.*?)</p>', html, flags=re.S)
+    assert contador, "falta el contador"
+    assert 'aria-live="polite"' in contador.group(1) and f'data-estado="{estado}"' in contador.group(1)
+    assert " ".join(re.sub(r"<[^>]+>", " ", contador.group(2)).split()) == texto
+    assert '<fieldset aria-describedby="contador">' in html
+
+
+def test_d5_fichas(tmp_path):
+    cliente, datos = _cliente(tmp_path)
+    html = cliente.get("/itinerario").get_data(as_text=True)
+    fichas = re.findall(r'<label class="ficha">(.*?)</label>', html, flags=re.S)
+    assert len(fichas) == 6
+    for ficha in fichas:
+        assert ficha.count('<input type="checkbox" name="atractivos"') == 1
+        id_atractivo = re.search(r'value="([^"]+)"', ficha).group(1)
+        assert datos.nombre_de[id_atractivo] in ficha and 'class="visita"' in ficha
+
+
+# ---- T42: app.js, entrada de las tarjetas (M2) y contador en vivo (M3) ----
+def test_b2_app_js_m2_m3():
+    """Las pruebas no ejecutan JavaScript: se comprueba el texto. El comportamiento real se ve en B9."""
+    js = _leer(STATIC / "app.js")
+    for fragmento in ('type: "spring"', "duration: 0.4", "stagger(0.04)", "opacity: [0, 1]", "y: [8, 0]",
+                      "duration: 0.2", 'getElementById("contador")', '"change"', "textContent",
+                      "MINIMO = 6", "MAXIMO = 8"):
+        assert fragmento in js, fragmento
+    rebotes = re.findall(r"bounce:\s*([\d.]+)", js)
+    assert rebotes and all(valor == "0" for valor in rebotes), f"nada se lanza con un gesto: sin rebote ({rebotes})"
+    for texto in ("elegido", "elegidos", "falta", "faltan", "sobra", "sobran", "listo para calcular"):
+        assert f'"{texto}"' in js, texto
+
+
+# ---- T43: control segmentado en Resultados y transición entre páginas (D4, M4, B7) ----
+@pytest.mark.parametrize("r", ["r2", "r3"])
+def test_b7_control_segmentado(cliente_app, r):
+    html = cliente_app.get(f"/resultados/{r}").get_data(as_text=True)
+    nav = _bloque(html, '<nav class="segmentado"', "</nav>")
+    assert re.findall(r'<a href="/resultados/(r\d)"', nav) == ["r1", "r2", "r3", "r4"]
+    assert re.search(rf'aria-current="page"[^>]*>{r.upper()}<', nav)
+    assert html.count('aria-current="page"') == 1, "un solo «page» en la página: el segmento actual"
+    assert re.search(r'aria-current="true"[^>]*>Resultados<', html), "el menú marca la sección, no la página"
+    assert html.count('class="indicador"') == 1
+    assert re.search(rf'<a href="/resultados/{r}" aria-current="page">{r.upper()}<span class="indicador"', nav)
+
+
+def test_b4_view_transition():
+    css = _css_sin_comentarios()
+    bloque = _bloque_media(css, "(prefers-reduced-motion: no-preference)")
+    assert bloque is not None and re.search(r"@view-transition\s*\{\s*navigation:\s*auto;\s*\}", bloque)
+    assert "@view-transition" not in css.replace(bloque, "")
+    assert "view-transition-name: indicador-segmento" in _cuerpo_de(css, ".segmentado .indicador")
+    assert "::view-transition-group(indicador-segmento)" in css
+
+
+# ---- T44: encabezado de cada página e inicio (D0, D7) ----
+@pytest.mark.parametrize("url", ["/", "/ruta", "/envolvente", "/itinerario", "/resultados/r1"])
+def test_d0_titulo_y_entradilla(cliente_app, url):
+    html = cliente_app.get(url).get_data(as_text=True)
+    assert html.count("<h1") == 1
+    entradilla = re.search(r'</h1>\s*<p class="entradilla">(.*?)</p>', html, flags=re.S)
+    assert entradilla, "la entradilla va justo después del <h1>"
+    for prohibido in ("Tiempo de viaje", "desconocido", "Faltan", "Regla de las 11 h"):
+        assert prohibido not in entradilla.group(1), prohibido
+    for marca in ("<form", '<nav class="segmentado"', "<dl"):
+        if marca in html:
+            assert html.index(marca) > entradilla.end(), marca
+
+
+def test_d7_inicio(cliente_app):
+    html = cliente_app.get("/").get_data(as_text=True)
+    tarjetas = re.findall(r'<li class="tarjeta-seccion">(.*?)</li>', html, flags=re.S)
+    assert len(tarjetas) == 4 and all(t.count("<a ") == 1 for t in tarjetas)
+    enlace = _cuerpo_de(_css_sin_comentarios(), ".tarjeta-seccion h2 a::after")
+    assert "inset: 0" in enlace

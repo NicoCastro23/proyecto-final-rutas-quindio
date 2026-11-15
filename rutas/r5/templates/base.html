@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>Rutas del Paisaje Cultural Cafetero</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+  <script src="/static/vendor/motion.js" defer></script>
+  <script src="/static/app.js" defer></script>
 </head>
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
-  <header class="cabecera">
+  <header class="barra">
     <a class="marca" href="/"{% if seccion == "inicio" %} aria-current="page"{% endif %}>Rutas del Paisaje Cultural Cafetero</a>
     <nav class="menu" aria-label="Secciones">
       {% for clave, enlace, texto in [("ruta", "/ruta", "Ruta"), ("envolvente", "/envolvente", "Envolvente"),
                                       ("itinerario", "/itinerario", "Itinerario"), ("resultados", "/resultados/r1", "Resultados")] %}
-      <a href="{{ enlace }}"{% if seccion == clave %} aria-current="page"{% endif %}>{{ texto }}</a>
+      {# En Resultados, la página exacta la marca el control segmentado; el menú solo marca la sección. #}
+      <a href="{{ enlace }}"{% if seccion == clave %} aria-current="{{ 'true' if clave == 'resultados' else 'page' }}"{% endif %}>{{ texto }}</a>
       {% endfor %}
     </nav>
   </header>

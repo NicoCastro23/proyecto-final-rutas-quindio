@@ -1,23 +1,32 @@
 {% extends "base.html" %}
 {% block contenido %}
 <h1>Itinerario del día</h1>
+<p class="entradilla">Elige la partida y los atractivos, y compara el recorrido óptimo (Held-Karp) con el voraz (vecino más cercano).</p>
 <form method="get" action="/itinerario">
-  <label for="partida">Partida</label>
-  <select id="partida" name="partida">
-    {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == partida %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
-  </select>
-  <fieldset>
-    <legend>Atractivos (elige de 6 a 8)</legend>
+  <div class="grupo">
+    <div class="fila">
+      <label for="partida">Partida</label>
+      <select id="partida" name="partida">
+        {% for id, nombre in lugares %}<option value="{{ id }}"{% if id == partida %} selected{% endif %}>{{ id }} · {{ nombre }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+  <fieldset aria-describedby="contador">
+    <legend>Atractivos</legend>
+    <p id="contador" class="contador" aria-live="polite" data-estado="{{ 'en-rango' if contador.en_rango else 'fuera' }}">
+      <span class="icono" aria-hidden="true">{{ "✓" if contador.en_rango else "!" }}</span>
+      <span class="cuenta">{{ contador.cuenta }}</span> (elige de 6 a 8) · <span class="estado">{{ contador.estado }}</span>
+    </p>
     <div class="casillas">
       {% for id in atractivos %}
-      <label class="casilla"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">{{ id }}</span> {{ nombre_de[id] }} <span class="visita">{{ visita_min[id]|num(0) }} min</span></label>
+      <label class="ficha"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">{{ id }}</span> <span class="nombre">{{ nombre_de[id] }}</span> <span class="visita">{{ visita_min[id]|num(0) }} min</span></label>
       {% endfor %}
     </div>
   </fieldset>
-  <button type="submit">Calcular itinerario</button>
+  <button type="submit" class="boton-principal">Calcular itinerario</button>
 </form>
 
-{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}. Ajusta la partida o los atractivos y vuelve a calcular.</p>{% endif %}
 
 {% if it %}
 {% set hk = it.held_karp %}{% set vo = it.voraz %}

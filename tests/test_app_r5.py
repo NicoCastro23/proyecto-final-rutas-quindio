@@ -24,7 +24,9 @@ def test_sin_algoritmos_ni_js_propio():
     plantillas = list((R5 / "templates").glob("*.html"))
     assert plantillas, "debe haber al menos base.html"
     for plantilla in plantillas:
-        assert "<script" not in plantilla.read_text(encoding="utf-8").lower(), plantilla.name
+        texto = plantilla.read_text(encoding="utf-8").lower()
+        esperados = 2 if plantilla.name == "base.html" else 0     # solo base.html carga motion.js y app.js
+        assert texto.count("<script") == esperados, plantilla.name
     requisitos = (RAIZ / "requirements.txt").read_text(encoding="utf-8")
     assert "Flask==3.1.3" in requisitos and "folium==0.20.0" in requisitos
 
@@ -47,7 +49,8 @@ def test_inicio_y_menu(cliente_app):
     html = r.get_data(as_text=True)
     for enlace in ("/ruta", "/envolvente", "/itinerario", "/resultados/r1"):
         assert f'href="{enlace}"' in html
-    assert "<script" not in html.lower()
+    assert re.findall(r"<script[^>]*>", html.lower()) == ['<script src="/static/vendor/motion.js" defer>',
+                                                          '<script src="/static/app.js" defer>']
 
 
 # ---- T14: /ruta ----

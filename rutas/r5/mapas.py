@@ -1,11 +1,11 @@
 """Mapas con Folium: cada función devuelve el HTML del mapa como texto.
 
 La plantilla lo mete en un <iframe srcdoc>. El JavaScript del mapa lo genera Folium (Leaflet);
-el grupo no escribe JavaScript.
+app.js no toca los mapas.
 """
 import folium
 
-COLORES = {"ruta": "#1F5F8B", "held_karp": "#1F5F8B", "voraz": "#B8322A", "envolvente": "#5E8C61"}
+COLORES = {"ruta": "#007AFF", "held_karp": "#007AFF", "voraz": "#FF9500", "envolvente": "#34C759"}
 
 
 def centro(datos):

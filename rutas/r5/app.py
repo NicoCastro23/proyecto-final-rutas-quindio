@@ -16,6 +16,27 @@ from rutas.r5.servicios import (ARCHIVOS_RESULTADOS, ErrorEntrada, itinerario, r
                                 ruta_entre)
 
 
+MIN_ATRACTIVOS, MAX_ATRACTIVOS = 6, 8   # los mismos límites que valida servicios.validar_itinerario
+
+
+def contador_elegidos(n):
+    """Texto del contador de atractivos (M3). app.js arma el mismo texto al marcar y desmarcar.
+
+    0 -> «0 elegidos», «faltan 6»; 1 -> «1 elegido», «faltan 5»; 5 -> «falta 1»;
+    6 a 8 -> «listo para calcular»; 9 -> «sobra 1»; 10 -> «sobran 2».
+    """
+    cuenta = f"{n} elegido" if n == 1 else f"{n} elegidos"
+    if n < MIN_ATRACTIVOS:
+        faltan = MIN_ATRACTIVOS - n
+        estado = f"falta {faltan}" if faltan == 1 else f"faltan {faltan}"
+    elif n > MAX_ATRACTIVOS:
+        sobran = n - MAX_ATRACTIVOS
+        estado = f"sobra {sobran}" if sobran == 1 else f"sobran {sobran}"
+    else:
+        estado = "listo para calcular"
+    return {"cuenta": cuenta, "estado": estado, "en_rango": MIN_ATRACTIVOS <= n <= MAX_ATRACTIVOS}
+
+
 # Título legible y descripción de cada archivo de resultados (la descripción sirve de alt y de caption).
 TITULOS_RESULTADOS = {
     # R1 · red vial
@@ -154,6 +175,10 @@ def crear_app(datos, results=RESULTS):
                     "visita_min": datos.visita_min, "elegidos": elegidos,
                     "partida": partida or ("C01" if "C01" in datos.nombre_de else lugares[0][0]),
                     "it": None, "mapa": None, "error": None, "seccion": "itinerario", "colores": COLORES}
+        # Se cuentan las casillas que quedan marcadas (sin repetidos ni ids que no son atractivos):
+        # es lo mismo que contaría app.js sobre esta página.
+        n_marcadas = sum(1 for id_atractivo in datos.atractivos if id_atractivo in elegidos)
+        contexto["contador"] = contador_elegidos(n_marcadas)
         if not partida:                            # sin partida: solo el formulario
             return render_template("itinerario.html", **contexto)
         try:
