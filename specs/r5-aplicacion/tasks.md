@@ -321,7 +321,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Resultado (2026-11-12, implementer): `-m "not red"`: 540 pasan, 1 se salta, 1 falla (`test_app_r5.py::test_puerto_por_defecto`, porque el puerto 5050 está ocupado por un proceso ajeno, PID 71719, que ya corría antes de empezar B5; con el puerto libre no depende del ajuste: no toca la plantilla ni `main`). `-m red`: 39 pasan y 2 se saltan (los dos conocidos: `test_red_real.py:79` y `test_red_real_r4.py:126`; las `red` de R5 corren). Suite completa: 579 pasan, 3 se saltan, 1 falla (la misma). Pruebas nuevas: 44 en `tests/test_visual_r5.py`. Los dos `git diff --stat` (prohibidos y pruebas actuales) salen vacíos; `grep -c "<style" base.html` = 0; `estilos.css` tiene 148 líneas; sin `<script`, `javascript:`, `@import` ni `url(http`. `curl` con la app en el puerto 5071 (ya detenida): `/static/estilos.css` (text/css), `/`, `/ruta`, `/ruta?origen=C01&destino=C12`, `/envolvente`, `/itinerario?...` (caso 5) y `/resultados/r1..r4` dan 200. Mutaciones vistas fallar y restauradas: `COLORES["voraz"]` distinto del CSS, `<style>` en base, sin `scope="row"` en la tabla de la envolvente, `<span>` en el `<h2>` de la ruta (falla la prueba actual del texto de `#resultado-ruta`) y `transition: all`.
   - Pendiente para el usuario: **«El puerto 5050 está ocupado»**: cerrar el servidor viejo (PID 71719) para que `test_puerto_por_defecto` pase; ese servidor usa las plantillas anteriores hasta que se reinicie.
 
-- [ ] T35 · Revisión manual en el navegador (A10) → `review.md`
+- [ ] T35 · Revisión manual en el navegador (A10) → `review.md` · **sustituida por B9 (v2)** el 2026-11-15: no se hace; ver T46
   - Archivos: ninguno de código; el resultado lo escribe el usuario (o el reviewer con el usuario) en `specs/r5-aplicacion/review.md`, sección «Ajuste visual (A10)»
   - Test primero: no aplica (manual)
   - URLs a revisar (con la app en el puerto 5050, cerrando antes el servidor viejo): `/`, `/ruta?origen=C01&destino=C12`, `/ruta?origen=C01&destino=C01`, `/envolvente`, `/itinerario?partida=C01&atractivos=A05&atractivos=A14&atractivos=A06&atractivos=A07&atractivos=A13&atractivos=A15`, el mismo con los 8 del caso 6 (`A05, A08, A04, A14, A06, A07, A12, A01`), `/itinerario?partida=C01&atractivos=A01` (error) y `/resultados/r1` a `/resultados/r4`.
@@ -340,6 +340,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Opcional, en la misma sesión: los pasos de navegador pendientes de los casos 16 y 17 (T23)
   - Cierre de B5: suite en verde (T34) y A10 anotado. **DETENERSE** hasta el commit del usuario
   - anotar en `docs/anexo-ia.md` (si se usó IA para revisar las capturas o redactar `review.md`)
+  - Nota (2026-11-15): el usuario reemplazó el diseño v1 por el v2 (spec «Diseño visual v2: apple-design») antes de hacer esta revisión. Revisar v1 en el navegador ya no tiene sentido: la revisión manual del diseño vigente es B9 (T46). La tarea queda sin marcar y sin borrar, como historia.
 
 ## Ronda 2, sugerencias del reviewer
 
@@ -353,6 +354,235 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - Nota: `_css_sin_comentarios()` (sin cambiar `_css()`) y `_bloque_media()`, que cuenta llaves anidadas. `test_v0_tipos_firma_y_movimiento` busca los fragmentos sin comentarios, y la prueba nueva `test_v0_movimiento_reducido_quita_la_escala` exige `button:active { transform: none; }` dentro de `@media (prefers-reduced-motion: reduce)`. Mutaciones que fallan: el bloque cambiado por un comentario (con la prueba anterior pasaba) y quitar solo `button:active { transform: none; }`.
 - [x] Sugerencia 8: colores al pasar el mouse en el plan
   - Nota: `plan.md` (sección 14 Movimiento) decía Niebla para `.menu a:hover` y Guadua para `button:hover`; el código usa Bahareque y Cocora (`estilos.css:133-134`). Se actualizó el plan con el motivo (Niebla casi no se distingue del blanco del menú y el botón ya es Guadua) y se anotó en T27 y T34. Sin cambios de código ni de pruebas.
+
+## B6 · Diseño visual v2 (spec «Diseño visual v2: apple-design», D0–D8 y B1–B9; plan «Diseño visual v2 (bloque B6)»)
+
+> Reemplaza por completo al ajuste visual v1 (B5, arriba, que queda como historia). La T35 de B5 queda sustituida por B9 (T46).
+
+> **Reglas propias de B6** (además de las reglas del usuario de arriba; sustituyen a las de B5):
+> 1. **No se tocan** `rutas/r1..r4/`, `rutas/r5/servicios.py`, `rutas/r5/datos.py`, `rutas/r5/formato.py`, `requirements.txt`, `.gitignore` ni el `Dockerfile`. En `rutas/r5/mapas.py` solo cambian `COLORES` y el docstring del módulo. En `rutas/r5/app.py` solo se agregan `MIN_ATRACTIVOS`, `MAX_ATRACTIVOS`, `contador_elegidos` y la clave `"contador"` del contexto de `/itinerario`.
+> 2. **JavaScript:** solo `rutas/r5/static/vendor/motion.js` (copia sin cambios, con su hash) y `rutas/r5/static/app.js` (propio, ≤ 150 líneas), cargados con `defer` desde `base.html`. No se permiten `<script>` en línea, atributos `on…=`, `javascript:` ni CDN. No se crean `package.json` ni `node_modules` en el repositorio.
+> 3. **Pruebas de v1:** solo se borran o reescriben las de la tabla «Pruebas de v1: qué se reescribe, qué se borra y qué se conserva» del plan, en la tarea que indica la tabla. Cada sustituta se escribe antes y se ve fallar. Ninguna otra prueba se modifica: si una conservada o una funcional falla, se corrige la plantilla, el CSS o `app.js`, no la prueba.
+> 4. Las pruebas nuevas van en `tests/test_visual_r5.py`, en una sección «Diseño v2» (sin la marca `red`), y reutilizan `_css_sin_comentarios`, `_bloque_media`, `_bloque` y `_cliente`.
+> 5. **Regresión de cada tarea**, además de su prueba: `.venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q`. Si la tarea toca `base.html`, ruta, envolvente o itinerario, también `.venv/bin/python -m pytest tests/test_red_real_r5.py -q` (contiene «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5»).
+> 6. B6 es un solo bloque: T36 a T45. Al cerrar T45 el trabajo se **DETIENE** hasta el commit del usuario. T46 (B9) es del usuario.
+
+- [ ] T36 · Línea base y Motion en `vendor/` con su hash (B3)
+  - Archivos: `rutas/r5/static/vendor/motion.js` y `rutas/r5/static/vendor/LICENSE.md` (copias sin cambios); `tests/test_visual_r5.py` (abrir la sección «Diseño v2»)
+  - Pasos previos:
+    1. `git rev-parse --short HEAD` → anotar aquí como `BASE_B6` (lo usa T45);
+    2. `.venv/bin/python -m pytest -q` → anotar la línea base (según la ronda 2: `-m "not red"` 541 pasan y 1 se salta);
+    3. `git status --short -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 rutas/r5/servicios.py rutas/r5/datos.py rutas/r5/formato.py requirements.txt .gitignore Dockerfile` → vacío.
+  - Copia: con los comandos del plan, «Motion: copia del paquete y hash», desde `/private/tmp/claude-501/-Users-nicolascastro-Desktop-proyecto-final-rutas-quindio/7659aacf-74cc-4238-84a5-ec57e0bde412/scratchpad/motion/package/`. Si el scratchpad ya no existe: `npm pack motion@14.14.0` en una carpeta temporal **fuera** del repositorio. Si el hash no coincide, **DETENERSE** y preguntar.
+  - Test primero:
+    - `::test_b3_motion_con_hash_y_licencia`: el SHA-256 de `static/vendor/motion.js` es `521cfef8910fdd997463ea9881d4b790e017331e3d2f79c02adfc4d5fe1f2cae` (con `hashlib`); `vendor/LICENSE.md` existe y contiene «MIT»; `motion.js` contiene `Motion`.
+    - `::test_b3_js_servidos`: parametrizada; en esta tarea solo `/static/vendor/motion.js` → 200.
+    - Rojo esperado: la carpeta `vendor/` no existe.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k b3 && shasum -a 256 rutas/r5/static/vendor/motion.js && ! git check-ignore -q rutas/r5/static/vendor/motion.js`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T37 · Guardia de JavaScript nueva, `app.js` mínimo y los dos `<script>` en `base.html` (B2; D8, «ausencia total de `<script`»)
+  - Archivos:
+    - `tests/test_visual_r5.py`: borrar `test_a9_sin_js_propio`; agregar las `test_b2_*` de abajo; agregar `/static/app.js` a `test_b3_js_servidos`.
+    - `tests/test_app_r5.py`: cambiar **solo** el bucle de plantillas de `test_sin_algoritmos_ni_js_propio` y la última línea de `test_inicio_y_menu`, como dice el plan. Las aserciones de algoritmos, de `requirements.txt` y de los `href` no cambian.
+    - `rutas/r5/static/app.js`: crear solo la cabecera comentada, la IIFE con `"use strict"` y `const movimientoReducido = window.matchMedia("(prefers-reduced-motion: reduce)");`. M2 y M3 llegan en T42.
+    - `rutas/r5/templates/base.html`: las dos etiquetas en `<head>`, primero la de Motion.
+  - Test primero:
+    - `::test_b2_scripts_solo_en_base`
+    - `::test_b2_sin_js_en_linea`
+    - `::test_b2_solo_dos_archivos_js`
+    - `::test_b2_app_js_limites`
+    - `::test_b2_html_servido_solo_dos_scripts` (parametrizada con `PAGINAS`)
+    - `::test_b3_js_servidos[/static/app.js]`
+    - las 2 reescritas de `tests/test_app_r5.py`, que ahora exigen los dos `<script>` permitidos.
+    - Rojo esperado: `base.html` no tiene scripts y `app.js` no existe.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b2 or b3" && .venv/bin/python -m pytest tests/test_app_r5.py -q && git diff -- tests/test_app_r5.py`. El diff muestra solo las 2 aserciones.
+  - Mutaciones que deben fallar y luego se restauran: `onclick="x"` en `ruta.html`; `fetch(` en un comentario de `app.js`; un `rutas/r5/static/x.js` vacío.
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T38 · `estilos.css` v2: colores claro y oscuro, tipografía, contraste, M1 y `COLORES` (D1, D2, D6 M1 y movimiento reducido, D8; parte de B4 y B5)
+  - Archivos:
+    - `rutas/r5/static/estilos.css`: reescribirlo completo con las 20 secciones del plan. En esta tarea se llenan:
+      - las secciones 1 a 6;
+      - lo mínimo de la 9 (`.tarjeta dd {` con `tabular-nums`);
+      - la 10 (`select`);
+      - lo mínimo de la 11 (`.casillas {` con `grid-template-columns` y `.visita {` con `tabular-nums`);
+      - la 15 (tablas, `td {` con `tabular-nums` y `thead .metodo-*` con franja);
+      - la 18 (M1);
+      - el bloque `prefers-reduced-motion: reduce` de la 19.
+
+      Las demás secciones quedan con su comentario y se llenan entre T39 y T44.
+    - `rutas/r5/mapas.py`: solo `COLORES` y el docstring de las líneas 1 a 5.
+    - `rutas/r5/templates/base.html`: solo `<meta name="color-scheme" content="light dark">`.
+    - `tests/test_visual_r5.py`.
+  - Test primero:
+    - **Borrar** `test_a11_paleta_en_css` (con `PALETA`) y `test_v0_tipos_firma_y_movimiento`.
+    - **Reescribir**:
+      - `test_a11_colores_de_mapas` → `::test_b5_colores_de_metodos`;
+      - `test_v0_contorno_select` → `::test_b4_contorno_de_controles`;
+      - `test_v5_colores_encabezado_metodos` → `::test_b5_encabezados_de_metodo`;
+      - `test_v0_movimiento_reducido_quita_la_escala` → `::test_b4_movimiento_reducido`.
+    - **Agregar** `::test_b4_variables_claro_y_oscuro`, `::test_b4_color_scheme`, `::test_b4_tipografia`, `::test_b4_contraste`, `::test_d8_sin_rastros_de_v1` y `::test_b4_movimiento_m1`.
+    - Rojo esperado: el CSS y `COLORES` todavía son los de v1.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b4 or b5 or d8 or cifras or cuadricula or transition_all or a7" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`. Fijarse en las conservadas `test_v0_cifras_tabulares`, `test_v3_fieldset_y_cuadricula`, `test_a7_leyenda_con_colores`, `test_a11_sin_transition_all_ni_externos` y en `test_mapas_r5.py::test_mapa_itinerario`.
+  - Mutación que debe fallar y luego se restaura: `--texto-secundario: #8E8E93` en claro (falla `test_b4_contraste`).
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T39 · Barra translúcida, superficies y preferencias del sistema (D3, menú de D4; B4)
+  - Archivos:
+    - `rutas/r5/templates/base.html`: `<header class="barra">` en lugar de `class="cabecera"`; el resto igual.
+    - `rutas/r5/static/estilos.css`: secciones 7, 8, 9 completa y 14 (mapas y leyenda, con `color-scheme: light` en `iframe.mapa`), más el resto de la 19 (`prefers-reduced-transparency`, `prefers-contrast: more`) y el `@supports not` de la barra.
+  - Test primero:
+    - `::test_b4_barra_translucida`
+    - `::test_b4_preferencias`
+    - `::test_d3_superficies`
+    - `::test_d4_menu` (parametrizada con `PAGINAS`)
+    - Rojo esperado: no hay `.barra` ni bloques de preferencias.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b4 or d3 or d4 or a2 or a3 or v10" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T40 · Lista agrupada, botón píldora y errores con su siguiente paso (D5; Ruta y la partida del Itinerario)
+  - Archivos:
+    - `rutas/r5/templates/ruta.html`: `.grupo` y `.fila`; `class="boton-principal"`; el error con su siguiente paso. El bloque `#resultado-ruta` no cambia.
+    - `rutas/r5/templates/itinerario.html`: solo el grupo de la partida, el botón y el error. Las fichas son de T41.
+    - `rutas/r5/static/estilos.css`: secciones 10, 12, 13 y 20.
+  - Test primero:
+    - `::test_d5_lista_agrupada`
+    - `::test_d5_boton_principal`
+    - `::test_d5_error_con_siguiente_paso`
+    - Rojo esperado: no hay `.grupo` ni `.boton-principal`, y el error no trae el siguiente paso.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "d5 or a4 or a6" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`. Fijarse en:
+    - `test_ruta_formulario` (16 `<option`);
+    - `test_ruta_lugar_desconocido`;
+    - `test_ruta_incompleta` (sin resultado no aparecen «desconocido» ni «Tiempo de viaje»);
+    - `test_caso_8_itinerario_400`;
+    - `test_ruta_sintetica_app` (el `<h2>` en texto plano).
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T41 · Fichas de atractivos y contador renderizado por el servidor (fichas de D5, M3 en el servidor; B6)
+  - Archivos:
+    - `rutas/r5/app.py`: `MIN_ATRACTIVOS`, `MAX_ATRACTIVOS` y `contador_elegidos(n)`; primero como stub con `raise NotImplementedError`, para que la prueba falle por la razón correcta. En la vista `/itinerario`, `contexto["contador"] = contador_elegidos(n)`, donde `n` es el número de casillas que quedan marcadas, en las tres salidas: formulario vacío, 200 y 400.
+    - `rutas/r5/templates/itinerario.html`: `fieldset` con `aria-describedby="contador"`; `<legend>` según DV-2; `<p id="contador" class="contador" aria-live="polite" data-estado=…>` con ícono, cuenta, regla y estado; fichas `<label class="ficha">` con `checked` justo después de `value`.
+    - `rutas/r5/static/estilos.css`: la sección 11 completa.
+  - Test primero:
+    - `::test_contador_elegidos`
+    - `::test_contador_limites_iguales_a_servicios`
+    - `::test_b6_contador_en_la_pagina`
+    - `::test_d5_fichas`
+    - Con la opción A de DV-2, ajustar en `::test_a4_labels_y_botones` **solo** el fragmento de la leyenda (`<legend>Atractivos</legend>`).
+    - Rojo esperado: `NotImplementedError` del stub, y la página todavía no tiene contador ni fichas.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "contador or b6 or d5 or a4 or v3" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -k "caso_9 or no_cabe or formulario" -q`. Fijarse en:
+    - `test_itinerario_sin_parametros` (6 `name="atractivos"`);
+    - `test_caso_8_itinerario_400` (`value="A01" checked`);
+    - `test_formulario_42_lugares_15_atractivos`;
+    - `test_itinerario_bloque_regla_no_aparece_si_cabe`.
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T42 · `app.js`: M2, entrada de las tarjetas, y M3, contador en vivo (D6 M2 y M3, movimiento reducido; B2)
+  - Archivos: `rutas/r5/static/app.js`, completo como el esbozo del plan y de ≤ 150 líneas
+  - Test primero:
+    - `::test_b2_app_js_m2_m3`
+    - `::test_b2_app_js_limites` sigue en verde.
+    - Rojo esperado: `app.js` solo tiene el esqueleto de T37.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k b2 && wc -l rutas/r5/static/app.js && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q`. `wc -l` debe dar ≤ 150.
+  - Mutación que debe fallar y luego se restaura: `bounce: 0.2`.
+  - Prueba de humo opcional: `.venv/bin/python -m rutas.r5.app --puerto 5061`; abrir `/itinerario`, marcar y desmarcar fichas, y ver que el contador cambia. Detener el servidor. La comprobación formal es B9 (T46).
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T43 · Control segmentado en Resultados y transición entre páginas (D4 y M4 de D6; B7 y B4)
+  - Archivos:
+    - `rutas/r5/templates/resultados.html`: `<nav class="segmentado">` con `aria-current="page"` en el actual y el `<span class="indicador" aria-hidden="true">` **después** del texto.
+    - `rutas/r5/templates/base.html`: en Resultados, el menú usa `aria-current="true"` (DV-1).
+    - `rutas/r5/static/estilos.css`: la sección 16 y la parte M4 de la 18, con `@view-transition` dentro de `@media (prefers-reduced-motion: no-preference)`.
+  - Test primero:
+    - **Reescribir** `test_v9_navegacion_requerimientos` → `::test_b7_control_segmentado`, parametrizada con r2 y r3.
+    - **Quitar** el parámetro `("/resultados/r2", "Resultados")` de `::test_a3_aria_current`.
+    - **Agregar** `::test_b4_view_transition`.
+    - Rojo esperado: la navegación todavía es la de v1, con `aria-current="true"` en el actual.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "b7 or view_transition or a3 or a8 or v8 or faltantes or titulos" && .venv/bin/python -m pytest tests/test_app_r5.py -k "caso_11 or caso_12" -q && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q`. Fijarse en `test_caso_11_cuatro_paginas_reales`: sin «Faltan» en r2 y r3.
+  - Mutaciones que deben fallar y luego se restauran: `aria-current="page"` en «Resultados» del menú; `@view-transition` fuera de `no-preference`.
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T44 · Encabezado de cada página e inicio (D0, D7)
+  - Archivos:
+    - `rutas/r5/templates/inicio.html`, `ruta.html`, `envolvente.html`, `itinerario.html` y `resultados.html`: `<p class="entradilla">` justo después del `<h1>`, con los textos del plan (DV-12).
+    - `inicio.html`: un solo enlace por tarjeta.
+    - `rutas/r5/static/estilos.css`: secciones 5 (`.entradilla`), 8 y 17.
+  - Test primero:
+    - `::test_d0_titulo_y_entradilla`
+    - `::test_d7_inicio`
+    - Rojo esperado: no hay entradillas ni el enlace extendido.
+  - Verificar: `.venv/bin/python -m pytest tests/test_visual_r5.py -k "d0 or d7 or v10" && .venv/bin/python -m pytest tests/test_app_r5.py tests/test_mapas_r5.py tests/test_visual_r5.py -q && .venv/bin/python -m pytest tests/test_red_real_r5.py -q`. Fijarse en `test_ruta_incompleta`, `test_caso_11_cuatro_paginas_reales` y `test_itinerario_bloque_regla_no_aparece_si_cabe`: las entradillas no pueden decir «desconocido», «Tiempo de viaje», «Faltan» ni «Regla de las 11 h».
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T45 · Suite completa, restricciones y mutaciones (cierre automático de B6; B8)
+  - Archivos: ninguno nuevo. R5 no genera resultados, así que no hay archivos que regenerar.
+  - Test primero: no aplica
+  - Comando (reemplazar `BASE_B6` por el hash anotado en T36):
+    ```bash
+    cd /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio && .venv/bin/python -m pytest \
+      && git diff --stat BASE_B6 -- rutas/r1 rutas/r2 rutas/r3 rutas/r4 rutas/r5/servicios.py rutas/r5/datos.py rutas/r5/formato.py requirements.txt .gitignore Dockerfile \
+      && git diff --stat BASE_B6 -- tests/test_red_real_r5.py tests/test_mapas_r5.py tests/test_servicios_r5.py tests/test_datos_r5.py tests/test_formato_r5.py tests/test_dockerfile_r5.py tests/conftest.py \
+      && git diff BASE_B6 -- tests/test_app_r5.py \
+      && shasum -a 256 rutas/r5/static/vendor/motion.js \
+      && find rutas/r5/static -name '*.js' | sort \
+      && wc -l rutas/r5/static/app.js rutas/r5/static/estilos.css \
+      && git status --short
+    ```
+  - Verificar:
+    - todas las pruebas pasan, y las `red` de R5 corren sin saltarse;
+    - los dos `git diff --stat` salen vacíos;
+    - el diff de `test_app_r5.py` muestra solo las 2 aserciones de «sin `<script`»;
+    - el hash es el de la spec;
+    - hay exactamente 2 `.js`, y `app.js` tiene ≤ 150 líneas;
+    - `git status` no muestra `package.json` ni `node_modules`.
+  - Mutaciones de la tabla «Verificación del diseño v2» del plan: cada una debe hacer fallar al menos una prueba, y luego se restaura.
+  - Anotar aquí el conteo final de pruebas.
+  - Cierre de B6: en verde, el trabajo se **DETIENE** hasta el commit del usuario. Después sigue T46, que hace el usuario.
+  - anotar en `docs/anexo-ia.md`
+
+- [ ] T46 · B9: revisión manual del usuario en Chrome y Safari → `review.md` y capturas en `evidencias/r5/`
+  - Archivos: ninguno de código. El usuario, o el reviewer con el usuario, escribe el resultado en `specs/r5-aplicacion/review.md`, sección «Diseño v2 (B9)», y guarda las capturas en `evidencias/r5/`.
+  - Test primero: no aplica (manual)
+  - Preparación:
+    - cerrar cualquier instancia vieja en el puerto 5050, porque serviría las plantillas de v1;
+    - arrancar con `.venv/bin/python -m rutas.r5.app` y abrir `http://127.0.0.1:5050`;
+    - anotar la versión de Chrome y la de Safari.
+  - Matriz: {Chrome, Safari} × {claro, oscuro} × {≈ 1280 px, ≈ 375 px}, más una pasada con movimiento reducido en cada navegador. Cómo emular:
+    - **Modo oscuro**: en Chrome, DevTools → Rendering → «Emulate CSS media feature prefers-color-scheme»; en Safari, Ajustes del Sistema → Apariencia.
+    - **Movimiento reducido**: en Chrome, Rendering → `prefers-reduced-motion: reduce`; en Safari, Ajustes del Sistema → Accesibilidad → Pantalla → Reducir movimiento.
+    - **375 px**: en Chrome, el modo de dispositivo (iPhone SE); en Safari, Desarrollo → Entrar en el modo de diseño adaptable.
+    - **Transparencia y contraste**, en el mismo panel de Accesibilidad: Reducir transparencia y Aumentar contraste.
+  - URLs:
+    - `/`;
+    - `/ruta?origen=C01&destino=C12`, `/ruta?origen=C01&destino=C01` y `/ruta?origen=X99&destino=C01`;
+    - `/envolvente`;
+    - `/itinerario`;
+    - el itinerario del caso 5: `/itinerario?partida=C01&atractivos=A05&atractivos=A14&atractivos=A06&atractivos=A07&atractivos=A13&atractivos=A15`;
+    - el mismo con los 8 del caso 6 (`A05, A08, A04, A14, A06, A07, A12, A01`);
+    - `/itinerario?partida=C01&atractivos=A01`;
+    - `/resultados/r1` a `/resultados/r4`.
+  - Lista de pasos (spec B9 y lo que no se puede automatizar):
+    1. **Las tarjetas entran sin rebote.** En ruta, envolvente e itinerario con resultado, las tarjetas del resumen suben 8 px, aparecen escalonadas y se detienen sin pasarse. Para verlo, Chrome DevTools → Animations, al 10 %. Con movimiento reducido: solo un fundido corto, sin desplazamiento. Anotar si hay un parpadeo antes de la animación (DV-9).
+    2. **El contador responde.** En `/itinerario`, al marcar y desmarcar fichas, «N elegidos (elige de 6 a 8)» cambia al instante: «✓ … listo para calcular» entre 6 y 8, y «! … falta / sobra …» fuera de ese rango. El botón nunca se deshabilita: con 5 se envía y el servidor responde con el error. Con «Atrás» después de calcular, el contador coincide con las casillas. Opcional: con VoiceOver (Cmd+F5), el cambio se anuncia.
+    3. **El indicador del segmentado se desliza.** En Resultados, ir de R1 a R4 y de R4 a R2: el fondo del segmento activo se traslada (Chrome ≥ 126, Safari ≥ 18.2). Si no se anima, anotar «sin animación» y la versión. Con movimiento reducido no hay transición.
+    4. **La barra translúcida es legible.** Desplazar la página para que el mapa, una tabla y las tarjetas pasen por debajo: el menú se lee siempre, y en lugar de una línea dura hay un desvanecido. Con «Reducir transparencia» y «Aumentar contraste», la barra queda sólida; anotar si un navegador no lo reconoce.
+    5. **El contraste se cumple en los dos modos.** Revisar el texto secundario, los captions, el contador, los ids, el botón en modo oscuro y los contornos de los selects y de las casillas. El naranja solo aparece como línea, muestra o franja, nunca como texto. Opcional: el selector de contraste de Chrome DevTools.
+    6. **M1.** El botón, las fichas y los segmentos se hunden un poco al presionarlos; con movimiento reducido, no.
+    7. **Mapas.** Siguen claros en modo oscuro (aceptado en D2: anotarlo). Los colores de la leyenda coinciden con las líneas del mapa y con las franjas de la tabla (azul para Held-Karp, naranja para el voraz), y el polígono de la envolvente es verde.
+    8. **375 px.** No hay desplazamiento horizontal en ninguna página. Las fichas van en 1 columna y la etiqueta encima del select. El segmentado se ve completo. Las tablas anchas se desplazan dentro de su caja.
+    9. **Teclado.** Con Tab aparece «Saltar al contenido», que lleva a `main` sin dejarlo debajo de la barra. El foco se ve en fichas, segmentos, enlaces y botones. La sección actual se distingue, también la marca en el inicio (sugerencia 5 de la ronda 2).
+    10. **Sin JavaScript** (en Chrome, Command Menu → «Disable JavaScript»): todo funciona, las tarjetas se ven y el contador muestra el valor del servidor.
+  - Capturas para `evidencias/r5/` (documento técnico, sección 7.1), con nombres `r5-<pagina>-<modo>-<ancho>.png`. Como mínimo:
+    - `r5-inicio-claro-1280.png`
+    - `r5-ruta-claro-1280.png` (C01 → C12)
+    - `r5-envolvente-claro-1280.png`
+    - `r5-itinerario-oscuro-1280.png` (caso 5)
+    - `r5-resultados-r2-oscuro-1280.png`
+    - `r5-itinerario-claro-375.png`
+  - Verificar: `review.md` registra fecha, quién lo hizo, navegadores con versión, modos, anchuras y el resultado de cada paso. Si algo obliga a cambiar el CSS, una plantilla o `app.js`, se corrige con su prueba y se vuelve a correr el comando de T45 antes de cerrar.
+  - Opcional, en la misma sesión: los pasos de navegador pendientes de los casos 16 y 17 (T23).
+  - anotar en `docs/anexo-ia.md` (si se usó IA para revisar las capturas o redactar `review.md`)
 
 ## Cobertura
 
@@ -409,3 +639,31 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
 | A11 | T26 |
 | Pruebas actuales intactas («29,7», «178,7», «190,4», «11,8», «14 vértices», «1 631,5») | T25–T34 (regresión de cada tarea), T34 |
 | Sin dependencias; `servicios.py` y R1–R4 sin tocar | T25, T34 |
+
+### Cobertura del diseño v2 (B6)
+
+| Punto / caso | Tarea | Prueba principal |
+|---|---|---|
+| D0 título, entradilla, resumen, detalle | T44 (T38 tipografía) | `test_d0_titulo_y_entradilla` |
+| D1 tipografía | T38 | `test_b4_tipografia`, `test_v0_cifras_tabulares` (conservada) |
+| D2 colores claro/oscuro, métodos, contraste, Folium claro | T38, T39 | `test_b4_variables_claro_y_oscuro`, `test_b4_contraste`, `test_b4_contorno_de_controles`, `test_b5_*`, `test_d3_superficies` |
+| D3 materiales y profundidad | T39 | `test_b4_barra_translucida`, `test_b4_preferencias`, `test_d3_superficies` |
+| D4 menú y control segmentado | T39, T43 | `test_d4_menu`, `test_a3_aria_current` (conservada), `test_b7_control_segmentado` |
+| D5 lista agrupada, fichas, botón, errores | T40, T41 | `test_d5_*`, `test_a4_labels_y_botones` y `test_a6_alert_y_status` (conservadas) |
+| D6 M1 | T38 | `test_b4_movimiento_m1` |
+| D6 M2 | T42 | `test_b2_app_js_m2_m3`; B9 |
+| D6 M3 | T41, T42 | `test_b6_contador_en_la_pagina`, `test_contador_*`, `test_b2_app_js_m2_m3`; B9 |
+| D6 M4 | T43 | `test_b4_view_transition`; B9 |
+| D6 movimiento reducido y rendimiento | T38, T42, T43 | `test_b4_movimiento_reducido`, `test_b2_app_js_limites`, `test_b4_view_transition`, `test_a11_sin_transition_all_ni_externos` |
+| D7 inicio | T44 | `test_d7_inicio`, `test_v10_inicio_tarjetas` (conservada) |
+| D8 lo que se quita de v1 | T37, T38 | `test_d8_sin_rastros_de_v1`; reescrituras de la tabla «Pruebas de v1» del plan |
+| B1 | T36, T45 | `test_a1_estilos_servidos`, `test_a1_base_sin_style` (conservadas) |
+| B2 | T37, T42 | `test_b2_*`; `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio`, `::test_inicio_y_menu` (reescritas) |
+| B3 | T36 | `test_b3_motion_con_hash_y_licencia`, `test_b3_js_servidos` |
+| B4 | T38, T39, T43 | `test_b4_*` |
+| B5 | T38 | `test_b5_colores_de_metodos`, `test_b5_encabezados_de_metodo`, `test_a7_leyenda_con_colores` |
+| B6 | T41 | `test_b6_contador_en_la_pagina` |
+| B7 | T43 | `test_b7_control_segmentado` |
+| B8 | T36–T45 (regresión), T45 | suite completa y `git diff` contra `BASE_B6` |
+| B9 (manual) | T46 | `review.md` y `evidencias/r5/` |
+| Sin tocar `servicios.py`, `datos.py`, `formato.py`, R1–R4, `requirements.txt`, `.gitignore`, `Dockerfile` | T36, T45 | `git status` / `git diff --stat` vacíos |

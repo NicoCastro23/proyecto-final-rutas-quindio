@@ -425,6 +425,8 @@ Se aprueban todas las decisiones de «Decisiones para el usuario (Puerta 2)» ta
 
 ## Ajuste visual (bloque B5, plan del 2026-11-12)
 
+> **Reemplazada el 2026-11-15** por «Diseño visual v2 (bloque B6)», al final de este plan (spec: «Diseño visual v2: apple-design», D0–D8 y B1–B9). Se conserva sin borrar como historia de B5. Ya no rigen su paleta (Guadua, Hoja, Niebla, Bahareque, Tinta, Cocora, Cereza), la serifa de los títulos, la cabecera con curvas de nivel ni la regla «sin JavaScript propio». Siguen valiendo su tabla «Pruebas actuales que dependen del HTML» (invariantes de las pruebas funcionales) y la estructura accesible (etiquetas, `fieldset`, `aria-current`, `role`, `title`, `caption`/`scope`, títulos legibles de resultados).
+
 Spec: `spec.md`, sección «Ajuste visual» (V0–V10 y casos A1–A11), aprobada por el usuario el 2026-11-12. Hallazgos por archivo:línea: `auditoria-visual.md`. Dirección visual: skills `.claude/skills/frontend-design/SKILL.md` y `.claude/skills/emil-design-eng/SKILL.md`. Enunciado: sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»): el diseño no se evalúa; el ajuste sirve para la sustentación y para las capturas del documento técnico (sección 7.1).
 
 R5 ya está implementado y aprobado (T1–T24 y la ronda 1). El ajuste **cambia cómo se ve, no qué se calcula ni qué datos se muestran**. Restricciones (spec):
@@ -769,3 +771,696 @@ Ninguno. El ajuste no contradice el enunciado (el diseño no se evalúa en R5 y 
 
 ### Puerta 2 del ajuste visual (2026-11-12), resuelta por el usuario
 Se aprueban las decisiones V-1 a V-11 tal como están propuestas: menú de 4 enlaces, ids en monoespaciada salvo el `<h2>` de la ruta, títulos y tamaños de imagen en `app.py`, tamaño provisional de `r4_tiempo_vs_k.png`, solo cambian los 4 valores de `COLORES`, cuadrícula de 2–3 columnas o 1 en móvil, corrección del texto de la envolvente en el inicio y leyenda con `style` en línea. La spec se corrigió en V1 («paleta de V0»).
+
+## Diseño visual v2 (bloque B6, plan del 2026-11-15)
+
+Spec: `spec.md`, sección «Diseño visual v2: apple-design» (D0–D8 y casos B1–B9), aprobada en Puerta 1 el 2026-11-15. **Reemplaza por completo** la sección «Ajuste visual (bloque B5)» de este plan (V0–V10, A1–A11), que queda arriba sin borrar, como historia. Dirección: la skill `.claude/skills/apple-design/SKILL.md`, leída completa. Se usan sobre todo:
+- §1, respuesta al pulsar (`scale(0.97)` en `:active`, 100 ms `ease-out`);
+- §4, resortes críticamente amortiguados (`bounce: 0` por defecto; el rebote solo cuando un gesto lleva impulso, y en esta app no hay ninguno);
+- §12, materiales: barra translúcida con `backdrop-filter`, desvanecido en lugar de línea, superficies grandes con sombra más profunda y nunca una translúcida clara sobre otra;
+- §14, movimiento reducido (fundido en lugar de desplazamiento), transparencia reducida y contraste aumentado;
+- §15, tipografía (fuente del sistema, `font-optical-sizing`, espaciado negativo en títulos grandes, `rem`);
+- §16, propósito, simplicidad sin minimalismo vacío, oficio, orientación y agrupación, y etiquetas específicas.
+
+Enunciado: sección 8 («En R5 se evalúa que la aplicación muestre los resultados y funcione siguiendo el README»). El diseño no se evalúa. El rediseño sirve para la sustentación y para las capturas del documento técnico (sección 7.1).
+
+**Punto de partida (leído el 2026-11-15).**
+- B1 a B5 tienen commit y están aprobados (`review.md`, rondas 1 y 2).
+- `estilos.css` v1 tiene 148 líneas y 15 secciones.
+- `tests/test_visual_r5.py` tiene 32 funciones de prueba (44 casos con las parametrizaciones), de B5 y de la ronda 2 (commits `05feb49` a `0034795`).
+- La revisión manual de v1 (T35, A10) nunca se hizo: la sustituye B9 (T46).
+- Las plantillas ya tienen la estructura accesible de v1, que se conserva.
+
+**Restricciones** (spec; iguales a las de B5 salvo el JavaScript):
+- No se tocan `rutas/r1..r4/`, `rutas/r5/servicios.py`, `datos.py`, `formato.py`, `requirements.txt`, `.gitignore` ni el `Dockerfile`. El `Dockerfile` ya copia `rutas/` completo, así que `static/vendor/` y `app.js` entran en la imagen sin cambiarlo. `.gitignore` no ignora `rutas/r5/static/vendor/` ni los `.js` (comprobado con `git check-ignore`, que no devuelve nada).
+- Todas las pruebas funcionales de R5 siguen en verde y **sin cambios**: `test_red_real_r5.py`, `test_mapas_r5.py`, `test_servicios_r5.py`, `test_datos_r5.py`, `test_formato_r5.py`, `test_dockerfile_r5.py`, `conftest.py` y `test_app_r5.py`, salvo las dos aserciones de «sin `<script`» que la spec ordena reescribir (D8). Siguen «29,7», «178,7», «190,4», «11,8», «14 vértices» y «1 631,5».
+- Solo dos archivos de JavaScript: `vendor/motion.js` (copiado sin cambios, con su hash) y `app.js` (propio, ≤ 150 líneas), cargados con `defer` desde `base.html`. Sin `<script>` en línea, atributos `on…=`, `javascript:`, CDN, `package.json`, `node_modules` ni paso de compilación.
+- Mejora progresiva: sin JavaScript la app es la misma. Los formularios son GET, la validación está en el servidor y el contador muestra el valor del servidor. **El CSS nunca oculta algo que solo el JS vuelve a mostrar.**
+- Siguen valiendo los invariantes de la tabla «Pruebas actuales que dependen del HTML» de B5. Ningún texto nuevo de ayuda (entradillas, siguiente paso de los errores, contador) puede contener «Tiempo de viaje», «desconocido», «Faltan» ni «Regla de las 11 h» fuera de su bloque condicional, ni agregar `<option>` o elementos con `name="atractivos"`.
+
+### Archivos a crear o modificar (B6)
+
+| Ruta | Acción | Qué cambia | Puntos |
+|---|---|---|---|
+| `rutas/r5/static/vendor/motion.js` | crear (copia) | Motion 14.14.0, el build para navegador `dist/motion.js` (UMD, deja el global `Motion`), copiado **sin cambios**. SHA-256 `521cfef8910fdd997463ea9881d4b790e017331e3d2f79c02adfc4d5fe1f2cae` | B3 |
+| `rutas/r5/static/vendor/LICENSE.md` | crear (copia) | Licencia MIT de Motion, del mismo paquete | B3 |
+| `rutas/r5/static/app.js` | crear | Propio, comentado en español, ≤ 150 líneas: M2 (entrada de las tarjetas) y M3 (contador). Ver «Esbozo de `app.js`» | D6, B2 |
+| `rutas/r5/static/estilos.css` | reescribir completo | 20 secciones comentadas (ver «Estructura de `estilos.css`»): variables claras y oscuras, tipografía, barra translúcida, superficies, lista agrupada, fichas, botón píldora, segmentado, M1, M4 y preferencias del sistema | D1–D6, B1, B4 |
+| `rutas/r5/templates/base.html` | modificar | `<meta name="color-scheme">`; las dos etiquetas `<script … defer>`; `<header class="barra">` en lugar de `cabecera`; regla de `aria-current` (en Resultados, `"true"` en el menú) | D3, D4, B2 |
+| `rutas/r5/templates/inicio.html` | modificar | Título grande con entradilla; las 4 tarjetas grandes, cada una con su enlace extendido a toda la tarjeta | D0, D7 |
+| `rutas/r5/templates/ruta.html` | modificar | Entradilla; selectores en lista agrupada; botón píldora; siguiente paso en el error | D0, D5 |
+| `rutas/r5/templates/envolvente.html` | modificar | Entradilla | D0 |
+| `rutas/r5/templates/itinerario.html` | modificar | Entradilla; partida en lista agrupada; atractivos como fichas; contador renderizado por el servidor; botón píldora; siguiente paso en el error | D0, D5, M3, B6 |
+| `rutas/r5/templates/resultados.html` | modificar | Entradilla; control segmentado R1 \| R2 \| R3 \| R4 con indicador (`view-transition-name`) en lugar de `nav.requerimientos` | D0, D4, M4, B7 |
+| `rutas/r5/mapas.py` | modificar **solo** `COLORES` y el docstring del módulo (líneas 1–5) | `COLORES` = `#007AFF` / `#007AFF` / `#FF9500` / `#34C759`; el docstring dice que el JS del mapa lo genera Folium y que `app.js` no toca los mapas | D2, B5 |
+| `rutas/r5/app.py` | modificar | `MIN_ATRACTIVOS = 6`, `MAX_ATRACTIVOS = 8`, `contador_elegidos(n)` y la clave `"contador"` del contexto de `/itinerario`. Nada más | M3, B6 |
+| `tests/test_visual_r5.py` | reescribir en parte | Se borran o reescriben 8 pruebas de v1 y se agregan las de B1–B8 (ver «Pruebas de v1» y «Pruebas nuevas de v2») | B1–B8 |
+| `tests/test_app_r5.py` | modificar 2 pruebas | Solo las aserciones de «sin `<script`» de `test_sin_algoritmos_ni_js_propio` y de `test_inicio_y_menu` | B2, D8 |
+| `docs/anexo-ia.md` | modificar (local, ignorado) | Entradas del diseño v2 | — |
+
+No se crean módulos de Python nuevos. `README.md` no cambia: el arranque es el mismo y no hay dependencias nuevas.
+
+### Motion: copia del paquete y hash (B3)
+
+Comprobado por lectura el 2026-11-15 en el paquete ya descargado:
+- `shasum -a 256` de `dist/motion.js` = `521cfef8…2cae`, igual al de la spec;
+- `package.json` dice `"version": "14.14.0"`;
+- el archivo empieza con el envoltorio UMD que asigna `….Motion={}` y exporta `animate` y `stagger`;
+- el bundle reconoce `"spring"` como tipo de animación;
+- `LICENSE.md` es MIT («Copyright (c) 2024 Motion B.V.»).
+
+El implementer **copia** los dos archivos (no instala nada en el repositorio) y verifica el hash:
+```bash
+cd /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio
+ORIGEN=/private/tmp/claude-501/-Users-nicolascastro-Desktop-proyecto-final-rutas-quindio/7659aacf-74cc-4238-84a5-ec57e0bde412/scratchpad/motion/package
+mkdir -p rutas/r5/static/vendor
+cp "$ORIGEN/dist/motion.js" rutas/r5/static/vendor/motion.js
+cp "$ORIGEN/LICENSE.md" rutas/r5/static/vendor/LICENSE.md
+shasum -a 256 rutas/r5/static/vendor/motion.js   # debe dar 521cfef8910fdd997463ea9881d4b790e017331e3d2f79c02adfc4d5fe1f2cae
+```
+**Si el scratchpad ya no existe**, la alternativa es `npm pack`, que solo descarga el `.tgz` del registro, sin instalar ni correr scripts. Se hace en una carpeta temporal **fuera** del repositorio, para no dejar `package.json` ni `node_modules`:
+```bash
+TMP=$(mktemp -d) && cd "$TMP" && npm pack motion@14.14.0 && tar -xzf motion-14.14.0.tgz
+cp package/dist/motion.js /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/rutas/r5/static/vendor/motion.js
+cp package/LICENSE.md /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/rutas/r5/static/vendor/LICENSE.md
+shasum -a 256 /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/rutas/r5/static/vendor/motion.js
+```
+Si el hash no coincide, **se detiene y se pregunta**: no se cambia la constante de la prueba para que pase.
+
+### Tokens: color y tipografía (D1, D2)
+
+Variables de color (D2). Las de método valen lo mismo en los dos modos, porque son las líneas del mapa y Folium no cambia con el modo.
+
+| Variable | Claro | Oscuro | Uso |
+|---|---|---|---|
+| `--fondo` | `#F5F5F7` | `#000000` | Fondo de la página |
+| `--superficie` | `#FFFFFF` | `#1C1C1E` | Tarjetas, lista agrupada, fichas, tablas, imágenes |
+| `--texto` | `#1D1D1F` | `#F5F5F7` | Texto y enlaces |
+| `--texto-secundario` | `#6E6E73` | `#98989D` | Entradillas, `dt`, captions, notas, duración de visita, contador |
+| `--separador` | `rgba(0,0,0,.1)` | `rgba(255,255,255,.15)` | Líneas decorativas (filas de la lista, filas de tablas, borde de fichas). **Nunca** el contorno de un control |
+| `--acento` | `#0071E3` | `#2997FF` | Anillo de foco, ficha elegida, casillas (`accent-color`), enlaces sobre superficie |
+| `--metodo-hk` | `#007AFF` | `#007AFF` | Ruta y Held-Karp; = `COLORES["ruta"]` y `COLORES["held_karp"]` |
+| `--metodo-voraz` | `#FF9500` | `#FF9500` | Voraz; = `COLORES["voraz"]`. Nunca como color de texto |
+| `--metodo-envolvente` | `#34C759` | `#34C759` | Envolvente; = `COLORES["envolvente"]` |
+
+Variables que agrega el plan, porque D2 pide 4,5:1 para el texto y 3:1 para los controles y sus valores no alcanzan solos (decisiones DV-4 a DV-6):
+
+| Variable | Claro | Oscuro | Por qué |
+|---|---|---|---|
+| `--borde-control` | `#8E8E93` | `#8E8E93` | El separador da ≈ 1,3:1, y un contorno de control pide 3:1. `#8E8E93` da 3,26:1 sobre blanco y 5,22:1 sobre `#1C1C1E`. Los controles van siempre sobre una superficie |
+| `--relleno-boton` | `#0071E3` | `#0071E3` | Blanco sobre `#2997FF` da 3,02:1 (no cumple); blanco sobre `#0071E3`, 4,70:1 |
+| `--texto-boton` | `#FFFFFF` | `#FFFFFF` | Texto del botón principal |
+| `--barra` | `rgba(245,245,247,.72)` | `rgba(28,28,30,.72)` | Material de la barra translúcida |
+| `--sombra-chica` / `--sombra-grande` | sombras suaves con alfa 0,04–0,10 | alfa 0,5–0,6 | Profundidad: las superficies grandes llevan la sombra grande |
+
+Medidas: `--radio: 18px` (tarjetas, grupos, mapas, tablas), `--radio-control: 10px` (fichas, selects, segmentos), `--radio-pildora: 980px` (botón).
+
+Tipografía (D1). Los espacios van en `rem`:
+
+| Elemento | Tamaño | `line-height` | `letter-spacing` | Peso |
+|---|---|---|---|---|
+| `body` | `1rem` | 1.5 | 0 | 400 |
+| `h1` | `clamp(2rem, 1.25rem + 3vw, 3.25rem)` | 1.05 | `-0.02em` | 700 |
+| `h2` | `clamp(1.375rem, 1.1rem + 1vw, 1.75rem)` | 1.15 | `-0.01em` | 600 |
+| `.entradilla` | `1.1875rem` | 1.4 | 0 | 400, en `--texto-secundario` |
+| `.tarjeta dd` | `1.75rem` | 1.1 | `-0.01em` | 600, `tabular-nums` |
+| `.nota`, `caption`, `dt`, `.visita` | `0.875rem` | 1.4 | `0.01em` (el texto chico se abre un poco: skill §15) | 400 |
+
+Familias: `--fuente: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif` con `font-optical-sizing: auto`, y `--fuente-ids: ui-monospace, "SF Mono", Menlo, Consolas, monospace` para `.id` y `code`. Llevan `font-variant-numeric: tabular-nums` `.tarjeta dd`, `td`, `.visita` y `.contador`.
+
+### Contraste (D2; calculado el 2026-11-15 con la fórmula de luminancia relativa de WCAG 2.x)
+
+| Par | Claro | Oscuro | Uso permitido |
+|---|---|---|---|
+| texto sobre fondo / sobre superficie | 15,46 / 16,83 | 19,29 / 15,63 | todo texto |
+| secundario sobre fondo / sobre superficie | 4,66 / 5,07 | 7,31 / 5,93 | texto secundario (≥ 4,5 ✅) |
+| acento sobre superficie | 4,70 | 5,64 | enlaces y texto de acento **solo sobre superficie** |
+| acento sobre fondo | **4,31** ❌ | 6,96 | en claro **no** se usa como texto sobre el fondo (DV-5); sí como anillo de foco (≥ 3:1 ✅) |
+| blanco sobre `--relleno-boton` `#0071E3` | 4,70 | 4,70 | botón principal (DV-4) |
+| blanco sobre `#2997FF` | — | **3,02** ❌ | por eso el botón no usa `--acento` en oscuro |
+| `--borde-control` `#8E8E93` sobre superficie | 3,26 | 5,22 | contorno de controles (≥ 3:1 ✅); sobre el fondo claro da 2,99, así que los controles van sobre una superficie |
+| texto sobre la pista del segmentado (≈ `#E8E8ED`) | 13,78 | — | segmentos en `--texto`; el secundario daría 4,15 ❌ |
+| `#007AFF` como texto sobre blanco / blanco sobre `#007AFF` | **4,02** ❌ | 4,24 sobre `#1C1C1E` | el azul de método **no** es texto ni fondo de texto: por eso los encabezados de método llevan una franja, no un fondo (DV-7) |
+| `#FF9500` sobre blanco / sobre `#F5F5F7` | **2,20 / 2,02** ❌ | 7,74 sobre `#1C1C1E` | nunca texto; en la leyenda la muestra lleva un contorno interior y el nombre del método va en texto |
+| `#1D1D1F` sobre `#FF9500` | 7,65 | — | si alguna vez hay texto sobre naranja, es oscuro (D2) |
+| `#34C759` sobre blanco | 2,22 ❌ | 7,66 | solo el polígono del mapa |
+
+La prueba `test_b4_contraste` (T38) recalcula estas cifras desde los valores de `estilos.css`, así que un cambio de color que rompa el contraste falla la suite.
+
+### Estructura de `estilos.css` (D1–D6; unas 250 líneas)
+
+Una sección por bloque de la página, cada una con un comentario de una línea que dice para qué sirve, como en v1. Selectores de uno o dos niveles y sin `!important`. Las pruebas que se **conservan** exigen que estos bloques empiecen al inicio de una línea:
+- `.tarjeta dd {`, `td {` y `.visita {`, con `tabular-nums` (`test_v0_cifras_tabulares`);
+- `.casillas {`, con `grid-template-columns` (`test_v3_fieldset_y_cuadricula`).
+
+```css
+/* Hoja de estilos de R5, diseño v2 (apple-design). Sin recursos externos; cada sección dice para qué sirve. */
+
+/* 1. Colores, modo claro (D2): fondo, superficie, texto, acento y un color por método (= COLORES de mapas.py). */
+:root {
+  color-scheme: light dark;
+  --fondo: #F5F5F7;
+  --superficie: #FFFFFF;
+  --texto: #1D1D1F;
+  --texto-secundario: #6E6E73;
+  --separador: rgba(0, 0, 0, 0.1);
+  --acento: #0071E3;
+  --metodo-hk: #007AFF;
+  --metodo-voraz: #FF9500;
+  --metodo-envolvente: #34C759;
+  --borde-control: #8E8E93;
+  --relleno-boton: #0071E3;
+  --texto-boton: #FFFFFF;
+  --barra: rgba(245, 245, 247, 0.72);
+  --sombra-chica: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --sombra-grande: 0 2px 6px rgba(0, 0, 0, 0.05), 0 12px 32px rgba(0, 0, 0, 0.10);
+}
+
+/* 2. Colores, modo oscuro (D2): mismas variables; los métodos no cambian porque el mapa sigue claro. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #000000;
+    --superficie: #1C1C1E;
+    --texto: #F5F5F7;
+    --texto-secundario: #98989D;
+    --separador: rgba(255, 255, 255, 0.15);
+    --acento: #2997FF;
+    --barra: rgba(28, 28, 30, 0.72);
+    --sombra-chica: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --sombra-grande: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* 3. Tipografía y medidas (D1): fuente del sistema, ids en monoespaciada, radios. */
+/*    :root { --fuente; --fuente-ids; --radio: 18px; --radio-control: 10px; --radio-pildora: 980px; } */
+
+/* 4. Base: caja predecible, fondo y texto del modo, 1rem/1.5, font-optical-sizing: auto; img fluida. */
+/* 5. Títulos y textos (D0, D1): h1 con clamp() y -0.02em; h2; .entradilla; .nota, caption, small;
+      .id y code en --fuente-ids; enlaces en --texto subrayados (en superficie, --acento). */
+/* 6. Foco visible y saltar al contenido: :focus-visible 3px --acento; .saltar; #contenido { scroll-margin-top } */
+
+/* 7. Barra de navegación translúcida (D3, D4): fija arriba; el contenido pasa por debajo. */
+.barra {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--barra);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  view-transition-name: barra;               /* queda quieta mientras la página cambia (M4) */
+}
+.barra::after {                              /* desvanecido en lugar de una línea divisoria */
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 0.75rem;
+  background: linear-gradient(var(--separador), transparent); pointer-events: none;
+}
+/*    .marca (600); .menu con flex-wrap; .menu a en --texto, peso 500 (legible sobre el material);
+      .barra [aria-current] con peso 600 y subrayado de 2px en --texto.
+      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .barra { background: var(--fondo); } } */
+
+/* 8. Contenido y encabezado de página (D0): main de ~68rem; h1 + .entradilla antes del formulario. */
+/* 9. Superficies y tarjetas (D3): .tarjeta, .grupo, .tabla-ancha, .grafica, .faltantes = superficie,
+      --radio y --sombra-chica; iframe.mapa y .tarjeta-seccion, --sombra-grande (superficies grandes).
+      dl.resumen en cuadrícula; .tarjeta dt en secundario;
+      .tarjeta dd { … font-variant-numeric: tabular-nums; }   (al inicio de línea: prueba conservada)
+      .tarjeta.metodo-hk / .metodo-voraz: franja superior con box-shadow inset en --metodo-*. */
+/* 10. Formularios en lista agrupada (D5): .grupo con esquinas redondeadas; .fila (label + control);
+       .fila + .fila con línea --separador; select { border: 1px solid var(--borde-control); … }. */
+/* 11. Fichas de atractivos y contador (D5, M3):
+       fieldset sin borde; legend flotante a la izquierda y .contador a su lado;
+       .casillas { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); … }
+       .ficha: el <label> entero es el área de clic; superficie, borde --separador, --radio-control;
+       .ficha input { accent-color: var(--acento); }  (la casilla real sigue visible)
+       .ficha:has(input:checked) { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+       .ficha:has(input:focus-visible) { outline: 3px solid var(--acento); }
+       .visita { margin-left: auto; … font-variant-numeric: tabular-nums; }   (prueba conservada)
+       .contador en secundario con tabular-nums; [data-estado="fuera"] .icono en --texto. */
+/* 12. Botón principal (D5): .boton-principal relleno --relleno-boton, texto --texto-boton, --radio-pildora, 600. */
+/* 13. Mensajes (D5): .error y .aviso sobre superficie con franja inset de 4px
+       (error en --metodo-voraz, aviso en --acento); el texto va en --texto. */
+/* 14. Mapas y leyenda: iframe.mapa 100 % × clamp(20rem, 60vh, 35rem), --radio, sin borde,
+       color-scheme: light (el mapa de Folium es claro en los dos modos); .leyenda; .muestra con
+       contorno interior rgba(0,0,0,.2) (el naranja sobre blanco solo da 2,20:1). */
+/* 15. Tablas: .tabla-ancha { overflow-x: auto; } sobre superficie; caption en secundario; th, td con
+       línea --separador; td { font-variant-numeric: tabular-nums; } (prueba conservada);
+       thead .metodo-hk { box-shadow: inset 0 -3px 0 var(--metodo-hk); }  (franja, no fondo: DV-7)
+       thead .metodo-voraz { box-shadow: inset 0 -3px 0 var(--metodo-voraz); } */
+/* 16. Resultados: control segmentado (D4, M4) e imágenes.
+       .segmentado { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 20rem; padding: 0.25rem;
+                     border-radius: var(--radio-control); background: rgba(118, 118, 128, 0.12); }
+       .segmentado a { position: relative; z-index: 0; text-align: center; color: var(--texto); … }
+       .segmentado .indicador { position: absolute; inset: 0; z-index: -1; border-radius: 8px;
+                                background: var(--superficie); box-shadow: var(--sombra-chica);
+                                view-transition-name: indicador-segmento; }
+       Los 4 segmentos miden lo mismo, así que entre R1 y R4 el indicador solo se traslada.
+       .grafica, .descripcion, .faltantes. */
+/* 17. Inicio (D7): .secciones en cuadrícula de tarjetas grandes; .tarjeta-seccion con --sombra-grande;
+       .tarjeta-seccion h2 a::after { content: ""; position: absolute; inset: 0; } (toda la tarjeta es el enlace). */
+
+/* 18. Movimiento (D6). Solo M1 y M4 están aquí; M2 y M3 están en app.js. Solo se animan transform y opacity. */
+.boton-principal, .ficha, .segmentado a { transition: transform 100ms ease-out; }
+.boton-principal:active, .ficha:active, .segmentado a:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }                  /* M4: fundido corto entre páginas */
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 180ms; animation-timing-function: ease-out; }
+::view-transition-group(indicador-segmento) { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); }
+
+/* 19. Preferencias del sistema (D3, D6): menos movimiento, menos transparencia, más contraste. */
+@media (prefers-reduced-motion: reduce) {
+  .boton-principal:active, .ficha:active, .segmentado a:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .barra { background: var(--fondo); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --separador: var(--texto-secundario); }
+  .barra { background: var(--fondo); -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid var(--texto); }
+  .barra::after { display: none; }
+  .tarjeta, .grupo, .ficha, .tabla-ancha, .tarjeta-seccion, .segmentado { border: 1px solid var(--texto); }
+}
+
+/* 20. Pantallas angostas: @media (max-width: 40rem): márgenes menores; en .fila el label queda encima del select. */
+```
+Por qué así:
+- **M4 dentro de `no-preference`.** El `@view-transition` va dentro de `@media (prefers-reduced-motion: no-preference)`. Con movimiento reducido, el navegador ni siquiera hace la transición: M4 queda desactivado, sin tener que anular animaciones.
+- **Fundido de 180 ms.** Ese fundido corto (`root`) no desplaza nada.
+- **Sin otras transiciones.** No hay transición de color en `:hover`: según D6, lo que no está en la lista no se anima.
+- **Nada se oculta antes del JS.** M2 no tiene CSS que oculte las tarjetas: las anima Motion desde `opacity: 0`, y si el JS no corre, las tarjetas ya se ven (DV-9).
+
+### Esbozo de `app.js` (M2 y M3; unas 80 líneas, máximo 150)
+
+```js
+/* app.js · Mejora progresiva de R5 (spec, «Diseño visual v2», D6).
+   La aplicación funciona igual sin este archivo: el servidor calcula, valida y pone el contador inicial.
+   Hace solo dos cosas:
+     M2. Las tarjetas del resumen entran con un resorte sin rebote.
+     M3. El contador de atractivos se actualiza al marcar y desmarcar.
+   Motion (vendor/motion.js) se carga antes, también con defer, y deja el objeto global Motion. */
+(function () {
+  "use strict";
+
+  // Se consulta al animar, así se respeta aunque el usuario lo cambie con la página abierta.
+  const movimientoReducido = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ---------- M2: entrada de las tarjetas del resumen ----------
+  function animarTarjetas() {
+    const tarjetas = document.querySelectorAll(".resumen .tarjeta");
+    if (tarjetas.length === 0 || !window.Motion) {
+      return; // página sin resultado, o Motion no cargó: las tarjetas ya están visibles
+    }
+    const { animate, stagger } = window.Motion;
+    if (movimientoReducido.matches) {
+      // Sin desplazamiento ni resorte: un fundido corto de opacidad.
+      animate(tarjetas, { opacity: [0, 1] }, { duration: 0.2, ease: "linear" });
+      return;
+    }
+    // Resorte críticamente amortiguado: llega sin pasarse. Nada se lanza con un gesto, así que no hay rebote.
+    animate(
+      tarjetas,
+      { opacity: [0, 1], y: [8, 0] },
+      { type: "spring", bounce: 0, duration: 0.4, delay: stagger(0.04) }
+    );
+  }
+
+  // ---------- M3: contador de atractivos ----------
+  // Mismos límites y textos que contador_elegidos() en app.py.
+  const MINIMO = 6;
+  const MAXIMO = 8;
+
+  function plural(n, uno, varios) {
+    return n === 1 ? uno : varios;
+  }
+
+  function estadoDe(n) {
+    if (n < MINIMO) {
+      return plural(MINIMO - n, "falta", "faltan") + " " + (MINIMO - n);
+    }
+    if (n > MAXIMO) {
+      return plural(n - MAXIMO, "sobra", "sobran") + " " + (n - MAXIMO);
+    }
+    return "listo para calcular";
+  }
+
+  // Solo escribe si cambia: así el aria-live no repite un anuncio idéntico.
+  function escribir(elemento, texto) {
+    if (elemento.textContent !== texto) {
+      elemento.textContent = texto; // textContent, nunca HTML
+    }
+  }
+
+  function actualizarContador(contador, casillas) {
+    let n = 0;
+    casillas.forEach(function (casilla) {
+      if (casilla.checked) {
+        n += 1;
+      }
+    });
+    const enRango = n >= MINIMO && n <= MAXIMO;
+    escribir(contador.querySelector(".cuenta"), n + " " + plural(n, "elegido", "elegidos"));
+    escribir(contador.querySelector(".estado"), estadoDe(n));
+    escribir(contador.querySelector(".icono"), enRango ? "✓" : "!");
+    contador.dataset.estado = enRango ? "en-rango" : "fuera";
+  }
+
+  function prepararContador() {
+    const contador = document.getElementById("contador");
+    if (!contador) {
+      return; // solo existe en /itinerario
+    }
+    const casillas = document.querySelectorAll('input[name="atractivos"]');
+    const actualizar = function () {
+      actualizarContador(contador, casillas);
+    };
+    casillas.forEach(function (casilla) {
+      casilla.addEventListener("change", actualizar);
+    });
+    // Al volver con «Atrás», el navegador puede restaurar las casillas marcadas: se resincroniza.
+    window.addEventListener("pageshow", actualizar);
+    actualizar();
+  }
+
+  animarTarjetas();
+  prepararContador();
+})();
+```
+Lo que la guardia B2 exige del texto de `app.js`:
+- ≤ 150 líneas;
+- no contiene `fetch(`, `XMLHttpRequest`, `eval(`, `innerHTML`, `document.write` ni `http`, **tampoco en los comentarios**;
+- contiene `matchMedia` y `prefers-reduced-motion`.
+
+Lo que exige M2/M3 (T42):
+- `type: "spring"`, `bounce: 0`, `duration: 0.4`, `stagger(0.04)`, `opacity: [0, 1]` y `y: [8, 0]`;
+- ningún `bounce` distinto de 0;
+- `duration: 0.2` en la rama reducida;
+- los textos «elegido», «elegidos», «falta», «faltan», «sobra», «sobran» y «listo para calcular», iguales a los de `contador_elegidos`.
+
+Las pruebas no ejecutan JavaScript (el cliente de Flask no lo corre y no se agregan dependencias como Node o un navegador sin interfaz). El comportamiento real de M2 y M3 se comprueba en B9.
+
+### Cambios por plantilla
+
+Comunes:
+- **Entradilla.** Cada página abre con su `<h1>` y, justo después, `<p class="entradilla">` con una línea de qué hace la página (D0). Después vienen el control, el resumen y el detalle.
+- **Clases que se conservan.** Las clases que piden las pruebas conservadas no cambian de nombre: `resumen`, `tarjeta`, `metodo-hk`, `metodo-voraz`, `leyenda`, `muestra`, `comparacion`, `regla`, `tabla-ancha`, `casillas`, `visita`, `faltantes`, `grafica`, `descripcion`, `secciones`, `tarjeta-seccion`, `marca`, `menu`, `saltar`, `aviso`, `error`, `nota` y `mapa`. `cabecera` pasa a ser `barra`, y `requerimientos` pasa a ser `segmentado` (ninguna prueba conservada los usa).
+
+**`base.html`**:
+```jinja
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rutas del Paisaje Cultural Cafetero</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+  <script src="/static/vendor/motion.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="barra">
+    <a class="marca" href="/"{% if seccion == "inicio" %} aria-current="page"{% endif %}>Rutas del Paisaje Cultural Cafetero</a>
+    <nav class="menu" aria-label="Secciones">
+      {% for clave, enlace, texto in [("ruta", "/ruta", "Ruta"), ("envolvente", "/envolvente", "Envolvente"),
+                                      ("itinerario", "/itinerario", "Itinerario"), ("resultados", "/resultados/r1", "Resultados")] %}
+      {# En Resultados, la página exacta la marca el control segmentado; el menú solo marca la sección. #}
+      <a href="{{ enlace }}"{% if seccion == clave %} aria-current="{{ 'true' if clave == 'resultados' else 'page' }}"{% endif %}>{{ texto }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+  <main id="contenido">{% block contenido %}{% endblock %}</main>
+</body>
+```
+Las rutas de los `<script>` son literales (`/static/...`), como las escribe la spec en B2, para que la guardia las compare tal cual. La hoja sigue con `url_for`.
+
+**`ruta.html`**:
+```jinja
+<h1>Ruta entre dos lugares</h1>
+<p class="entradilla">Elige dos de los 42 lugares y calcula el camino más rápido por las vías, con Dijkstra (R2).</p>
+<form method="get" action="/ruta">
+  <div class="grupo">
+    <div class="fila"><label for="origen">Origen</label> <select id="origen" name="origen">…</select></div>
+    <div class="fila"><label for="destino">Destino</label> <select id="destino" name="destino">…</select></div>
+  </div>
+  <button type="submit" class="boton-principal">Calcular ruta</button>
+</form>
+{% if error %}<p class="error" role="alert">{{ error }}. Elige el origen y el destino de la lista.</p>{% endif %}
+```
+El resultado no cambia: `<div id="resultado-ruta">`, el `<h2>` en texto plano y en una línea, `<dl class="resumen">` con sus tres tarjetas, la nota de cómputo, el aviso con `role="status"` y el `<iframe class="mapa" title="Mapa de la ruta">`.
+
+**`envolvente.html`**: solo agrega `<p class="entradilla">El polígono convexo más pequeño que encierra los nodos de la red vial, calculado con QuickHull (R3).</p>`. El resto no cambia: tarjetas con «N vértices» y «X km²», mapa y tabla con `caption`/`scope`.
+
+**`itinerario.html`** (formulario; el bloque de resultado no cambia):
+```jinja
+<h1>Itinerario del día</h1>
+<p class="entradilla">Elige la partida y los atractivos, y compara el recorrido óptimo (Held-Karp) con el voraz (vecino más cercano).</p>
+<form method="get" action="/itinerario">
+  <div class="grupo">
+    <div class="fila"><label for="partida">Partida</label> <select id="partida" name="partida">…</select></div>
+  </div>
+  <fieldset aria-describedby="contador">
+    <legend>Atractivos</legend>
+    <p id="contador" class="contador" aria-live="polite" data-estado="{{ 'en-rango' if contador.en_rango else 'fuera' }}">
+      <span class="icono" aria-hidden="true">{{ "✓" if contador.en_rango else "!" }}</span>
+      <span class="cuenta">{{ contador.cuenta }}</span> (elige de 6 a 8) · <span class="estado">{{ contador.estado }}</span>
+    </p>
+    <div class="casillas">
+      {% for id in atractivos %}
+      <label class="ficha"><input type="checkbox" name="atractivos" value="{{ id }}"{% if id in elegidos %} checked{% endif %}> <span class="id">{{ id }}</span> <span class="nombre">{{ nombre_de[id] }}</span> <span class="visita">{{ visita_min[id]|num(0) }} min</span></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <button type="submit" class="boton-principal">Calcular itinerario</button>
+</form>
+{% if error %}<p class="error" role="alert">{{ error }}. Ajusta la partida o los atractivos y vuelve a calcular.</p>{% endif %}
+```
+Detalles:
+- `<legend>` es el primer hijo del `fieldset`, como pide HTML. El contador va al lado (la leyenda flota a la izquierda en el CSS).
+- El texto del contador sin etiquetas es, por ejemplo, «✓ 6 elegidos (elige de 6 a 8) · listo para calcular»: estado con texto e ícono, no solo con color (M3).
+- `checked` sigue justo después de `value="…"` (invariante de `test_caso_8_itinerario_400`).
+- La casilla real queda visible dentro de la ficha. El `<label>` entero es el área de clic.
+- El bloque con resultado no cambia: resumen → leyenda (con `style` desde `COLORES`) → mapa → tabla → regla.
+
+**`resultados.html`**:
+```jinja
+<h1>Resultados de {{ r|upper }}</h1>
+<p class="entradilla">Tablas y gráficas de las mediciones de cada requerimiento, leídas de <code>results/</code>.</p>
+<nav class="segmentado" aria-label="Resultados por requerimiento">
+  {% for req in requerimientos %}<a href="/resultados/{{ req }}"{% if req == r %} aria-current="page"{% endif %}>{{ req|upper }}{% if req == r %}<span class="indicador" aria-hidden="true"></span>{% endif %}</a>{% endfor %}
+</nav>
+```
+Detalles:
+- El `<span class="indicador">` va **después** del texto: así el enlace sigue cumpliendo `aria-current="page"[^>]*>R2<`.
+- El control va justo debajo del título, cerca de lo que cambia (D4).
+- Imágenes, tablas y faltantes no cambian.
+
+**`inicio.html`**:
+- el `<p>` de introducción pasa a ser `<p class="entradilla">`;
+- las 4 tarjetas conservan sus textos y clases (`secciones`, `tarjeta-seccion`), así que `test_v10_inicio_tarjetas` sigue sin cambios;
+- cada tarjeta tiene **un solo** enlace, en el `<h2>`, extendido a toda la tarjeta con `::after` (D7). Sin texto de relleno.
+
+### `COLORES` y conteo inicial de elegidos
+
+`rutas/r5/mapas.py`:
+```python
+COLORES = {"ruta": "#007AFF", "held_karp": "#007AFF", "voraz": "#FF9500", "envolvente": "#34C759"}
+```
+Folium copia el texto del color tal cual, así que `test_mapa_itinerario` sigue valiendo (lee `COLORES`). Los grises fijos de `mapas.py` (`#444`, `#333`) y el marcador verde de la partida no cambian (como en B5, V-8). Además, se corrige el docstring del módulo. Hoy dice «el grupo no escribe JavaScript»; pasa a decir «el JavaScript del mapa lo genera Folium (Leaflet); `app.js` no toca los mapas».
+
+Hay tres lugares con el mismo color, protegidos por B5 (`test_b5_colores_de_metodos`):
+1. `COLORES`, la fuente para Folium y para la leyenda;
+2. las variables `--metodo-*` del CSS (tarjetas, encabezados de la tabla);
+3. la leyenda del itinerario, que sigue usando `style="background: {{ colores.held_karp }}"` y `{{ colores.voraz }}` (aprobado en B5).
+
+`rutas/r5/app.py`, conteo inicial (M3, B6):
+```python
+MIN_ATRACTIVOS, MAX_ATRACTIVOS = 6, 8   # los mismos límites que valida servicios.validar_itinerario
+
+def contador_elegidos(n):
+    """Texto del contador de atractivos (M3). app.js arma el mismo texto al marcar y desmarcar.
+    0 → {"cuenta": "0 elegidos", "estado": "faltan 6", "en_rango": False}
+    1 → {"cuenta": "1 elegido", "estado": "faltan 5", ...}; 5 → "falta 1"; 6..8 → "listo para calcular", True;
+    9 → "sobra 1"; 10 → "sobran 2"."""
+```
+En la vista `/itinerario`, siempre (también en el formulario vacío y en la respuesta 400):
+```python
+n = sum(1 for id_atractivo in datos.atractivos if id_atractivo in elegidos)
+contexto["contador"] = contador_elegidos(n)
+```
+Se cuentan **las casillas que quedan marcadas**, no `len(elegidos)`: con `A01, A01, C02` llegan 3 ids, pero solo queda marcada la casilla A01. Así el valor del servidor es exactamente el que contaría `app.js` sobre la misma página. `servicios.py` no cambia. La prueba `test_contador_limites_iguales_a_servicios` comprueba que el mensaje de `validar_itinerario` dice «entre {MIN_ATRACTIVOS} y {MAX_ATRACTIVOS}», para que los límites no se separen.
+
+### Pruebas de v1: qué se reescribe, qué se borra y qué se conserva
+
+D8 lo dice explícitamente: las pruebas que fijaban detalles de v1 se **reescriben** porque cambió la spec, no para debilitarlas. Cada sustituta se escribe **antes** del cambio y se ve fallar contra el código de v1.
+
+**Se borran o reescriben** (todas en `tests/test_visual_r5.py`, salvo las dos últimas):
+
+| Prueba de v1 | Qué fijaba de v1 | Destino | Sustituta (tarea) |
+|---|---|---|---|
+| `test_a9_sin_js_propio` | Ausencia total de `<script` y `javascript:` en plantillas y CSS | **borrar** | `test_b2_scripts_solo_en_base`, `test_b2_sin_js_en_linea` (sigue prohibiendo `javascript:` en plantillas y CSS), `test_b2_solo_dos_archivos_js`, `test_b2_app_js_limites` (T37) |
+| `test_a11_paleta_en_css` (+ la constante `PALETA`) | Las 7 variables Guadua/Hoja/Niebla/Bahareque/Tinta/Cocora/Cereza | **borrar** | `test_b4_variables_claro_y_oscuro`, `test_b4_contraste` (T38) |
+| `test_a11_colores_de_mapas` | `COLORES` = Cocora/Cereza/Hoja del CSS | **reescribir** | `test_b5_colores_de_metodos`: `COLORES` = `#007AFF`/`#FF9500`/`#34C759` = `--metodo-*` del CSS en claro (y sin redefinir en oscuro) (T38) |
+| `test_v0_tipos_firma_y_movimiento` | Serifa `"Iowan Old Style"`, curvas de nivel (`repeating-radial-gradient`), `160ms ease-out`, `(hover: hover) and (pointer: fine)` | **borrar** | `test_b4_tipografia` (fuente del sistema, `font-optical-sizing`, `clamp(`, `-0.02em`, `ui-monospace`, `:focus-visible`), `test_d8_sin_rastros_de_v1` (sin serifa, sin curvas de nivel, sin variables de v1), `test_b4_movimiento_m1` (`scale(0.97)` y `100ms ease-out`) (T38) |
+| `test_v0_movimiento_reducido_quita_la_escala` | `button:active { transform: none }` dentro de `prefers-reduced-motion: reduce` | **reescribir** (se amplía) | `test_b4_movimiento_reducido`: dentro de ese bloque, `transform: none` para `:active` de `.boton-principal`, `.ficha` y `.segmentado a` (T38) |
+| `test_v0_contorno_select` | Contorno del `select` en `var(--hoja)` | **reescribir** | `test_b4_contorno_de_controles`: `select` con `var(--borde-control)`, y `--borde-control` ≥ 3:1 sobre la superficie en los dos modos (T38) |
+| `test_v5_colores_encabezado_metodos` | Fondo `var(--cocora)` / `var(--cereza)` en `thead .metodo-*` (texto blanco) | **reescribir** | `test_b5_encabezados_de_metodo`: `thead .metodo-hk` y `.metodo-voraz` usan `var(--metodo-hk)` / `var(--metodo-voraz)` como franja y **no** como `background` (blanco sobre `#007AFF` da 4,02:1) (T38) |
+| `test_v9_navegacion_requerimientos` | `nav.requerimientos` con `aria-current="true"` en el actual y el único `"page"` en «Resultados» | **reescribir** | `test_b7_control_segmentado` (T43) |
+| `test_a3_aria_current`, parámetro `("/resultados/r2", "Resultados")` | El único `aria-current="page"` de resultados en el menú | **quitar ese parámetro**; los otros tres se conservan | `test_b7_control_segmentado`: `"page"` en R2 y `"true"` en «Resultados» del menú (T43) |
+| `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio` (solo el bucle de plantillas) | Ninguna plantilla contiene `<script` | **reescribir solo ese bucle**: los únicos `<script` son los dos permitidos, en `base.html`. Las aserciones de algoritmos y de `requirements.txt` no cambian | ídem (T37) |
+| `tests/test_app_r5.py::test_inicio_y_menu` (solo la última línea) | `"<script" not in html` en `/` | **reescribir esa línea**: el HTML de `/` tiene exactamente los dos `<script src=… defer>` permitidos. Los `href` no cambian | ídem (T37) |
+
+**Se conserva con un ajuste mínimo** (solo con la opción A de DV-2):
+- `test_a4_labels_y_botones`: el fragmento `<legend>Atractivos (elige de 6 a 8)</legend>` pasa a `<legend>Atractivos</legend>`. La regla «(elige de 6 a 8)» la exige ahora B6 dentro del contador (T41). Con la opción B no cambia.
+
+**Se conservan sin cambios**, porque prueban estructura accesible, títulos legibles o no regresión, que la spec manda mantener (B8):
+- `test_a11_sin_transition_all_ni_externos`, `test_a1_estilos_servidos`, `test_a1_base_sin_style` (B1);
+- `test_a2_viewport_y_saltar`;
+- `test_a3_aria_current`, con sus parámetros de ruta, envolvente e itinerario;
+- `test_v0_cifras_tabulares` (D1 conserva `tabular-nums` con los mismos selectores);
+- `test_v3_fieldset_y_cuadricula`, `test_a6_alert_y_status`;
+- `test_v4_tarjetas_ruta`, `test_v4_tarjetas_envolvente`, `test_v4_tarjetas_itinerario`;
+- `test_v8_tabla_envolvente`;
+- `test_a7_leyenda_con_colores` (lee `COLORES`, que cambia de valor pero no de papel);
+- `test_v5_tabla_comparacion`, `test_v5_orden_de_la_pagina`, `test_a5_iframes_con_title`;
+- `test_titulos_cubren_la_lista_fija`, `test_tamanos_de_imagenes`, `test_tabla_con_titulo`, `test_a8_imagen_y_titulo`, `test_v8_tablas_de_resultados`, `test_faltantes_con_titulo`;
+- `test_v10_inicio_tarjetas`;
+- los auxiliares `_leer`, `_css`, `_css_sin_comentarios`, `_bloque_media`, `_bloque` y `_tamano_png`.
+
+Balance: de 32 funciones de v1, se borran 3 (`test_a9`, `test_a11_paleta`, `test_v0_tipos`), se reescriben 5 (`test_a11_colores_de_mapas`, `test_v0_movimiento_reducido…`, `test_v0_contorno_select`, `test_v5_colores_encabezado…`, `test_v9_…`), una pierde un parámetro (`test_a3`) y 23 siguen igual (una de ellas, `test_a4`, con un fragmento ajustado si se elige la opción A). En `test_app_r5.py` cambian 2 aserciones de 2 pruebas; las otras 28 pruebas de ese archivo no se tocan.
+
+### Pruebas nuevas de v2 (en `tests/test_visual_r5.py`, sección «Diseño v2»)
+
+| Prueba | Qué comprueba | Tarea |
+|---|---|---|
+| `test_b3_motion_con_hash_y_licencia` | SHA-256 de `static/vendor/motion.js` = la constante de la spec; `vendor/LICENSE.md` existe y contiene «MIT»; `motion.js` contiene `Motion` | T36 |
+| `test_b3_js_servidos` | `GET /static/vendor/motion.js` y `GET /static/app.js` → 200 (el segundo pasa a verde en T37) | T36, T37 |
+| `test_b2_scripts_solo_en_base` | `base.html` tiene exactamente `<script src="/static/vendor/motion.js" defer></script>` y `<script src="/static/app.js" defer></script>`, en ese orden y en `<head>`; las otras 5 plantillas no tienen `<script` | T37 |
+| `test_b2_sin_js_en_linea` | En las plantillas, cada `<script` lleva `src=` y se cierra vacío; ninguna plantilla tiene `\son[a-z]+\s*=` ni `javascript:`; `estilos.css` tampoco tiene `javascript:` | T37 |
+| `test_b2_solo_dos_archivos_js` | `{p.relative_to(static) for p in static.rglob("*.js")} == {app.js, vendor/motion.js}` | T37 |
+| `test_b2_app_js_limites` | ≤ 150 líneas; sin `fetch(`, `XMLHttpRequest`, `eval(`, `innerHTML`, `document.write` ni `http`; contiene `matchMedia` y `prefers-reduced-motion` | T37 |
+| `test_b2_html_servido_solo_dos_scripts` | Parametrizada con las 12 URL de `PAGINAS`: el HTML servido tiene exactamente 2 `<script` (los de Folium van escapados dentro de `srcdoc`) | T37 |
+| `test_b4_variables_claro_y_oscuro` | En `:root` (fuera de `@media`), las 9 variables de D2 con sus valores claros; dentro de `_bloque_media(css, "(prefers-color-scheme: dark)")`, las 6 de base con sus valores oscuros | T38 |
+| `test_b4_color_scheme` | `color-scheme: light dark` en el CSS; `<meta name="color-scheme" content="light dark">` en `base.html` | T38 |
+| `test_b4_tipografia` | La pila de fuentes de D1, `font-optical-sizing: auto`, `h1` con `clamp(`, `line-height: 1.05` y `letter-spacing: -0.02em`, `ui-monospace`, `:focus-visible`; sin `font-family` con serifa | T38 |
+| `test_b4_contraste` | Con una función `_contraste(a, b)` de WCAG en la prueba, leyendo los hex del CSS: texto y secundario ≥ 4,5 sobre fondo y superficie en los dos modos; `--texto-boton` sobre `--relleno-boton` ≥ 4,5; `--borde-control` sobre `--superficie` ≥ 3 en los dos modos | T38 |
+| `test_b4_contorno_de_controles` | `select {` usa `var(--borde-control)` | T38 |
+| `test_b5_colores_de_metodos` | `COLORES` = los 3 hex de D2; `COLORES["ruta"] == COLORES["held_karp"]`; cada uno = la variable `--metodo-*` del CSS | T38 |
+| `test_b5_encabezados_de_metodo` | `thead .metodo-hk` / `.metodo-voraz` usan `var(--metodo-hk)` / `var(--metodo-voraz)` y no declaran `background` | T38 |
+| `test_d8_sin_rastros_de_v1` | El CSS sin comentarios no contiene `Iowan`, `Palatino`, `Georgia`, `serif` salvo dentro de `sans-serif`, `repeating-radial-gradient` ni ninguna de las 7 variables de v1; `COLORES` no contiene los hex de v1; las plantillas no tienen `class="cabecera"` | T38 |
+| `test_b4_movimiento_m1` | `transition: transform 100ms ease-out` y `transform: scale(0.97)` para `.boton-principal`, `.ficha` y `.segmentado a`; toda declaración `transition:` del CSS anima solo `transform` u `opacity` | T38 |
+| `test_b4_movimiento_reducido` | Dentro de `@media (prefers-reduced-motion: reduce)`, `:active` de los tres selectores con `transform: none` | T38 |
+| `test_b4_barra_translucida` | `.barra {` con `position: sticky`, `backdrop-filter: blur(20px) saturate(180%)` y la versión `-webkit-`; `.barra::after` con `linear-gradient`; `.barra {` sin `border-bottom` (desvanecido en lugar de línea) | T39 |
+| `test_b4_preferencias` | Bloque `prefers-reduced-transparency: reduce` con `backdrop-filter: none` en `.barra`; bloque `prefers-contrast: more` con `backdrop-filter: none` y un `border` sólido; `@supports not` con fondo sólido | T39 |
+| `test_d3_superficies` | `--radio: 18px`; `.tarjeta` con `var(--radio)` y `var(--sombra-chica)`; `iframe.mapa` y `.tarjeta-seccion` con `var(--sombra-grande)`; `iframe.mapa` con `color-scheme: light` | T39 |
+| `test_d4_menu` | En todas las páginas, `<header class="barra">` con la marca y exactamente 4 enlaces en `nav.menu` («Ruta», «Envolvente», «Itinerario», «Resultados») | T39 |
+| `test_d5_lista_agrupada` | En `/ruta`, los dos `<label for>` y sus `<select>` dentro de `class="grupo"`, cada par en una `class="fila"`; en `/itinerario`, la partida igual; `.grupo` con `var(--radio)` en el CSS | T40 |
+| `test_d5_boton_principal` | `class="boton-principal"` con «Calcular ruta» y «Calcular itinerario»; en el CSS, `var(--radio-pildora)`, `var(--relleno-boton)` y `var(--texto-boton)` | T40 |
+| `test_d5_error_con_siguiente_paso` | El `role="alert"` de `/ruta?origen=X99…` contiene el mensaje y «Elige el origen y el destino»; el de `/itinerario?partida=C01&atractivos=A01` contiene «vuelve a calcular» | T40 |
+| `test_contador_elegidos` | Función pura (parametrizada): 0, 1, 5, 6, 8, 9 y 10 → `cuenta`, `estado` y `en_rango` del plan | T41 |
+| `test_contador_limites_iguales_a_servicios` | El mensaje de `validar_itinerario(datos, "C01", [])` contiene `f"entre {MIN_ATRACTIVOS} y {MAX_ATRACTIVOS}"` | T41 |
+| `test_b6_contador_en_la_pagina` | Parametrizada: `/itinerario` → «0 elegidos (elige de 6 a 8)», `fuera`; con 6 casillas → «6 elegidos (elige de 6 a 8)», `en-rango` y «✓»; `?partida=C01&atractivos=A01` (400) → «1 elegido», «!»; `?partida=C01&atractivos=A01&atractivos=A01&atractivos=C02` → «1 elegido». El elemento tiene `id="contador"` y `aria-live="polite"`; el `fieldset` tiene `aria-describedby="contador"` | T41 |
+| `test_d5_fichas` | En `/itinerario` hay 6 `<label class="ficha">`, y cada una contiene exactamente un `<input type="checkbox" name="atractivos"`, el nombre del atractivo y su `class="visita"` | T41 |
+| `test_b2_app_js_m2_m3` | Texto de `app.js`: `type: "spring"`, `bounce: 0`, `duration: 0.4`, `stagger(0.04)`, `opacity: [0, 1]`, `y: [8, 0]` y `duration: 0.2`; ningún `bounce:` distinto de 0; `getElementById("contador")`, `"change"`, `textContent`, `MINIMO = 6` y `MAXIMO = 8`; los textos de `contador_elegidos` | T42 |
+| `test_b7_control_segmentado` | `/resultados/r2`: `<nav class="segmentado"` con 4 enlaces `href="/resultados/r1"…r4`; `aria-current="page"` solo en R2 (regex `aria-current="page"[^>]*>R2<`); un solo `aria-current="page"` en toda la página; «Resultados» del menú con `aria-current="true"`; un solo `class="indicador"`, dentro del enlace de R2. Con `/resultados/r3`, lo mismo en R3 | T43 |
+| `test_b4_view_transition` | `@view-transition { navigation: auto; }` dentro de `_bloque_media(css, "(prefers-reduced-motion: no-preference)")`; `view-transition-name: indicador-segmento` en `.segmentado .indicador`; `::view-transition-group(indicador-segmento)` | T43 |
+| `test_d0_titulo_y_entradilla` | Parametrizada con `/`, `/ruta`, `/envolvente`, `/itinerario` y `/resultados/r1`: un solo `<h1`, seguido de `<p class="entradilla">` antes de cualquier `<form`, `<nav class="segmentado"` o `<dl`; la entradilla no contiene «Tiempo de viaje», «desconocido», «Faltan» ni «Regla de las 11 h» | T44 |
+| `test_d7_inicio` | En `/`, cada `tarjeta-seccion` tiene exactamente un `<a`; en el CSS, `.tarjeta-seccion h2 a::after` con `inset: 0` | T44 |
+
+### Verificación del diseño v2
+
+| Qué | Contra qué | Datos |
+|---|---|---|
+| B1 hoja servida, `base.html` sin `<style>` | `GET /static/estilos.css` → 200 `text/css`; texto de `base.html` | pruebas conservadas `test_a1_*` |
+| B2 guardia de JS | texto de plantillas, `static/` y `app.js`; HTML servido de las 12 URL | `test_b2_*` y las 2 pruebas reescritas de `test_app_r5.py` |
+| B3 vendor | SHA-256 de la spec; `LICENSE.md` | `test_b3_*` + `shasum -a 256` en T36 y T45 |
+| B4 CSS | texto de `estilos.css` sin comentarios (`_css_sin_comentarios`) y bloques `@media` con `_bloque_media`; contraste recalculado | `test_b4_*`, `test_d3_*`, `test_d8_*` y la conservada `test_a11_sin_transition_all_ni_externos` |
+| B5 colores de método | `COLORES` frente al CSS y a la leyenda | `test_b5_*` y la conservada `test_a7_leyenda_con_colores` |
+| B6 contador | HTML servido (cliente sintético) y la función pura | `test_b6_*`, `test_contador_*` |
+| B7 segmentado | HTML servido de `/resultados/r2` y `/resultados/r3` | `test_b7_control_segmentado` |
+| B8 no regresión | todas las pruebas funcionales y las conservadas de v1; `git diff` vacío de lo prohibido y de las pruebas funcionales (salvo las 2 aserciones de `test_app_r5.py`) | T45 |
+| B9 aspecto y movimiento reales | Chrome y Safari, claro y oscuro, 1280 y 375 px, movimiento reducido emulado | manual (T46) → `review.md` |
+| Mutaciones (en T45) | Cada una debe hacer fallar al menos una prueba, y luego se restaura | `bounce: 0.2` en `app.js`; un `onclick=` en una plantilla; `--texto-secundario` de `#6E6E73` a `#8E8E93` (contraste); `@view-transition` fuera de `no-preference`; `aria-current="page"` en «Resultados» del menú; un `x.js` extra en `static/`; `COLORES["voraz"]` distinto de `--metodo-voraz` |
+
+Cada prueba nueva se escribe antes del cambio y se ve fallar «por la razón correcta»: falta el archivo, la clase, la variable o el texto. No hay algoritmos ni mediciones nuevos.
+
+### Trazabilidad: D0–D8 y B1–B9 → tarea → prueba
+
+Todas las pruebas son de `tests/test_visual_r5.py`, salvo que se diga otra cosa.
+
+| Punto / caso | Tarea | Prueba |
+|---|---|---|
+| D0 dirección: título grande, entradilla, resumen y detalle | T44 (T38 la tipografía) | `::test_d0_titulo_y_entradilla`, `::test_b4_tipografia`; B9 |
+| D1 tipografía | T38 | `::test_b4_tipografia`, `::test_v0_cifras_tabulares` (conservada) |
+| D2 color claro/oscuro, métodos, contraste, Folium claro | T38, T39 | `::test_b4_variables_claro_y_oscuro`, `::test_b4_color_scheme`, `::test_b4_contraste`, `::test_b4_contorno_de_controles`, `::test_b5_*`, `::test_d3_superficies` (`color-scheme: light` del mapa); B9 |
+| D3 materiales y profundidad | T39 | `::test_b4_barra_translucida`, `::test_b4_preferencias`, `::test_d3_superficies`; B9 (legibilidad de la barra) |
+| D4 orientación y agrupación | T39, T43 | `::test_d4_menu`, `::test_a3_aria_current` (conservada), `::test_b7_control_segmentado` |
+| D5 lista agrupada, fichas, botón, errores | T40, T41 | `::test_d5_lista_agrupada`, `::test_d5_boton_principal`, `::test_d5_error_con_siguiente_paso`, `::test_d5_fichas`, `::test_a4_labels_y_botones` y `::test_a6_alert_y_status` (conservadas) |
+| D6 M1 respuesta al pulsar | T38 | `::test_b4_movimiento_m1`; B9 |
+| D6 M2 entrada del resultado | T42 | `::test_b2_app_js_m2_m3`; B9 (sin rebote) |
+| D6 M3 contador en vivo | T41 (servidor), T42 (JS) | `::test_b6_contador_en_la_pagina`, `::test_contador_elegidos`, `::test_contador_limites_iguales_a_servicios`, `::test_b2_app_js_m2_m3`; B9 |
+| D6 M4 transiciones entre páginas | T43 | `::test_b4_view_transition`; B9 (el indicador se desliza) |
+| D6 movimiento reducido | T38, T42, T43 | `::test_b4_movimiento_reducido`, `::test_b2_app_js_limites` (`matchMedia`), `::test_b2_app_js_m2_m3` (`duration: 0.2`), `::test_b4_view_transition` (`no-preference`); B9 |
+| D6 rendimiento (solo `transform` y `opacity`) | T38 | `::test_b4_movimiento_m1`, `::test_a11_sin_transition_all_ni_externos` (conservada) |
+| D7 inicio | T44 | `::test_d7_inicio`, `::test_v10_inicio_tarjetas` (conservada) |
+| D8 lo que se quita de v1 | T37, T38 | `::test_d8_sin_rastros_de_v1`; reescrituras de la tabla «Pruebas de v1» |
+| B1 | T36 (línea base), T45 | `::test_a1_estilos_servidos`, `::test_a1_base_sin_style` (conservadas) |
+| B2 | T37, T42 | `::test_b2_*`; `tests/test_app_r5.py::test_sin_algoritmos_ni_js_propio`, `::test_inicio_y_menu` (reescritas) |
+| B3 | T36 | `::test_b3_motion_con_hash_y_licencia`, `::test_b3_js_servidos` |
+| B4 | T38, T39, T43 | `::test_b4_*`, `::test_a11_sin_transition_all_ni_externos` |
+| B5 | T38 | `::test_b5_colores_de_metodos`, `::test_b5_encabezados_de_metodo`, `::test_a7_leyenda_con_colores` |
+| B6 | T41 | `::test_b6_contador_en_la_pagina` |
+| B7 | T43 | `::test_b7_control_segmentado` |
+| B8 | T36–T45 (regresión de cada tarea), T45 | `tests/test_app_r5.py`, `test_red_real_r5.py`, `test_mapas_r5.py`, `test_servicios_r5.py` y las conservadas de `test_visual_r5.py`; `git diff --stat` vacío |
+| B9 | T46 | manual → `review.md` y capturas en `evidencias/r5/` |
+| Restricción: `servicios.py`, `datos.py`, `formato.py`, R1–R4, `requirements.txt`, `.gitignore`, `Dockerfile` sin tocar | T36, T45 | `git diff --stat` contra `BASE_B6` vacío |
+
+### Riesgos del diseño v2
+
+- **`@view-transition` entre documentos (M4).** Solo hay soporte en navegadores recientes: Chrome y Edge desde la 126, Safari desde la 18.2. En Firefox no está confirmado a la fecha del plan. Sin soporte, la navegación es normal y el indicador simplemente aparece en el segmento nuevo, como pide la spec («simplemente no se anima»). B9 anota la versión de cada navegador y si se deslizó. Las dos páginas deben tener la regla, y la tienen, porque está en la hoja común.
+- **`backdrop-filter`.** Safari anterior a la 18 solo entiende `-webkit-backdrop-filter`, así que se escriben las dos formas. Si un navegador no soporta ninguna, `@supports not (…)` deja la barra sólida con `--fondo`: legible siempre.
+- **`prefers-reduced-transparency`.** El soporte varía: Chromium lo reconoce; Safari y Firefox no lo hacen en todas las versiones. Donde no se reconoce, la barra queda translúcida (`.72` de opacidad, con desenfoque). Se acepta y se anota en B9. `prefers-contrast: more` también deja la barra sólida.
+- **Folium sigue claro en modo oscuro.** Leaflet y los mosaicos de OpenStreetMap no tienen modo oscuro. Se acepta (D2) y se anota en `review.md`. Para que no parezca un error, el mapa es una superficie con `--radio` y `--sombra-grande`, con `color-scheme: light` en el `iframe`, para que el navegador no le pinte un fondo distinto. Los marcadores grises de `mapas.py` no cambian.
+- **Contraste del naranja `#FF9500`.** Da 2,20:1 sobre blanco y 2,02:1 sobre `#F5F5F7`.
+  - Nunca es color de texto (D2).
+  - En la leyenda, la muestra lleva un contorno interior y el nombre del método va en texto, así que el color no es la única pista.
+  - En el mapa, la línea va sobre los mosaicos con peso 4.
+  - En la tabla, el voraz se marca con una franja y con su nombre en el encabezado.
+  - B9 lo revisa a ojo en los dos modos.
+- **Otros contrastes justos.** El acento claro sobre el fondo da 4,31:1, el azul de método 4,02:1 y el blanco sobre `#2997FF` 3,02:1: los resuelven DV-4, DV-5 y DV-7, y `test_b4_contraste` los vigila.
+- **Parpadeo antes de M2.** Con `defer`, el navegador puede pintar las tarjetas un instante antes de que `app.js` las anime desde `opacity: 0`. Se prefiere ese riesgo a ocultarlas con CSS: si `motion.js` o `app.js` no cargan, las tarjetas tienen que verse (mejora progresiva). B9 lo revisa (DV-9).
+- **El JavaScript no se ejecuta en las pruebas.** Las pruebas de B2 y M2/M3 leen el texto de `app.js`. Que la animación llegue sin rebote y que el contador responda solo se ve en B9. No se agrega Node ni un navegador sin interfaz (spec: sin dependencias).
+- **Contador y botón «Atrás».** El navegador puede restaurar las casillas marcadas sin volver a pedir la página. Por eso `app.js` resincroniza en `pageshow` y al cargar. `escribir()` solo cambia el texto si es distinto, para que `aria-live` no repita el anuncio. Sin JS, el contador muestra lo que calculó el servidor para esa respuesta.
+- **Motion como global.** `app.js` comprueba `window.Motion` antes de usarlo. Si el archivo falta o cambia de forma, no hay animación y no hay error.
+- **`:has()`** (estilo de la ficha elegida) existe desde Safari 15.4, Chrome 105 y Firefox 121. Sin él, la casilla real sigue visible y marcada, así que el estado no se pierde.
+- **Barra pegajosa y «Saltar al contenido».** Con la barra fija arriba, el destino quedaría tapado: `#contenido` lleva `scroll-margin-top`. B9 lo revisa con Tab.
+- **Reescritura de pruebas de v1.** El riesgo es debilitar sin querer. Mitigación: la tabla «Pruebas de v1» da la sustituta de cada una y cada sustituta se ve fallar antes. T45 comprueba con `git diff` que en `test_app_r5.py` solo cambiaron las 2 aserciones listadas y que las demás pruebas funcionales no cambiaron.
+- **CLAUDE.md dice «Lenguaje: Python (todos los algoritmos … y la aplicación)».** La aplicación sigue siendo Python: Flask, la lógica, la validación y el formato. `app.js` solo agrega movimiento y un contador, y no implementa ningún algoritmo, así que la regla del enunciado («mismo lenguaje para todos los algoritmos») se cumple. El usuario aprobó el cambio en la spec (2026-11-15). El plan no toca `CLAUDE.md` (DV-14).
+
+### Decisiones del diseño v2 para el usuario (Puerta 2)
+
+- **DV-1. `aria-current` en Resultados.** En `/resultados/<r>`, `aria-current="page"` va en el segmento del requerimiento actual (lo pide B7) y «Resultados» del menú pasa a `aria-current="true"` (sección, no página). Así hay un solo `"page"` por página, el que enlaza a la URL actual. Con esto se reescriben `test_v9_navegacion_requerimientos` y el parámetro de resultados de `test_a3_aria_current`. Alternativa: dos `"page"` en la misma página (no recomendado: ARIA lo reserva para la página actual).
+- **DV-2. Leyenda y contador.**
+  - **Opción A (recomendada):** `<legend>Atractivos</legend>` y el contador con el texto literal de la spec, «N elegidos (elige de 6 a 8) · estado». Así la regla no aparece dos veces. El `fieldset` lleva `aria-describedby="contador"` para que el lector de pantalla diga la regla. En `test_a4_labels_y_botones` cambia solo el fragmento de la leyenda.
+  - **Opción B:** la leyenda queda «Atractivos (elige de 6 a 8)» y el contador repite la regla. `test_a4` no cambia, pero la regla se ve dos veces.
+- **DV-3. Textos del contador**: «1 elegido» / «N elegidos»; estado «falta 1» / «faltan N», «sobra 1» / «sobran N» o «listo para calcular»; ícono «✓» en rango y «!» fuera de rango, con `aria-hidden`, porque el texto ya lo dice. Se cuentan las casillas que quedan marcadas (sin repetidos ni ids que no son atractivos), no `len(elegidos)`.
+- **DV-4. Botón en modo oscuro**: `--relleno-boton: #0071E3` en los dos modos, con texto blanco (4,70:1), porque blanco sobre el acento oscuro `#2997FF` da 3,02:1. Alternativa: fondo `#2997FF` con texto negro (6,96:1).
+- **DV-5. Acento como texto solo sobre superficie** (4,70:1). Sobre el fondo claro `#F5F5F7` da 4,31:1 y no cumple. Los enlaces sueltos van en `--texto` subrayados. Alternativa: un acento de texto `#0066CC` (5,11:1 sobre el fondo), que no está en D2.
+- **DV-6. Variable extra `--borde-control: #8E8E93`** para el contorno de selects y casillas: 3,26:1 sobre blanco y 5,22:1 sobre `#1C1C1E`. D2 pide 3:1 pero su `--separador` da ≈ 1,3:1. Los controles van siempre sobre una superficie, porque sobre el fondo claro daría 2,99:1.
+- **DV-7. Encabezados de método con franja de color, no con fondo**: blanco sobre `#007AFF` da 4,02:1. Con esto se reescribe `test_v5_colores_encabezado_metodos`.
+- **DV-8. Barra `position: sticky`** (fija arriba al desplazarse, sin reservar espacio a mano) en lugar de `position: fixed`.
+- **DV-9. M2 sin ocultar nada en CSS**: se acepta un posible parpadeo de un cuadro antes de la animación, para que las tarjetas se vean aunque falle el JS. Alternativa: ocultarlas con `@media (scripting: enabled)`. Es más limpia a la vista, pero si `motion.js` no carga, las tarjetas quedan invisibles.
+- **DV-10. Leyenda con `style` en línea desde `COLORES`** (como en B5), más las variables `--metodo-*` del CSS. Son dos lugares con el mismo valor, protegidos por `test_b5_colores_de_metodos`.
+- **DV-11. `contador_elegidos` y los límites 6 y 8 en `app.py`** (porque `servicios.py` no se toca), con una prueba que los ata al mensaje de `validar_itinerario`.
+- **DV-12. Entradillas y «siguiente paso» de los errores** con los textos propuestos en «Cambios por plantilla». Los mensajes de `servicios.py` no cambian: el siguiente paso se agrega en la plantilla, después del mensaje.
+- **DV-13. Las pruebas de v2 van en el mismo `tests/test_visual_r5.py`** (sección «Diseño v2»), y las de v1 se borran o reescriben ahí mismo, según la tabla. No se crea otro archivo.
+- **DV-14. `CLAUDE.md`** dice que la aplicación es Python. Sigue siéndolo, y el JS es mejora progresiva aprobada en la spec. El usuario decide si quiere agregar en `CLAUDE.md` una línea sobre `app.js` y Motion; el plan no lo toca.
+- **DV-15. Docstring de `mapas.py`**: se corrige junto con `COLORES` (hoy dice «el grupo no escribe JavaScript»). Es el único cambio de `mapas.py` fuera de `COLORES`.
+- **DV-16. B6 es un solo bloque** (T36–T45), que termina con la suite en verde y se **detiene** para el commit del usuario. B9 (T46) es del usuario y, si obliga a cambiar CSS, se vuelve a correr el comando de T45.
+
+### Bloqueos del diseño v2
+
+Ninguno:
+- La spec v2 no contradice el enunciado: el diseño no se evalúa en R5, no cambia ningún resultado y el JavaScript no implementa ningún algoritmo, así que todos los algoritmos siguen en Python.
+- Todo cabe en los archivos que la spec permite.
+- El paquete de Motion está disponible y su hash coincide con el de la spec.
+- La única tensión es la frase de `CLAUDE.md` sobre el lenguaje de la aplicación. No bloquea, porque la app sigue en Python y el usuario aprobó el JS en la spec, pero queda en DV-14 para que el usuario decida si la aclara.
+
+### Puerta 2 del diseño v2 (2026-11-15), resuelta por el usuario
+Se aprueban las decisiones DV-1 a DV-16 tal como están propuestas. Sobre DV-14, `CLAUDE.md` no se modifica: la app sigue en Python y el JS es una mejora progresiva que no implementa algoritmos.
