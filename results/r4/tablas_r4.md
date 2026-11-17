@@ -4,7 +4,39 @@ Generadas por `rutas/r4/tablas.py` desde los archivos de `results/r4/`. Los tiem
 
 ## Tiempos de fuerza bruta y Held-Karp
 
-_El archivo `r4_exactas.csv` todavía no existe: corre `.venv/bin/python -m rutas.r4.medir_exactas`._
+Mediana de las repeticiones, en milisegundos (ms). «no completada»: pasó el límite de 5 min (o no se ejecutó porque un k menor ya lo pasó).
+
+| k | Tiempo fuerza bruta (ms) | Tiempo Held-Karp (ms) | Repeticiones fuerza bruta | Repeticiones Held-Karp |
+|---|---|---|---|---|
+| 5 | 0.054 | 0.038 | 5 | 5 |
+| 6 | 0.282 | 0.073 | 5 | 5 |
+| 7 | 2.108 | 0.162 | 5 | 5 |
+| 8 | 17.289 | 0.355 | 5 | 5 |
+| 9 | 160.911 | 0.840 | 5 | 5 |
+| 10 | 1694.693 | 2.002 | 5 | 5 |
+| 11 | 19456.687 | 5.446 | 5 | 5 |
+| 12 | 239463.963 | 11.480 | 1 | 5 |
+
+## Mayor k resuelto
+
+| Método | Mayor k resuelto |
+|---|---|
+| Fuerza bruta | 12 |
+| Held-Karp | 12 |
+
+## Cocientes t(k+1)/t(k): medidos y predichos
+
+| k | FB medido | FB predicho | HK medido | HK predicho |
+|---|---|---|---|---|
+| 5 a 6 | 5.21 | 7.20 | 1.95 | 2.88 |
+| 6 a 7 | 7.47 | 8.17 | 2.21 | 2.72 |
+| 7 a 8 | 8.20 | 9.14 | 2.20 | 2.61 |
+| 8 a 9 | 9.31 | 10.12 | 2.36 | 2.53 |
+| 9 a 10 | 10.53 | 11.11 | 2.38 | 2.47 |
+| 10 a 11 | 11.48 | 12.10 | 2.72 | 2.42 |
+| 11 a 12 | 12.31 | 13.09 | 2.11 | 2.38 |
+
+Gráfica: `r4_tiempo_vs_k.png` (eje y logarítmico).
 
 ## Memoria de Held-Karp: estimada frente a medida
 
@@ -79,4 +111,7 @@ Atractivos quitados, en orden:
 
 ## Máquina
 
-_El archivo `maquina.json` todavía no existe: lo escribe `rutas.r4.medir_exactas`._
+- procesador: Apple M4
+- ram_gb: 16.0
+- so: macOS-27.0.1-arm64-arm-64bit-Mach-O
+- python: 3.13.18

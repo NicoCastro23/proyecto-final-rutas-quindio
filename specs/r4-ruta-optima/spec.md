@@ -1,6 +1,6 @@
 # Ruta óptima de recorrido (TSP asimétrico) — Requerimiento 4
 Enunciado: sección 5, Requerimiento 4 (puntos 1 a 5 y párrafo inicial); protocolo en sección 6; formatos en Anexo, Requerimiento 4 (tabla de soluciones exactas, gráfica, calidad de la heurística, itinerario de un día). Peso: 25 % (40 % implementación verificada, 30 % teoría, 30 % experimental).
-Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas (408 sin red y 7 de R4 con la red real) · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO; pendiente la medición real de exactas, T23 y T24)
+Estado: ☑ spec (aprobada en Puertas 1 y 2, 2026-11-11) · ☑ pruebas · ☑ código · ☑ verificado (review.md, ronda 1: APROBADO) · ☑ medición real (2026-11-15, Apple M4; FB y HK resuelven k = 12) · ☑ T23 y T24: **cerrado**
 Depende de: `r2-dijkstra` (cerrado): `data/processed/matriz_tiempos.csv` (42 × 42, segundos, sin redondear, orden del catálogo) y `rutas.r2.matriz.cargar_matriz`; `r1-red-vial` (cerrado): `data/catalogo.csv` (`duracion_visita_min` de los 15 atractivos) y `rutas.r1.catalogo`; `rutas.medicion` (`medir_en_hijo`, `info_maquina`).
 
 ## Propósito

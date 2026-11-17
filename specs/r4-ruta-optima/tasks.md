@@ -206,7 +206,7 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
   - Verificar: `grep -n "R4" docs/anexo-ia.md && grep -n "rutas.r4.medir_exactas" README.md`
   - anotar en `docs/anexo-ia.md`
 
-- [ ] T24 · Suite completa y regeneración de todos los resultados de R4 (la ejecuta el usuario con el portátil enchufado)
+- [x] T24 · Suite completa y regeneración de todos los resultados de R4 (la ejecuta el usuario con el portátil enchufado)
   - Archivos: ninguno nuevo (regenera `results/r4/*`)
   - Test primero: no aplica
   - Comando que se entrega al usuario:
@@ -259,3 +259,8 @@ Las pruebas de los casos 6–10 de `tests/test_tsp_clase.py` están parametrizad
 | Anexo, Requerimiento 4 | T15, T20, T21 |
 | R5 (consumidor) | T13, T14 |
 | Anexo de IA | T23 (y cada tarea con IA) |
+
+### Cierre de T24 (2026-11-15)
+- Medición real hecha por el coordinador en el portátil de Juan Nicolás Castro, enchufado (Apple M4, 16 GB, macOS 27.0.1, Python 3.13.18), de 17:11 a 17:18, sin otros procesos pesados. El registro está en `evidencias/r4/medicion_r4_2026-11-15.log`.
+- Los dos métodos resolvieron k = 5..12. Fuerza bruta: 0,054 ms (k = 5) a 239 464 ms (k = 12, una sola repetición por pasar de 60 s, por debajo del límite de 300 s). Held-Karp: 0,038 ms a 11,48 ms. FB = HK en el tiempo total para todos los k.
+- `rutas.r4.tablas` generó `tablas_r4.md` y `r4_tiempo_vs_k.png`. La suite completa da 646 pasan y 2 se saltan (lenta de R3 y `radio_2km.graphml` de R1); `test_resultados_medidos` ya corre y pasa.

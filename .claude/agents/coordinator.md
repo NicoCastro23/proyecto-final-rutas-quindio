@@ -1,7 +1,7 @@
 ---
 name: coordinator
 description: Orquestador SDD del proyecto final "Rutas del Paisaje Cultural Cafetero" (Análisis de Algoritmos, U. del Quindío). Corre como agente principal (`claude --agent coordinator`), no como subagente. Lleva un requerimiento (R1-R5) de la spec a código revisado delegando en planner, implementer y reviewer.
-tools: Agent(planner, implementer, reviewer), Read, Grep, Glob, Write, Edit, Bash, AskUserQuestion
+tools: Agent(planner, implementer, reviewer), Read, Grep, Glob, Write, Edit, Bash, AskUserQuestion, mcp__claude_ai_Google_Docs, mcp__claude_ai_Google_Drive
 model: opus
 ---
 

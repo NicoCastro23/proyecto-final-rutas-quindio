@@ -551,7 +551,7 @@ Orden de la suite al cerrar cada bloque: `.venv/bin/python -m pytest -m "not red
   - anotar en `docs/anexo-ia.md`
   - Nota (2026-11-15), conteo final: completa 645 pasan y 3 se saltan; `-m "not red"` 606 pasan y 1 se salta (antes 545 y 1); `-m red` 39 pasan y 2 se saltan (los 2 saltos conocidos). Los dos `git diff --stat` salen vacíos; el diff de `test_app_r5.py` muestra solo las 2 aserciones; hash de `motion.js` correcto; 2 `.js` (`app.js` 92 líneas, `estilos.css` 200); sin `package.json` ni `node_modules`. Mutación extra vista fallar y restaurada: `COLORES["voraz"]` = `#FF9501` (`test_b5_colores_de_metodos`). `curl` a un puerto distinto de 5050: 200 en `/static/estilos.css`, `/static/app.js`, `/static/vendor/motion.js` y las 4 secciones, con «29,7», «178,7», «190,4» y «11,8». El trabajo se DETIENE hasta el commit del usuario; T46 es del usuario.
 
-- [ ] T46 · B9: revisión manual del usuario en Chrome y Safari → `review.md` y capturas en `evidencias/r5/`
+- [x] T46 · B9: revisión manual del usuario en Chrome y Safari → `review.md` y capturas en `evidencias/r5/`
   - Archivos: ninguno de código. El usuario, o el reviewer con el usuario, escribe el resultado en `specs/r5-aplicacion/review.md`, sección «Diseño v2 (B9)», y guarda las capturas en `evidencias/r5/`.
   - Test primero: no aplica (manual)
   - Preparación:

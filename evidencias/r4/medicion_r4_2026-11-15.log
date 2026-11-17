@@ -1,0 +1,15 @@
+inicio: 2026-11-15 17:11:16
+k = 5: fuerza_bruta ok 0.054 ms, held_karp ok 0.038 ms
+k = 6: fuerza_bruta ok 0.282 ms, held_karp ok 0.073 ms
+k = 7: fuerza_bruta ok 2.108 ms, held_karp ok 0.162 ms
+k = 8: fuerza_bruta ok 17.289 ms, held_karp ok 0.355 ms
+k = 9: fuerza_bruta ok 160.911 ms, held_karp ok 0.840 ms
+k = 10: fuerza_bruta ok 1694.693 ms, held_karp ok 2.002 ms
+k = 11: fuerza_bruta ok 19456.687 ms, held_karp ok 5.446 ms
+k = 12: fuerza_bruta ok 239463.963 ms, held_karp ok 11.480 ms
+Escrito /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/results/r4/r4_exactas.csv
+codigo medir_exactas: 0
+fin medición: 2026-11-15 17:18:01
+Tablas escritas en /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/results/r4/tablas_r4.md
+Gráfica escrita en /Users/nicolascastro/Desktop/proyecto-final-rutas-quindio/results/r4/r4_tiempo_vs_k.png
+codigo tablas: 0
